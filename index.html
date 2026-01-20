@@ -280,7 +280,7 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var
       </div>
       <div class="action-grid">
         <button class="action-btn" id="addBtn"><div class="icon"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div><span>Add</span></button>
-        <button class="action-btn" id="statsBtn"><div class="icon"><svg viewBox="0 0 24 24"><path d="M18 20V10M12 20V4M6 20v-6"/></svg></div><span>Stats</span></button>
+        <button class="action-btn" id="calcBtn"><div class="icon"><svg viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="12" y2="14"/><line x1="8" y1="18" x2="12" y2="18"/></svg></div><span>Calc</span></button>
         <button class="action-btn" id="syncBtn"><div class="icon"><svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg></div><span>Sync</span></button>
         <button class="action-btn" id="alertsBtn"><div class="icon"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0"/></svg></div><span>Alerts</span></button>
       </div>
@@ -309,7 +309,7 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var
   <div id="calcTab" class="tab-content"><div class="page-header"><h1>Positions</h1><p>Your active trades</p></div><div class="section" style="margin-top:20px" id="allPositions"></div></div>
   <div id="watchTab" class="tab-content"><div class="page-header"><h1>Watchlist</h1><p>Stocks you're tracking</p></div><div class="section" style="margin-top:20px"><div class="card" id="watchlistItems"></div></div><div style="padding:20px"><button class="btn btn-primary" id="addWatchBtn">+ Add to Watchlist</button></div></div>
   <div id="signalsTab" class="tab-content"><div class="page-header"><h1>Signals</h1><p>Live plays from the team</p></div><div id="signalsList" style="padding:20px"></div></div>
-  <div id="statsTab" class="tab-content"><div class="page-header"><h1>Analytics</h1><p>Your performance</p></div><div class="stat-grid"><div class="stat-card green"><div class="stat-value" id="statTotalPnl">$0</div><div class="stat-label">Total P&L</div></div><div class="stat-card"><div class="stat-value" id="statWinRate">0%</div><div class="stat-label">Win Rate</div></div><div class="stat-card blue"><div class="stat-value" id="statTrades">0</div><div class="stat-label">Total Trades</div></div><div class="stat-card green"><div class="stat-value" id="statPremium">$0</div><div class="stat-label">Premium</div></div></div></div>
+  <div id="statsTab" class="tab-content"><div class="page-header"><h1>Analytics</h1><p>Your performance</p></div><div class="stat-grid"><div class="stat-card green"><div class="stat-value" id="statTotalPnl">$0</div><div class="stat-label">Total P&L</div></div><div class="stat-card"><div class="stat-value" id="statWinRate">0%</div><div class="stat-label">Win Rate</div></div><div class="stat-card blue"><div class="stat-value" id="statTrades">0</div><div class="stat-label">Total Trades</div></div><div class="stat-card green"><div class="stat-value" id="statPremium">$0</div><div class="stat-label">Premium Collected</div></div><div class="stat-card"><div class="stat-value" id="statAvgReturn">0%</div><div class="stat-label">Avg Return</div></div><div class="stat-card blue"><div class="stat-value" id="statBestTrade">$0</div><div class="stat-label">Best Trade</div></div><div class="stat-card"><div class="stat-value" id="statAssignments">0</div><div class="stat-label">Assignments</div></div><div class="stat-card green"><div class="stat-value" id="statMonthlyIncome">$0</div><div class="stat-label">Monthly Avg</div></div></div><div class="section"><h3 style="padding:0 20px;margin-bottom:14px;font-size:18px">Performance Breakdown</h3><div class="card" style="margin:0 20px"><div class="card-item"><div style="flex:1"><div style="font-weight:600;margin-bottom:8px">CSP Performance</div><div style="display:flex;gap:20px;font-size:13px;color:var(--text2)"><span>Win Rate: <strong id="cspWinRate" style="color:var(--text)">0%</strong></span><span>Avg P&L: <strong id="cspAvgPnl" style="color:var(--text)">$0</strong></span></div></div></div><div class="card-item"><div style="flex:1"><div style="font-weight:600;margin-bottom:8px">CC Performance</div><div style="display:flex;gap:20px;font-size:13px;color:var(--text2)"><span>Win Rate: <strong id="ccWinRate" style="color:var(--text)">0%</strong></span><span>Avg P&L: <strong id="ccAvgPnl" style="color:var(--text)">$0</strong></span></div></div></div></div></div><div class="section"><h3 style="padding:0 20px;margin-bottom:14px;font-size:18px">Monthly Summary</h3><div id="monthlyChart" style="padding:0 20px;height:200px;display:flex;align-items:flex-end;gap:8px;border-bottom:1px solid var(--border);margin:0 20px"></div></div></div>
 
   <div id="profileTab" class="tab-content">
     <div class="profile-header">
@@ -322,7 +322,10 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var
     <div class="stat-grid"><div class="stat-card green"><div class="stat-value" id="pWinRate">0%</div><div class="stat-label">Win Rate</div></div><div class="stat-card blue"><div class="stat-value" id="pTrades">0</div><div class="stat-label">Trades</div></div></div>
     <div id="premiumCard" class="premium-banner"><h3>🚀 Go Premium</h3><p>Unlock signals, alerts & analytics</p><button class="btn btn-primary" id="premiumBtn" style="margin:0">$49.99/mo</button></div>
     <div class="profile-section"><h3>Account</h3><div class="form-group"><label class="form-label">Name</label><input type="text" class="form-input" id="nameInput"></div><div class="form-group"><label class="form-label">Account Size</label><input type="number" class="form-input" id="accSizeInput"></div><button class="btn btn-primary" id="saveProfileBtn">Save</button></div>
-    <div class="profile-section"><h3>Brokerage</h3><div class="form-group"><label class="form-label">Alpaca Key</label><input type="text" class="form-input" id="alpacaKey"></div><div class="form-group"><label class="form-label">Secret</label><input type="password" class="form-input" id="alpacaSecret"></div><button class="btn btn-secondary" id="saveAlpacaBtn">Connect</button></div>
+    <div class="profile-section"><h3>Brokerage</h3><div class="form-group"><label class="form-label">Alpaca Key</label><input type="text" class="form-input" id="alpacaKey" placeholder="PK..."></div><div class="form-group"><label class="form-label">Secret</label><input type="password" class="form-input" id="alpacaSecret" placeholder="Enter secret key"></div><button class="btn btn-secondary" id="saveAlpacaBtn">Test & Connect</button></div>
+    <div class="profile-section"><h3>Interactive Brokers</h3><div class="form-group"><label class="form-label">IBKR Client ID</label><input type="text" class="form-input" id="ibkrKey" placeholder="Client ID"></div><div class="form-group"><label class="form-label">API Key</label><input type="password" class="form-input" id="ibkrSecret" placeholder="API Key"></div><button class="btn btn-secondary" id="saveIbkrBtn">Connect</button></div>
+    <div class="profile-section"><h3>Robinhood</h3><div class="form-group"><label class="form-label">Account Token</label><input type="text" class="form-input" id="robinhoodKey" placeholder="Token"></div><div class="form-group"><label class="form-label">API Secret</label><input type="password" class="form-input" id="robinhoodSecret" placeholder="Secret"></div><button class="btn btn-secondary" id="saveRobinhoodBtn">Connect</button></div>
+    <div class="profile-section"><h3>ThinkorSwim</h3><div class="form-group"><label class="form-label">TDA Key</label><input type="text" class="form-input" id="thinkorswimKey" placeholder="Consumer Key"></div><div class="form-group"><label class="form-label">Refresh Token</label><input type="password" class="form-input" id="thinkorswimSecret" placeholder="Refresh Token"></div><button class="btn btn-secondary" id="saveThinkorswimBtn">Connect</button></div>
     <div class="profile-section"><button class="btn btn-danger" id="signOutBtn">Sign Out</button></div>
   </div>
 
@@ -346,6 +349,7 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var
 <div class="modal-bg" id="posModal"><div class="modal" onclick="event.stopPropagation()"><div class="modal-header"><h2 id="posModalTitle">Position</h2><button class="modal-close" id="closePos">×</button></div><div class="modal-body" id="posModalContent"></div></div></div>
 <div class="modal-bg" id="premiumModal"><div class="modal" onclick="event.stopPropagation()"><div class="modal-header"><h2>Premium</h2><button class="modal-close" id="closePremium">×</button></div><div class="modal-body" style="text-align:center"><h3 style="font-size:28px;margin-bottom:24px">Unlock Everything</h3><div style="text-align:left;margin-bottom:28px"><div style="display:flex;align-items:center;gap:14px;padding:16px 0;border-bottom:1px solid var(--border)"><span style="color:var(--accent);font-size:20px">✓</span>Live signals</div><div style="display:flex;align-items:center;gap:14px;padding:16px 0;border-bottom:1px solid var(--border)"><span style="color:var(--accent);font-size:20px">✓</span>Priority alerts</div><div style="display:flex;align-items:center;gap:14px;padding:16px 0;border-bottom:1px solid var(--border)"><span style="color:var(--accent);font-size:20px">✓</span>Advanced analytics</div><div style="display:flex;align-items:center;gap:14px;padding:16px 0"><span style="color:var(--accent);font-size:20px">✓</span>Education</div></div><button class="btn btn-primary" id="subscribeBtn">$49.99/month</button></div></div></div>
 <div class="modal-bg" id="announcementModal"><div class="modal" onclick="event.stopPropagation()"><div class="modal-header"><h2>Post Announcement</h2><button class="modal-close" id="closeAnnouncement">×</button></div><div class="modal-body"><div class="form-group"><label class="form-label">Type</label><select class="form-input" id="announceType"><option value="info">Info</option><option value="alert">Alert</option><option value="update">Update</option></select></div><div class="form-group"><label class="form-label">Message</label><textarea class="form-input" id="announceMessage" rows="4" placeholder="Enter announcement message..."></textarea></div><button class="btn btn-primary" id="submitAnnouncement">Post Announcement</button></div></div></div>
+<div class="modal-bg" id="calculatorModal"><div class="modal" onclick="event.stopPropagation()" style="max-width:420px"><div class="modal-header"><h2>💰 Options Calculator</h2><button class="modal-close" id="closeCalculator">×</button></div><div class="modal-body" style="padding:28px 24px"><div style="background:linear-gradient(135deg,rgba(96,165,250,.1),rgba(168,85,247,.08));border-radius:20px;padding:24px;margin-bottom:24px"><div style="text-align:center;margin-bottom:20px"><div style="font-size:12px;color:var(--text2);margin-bottom:8px;text-transform:uppercase;letter-spacing:1px;font-weight:600">Expected Premium</div><div id="calcResult" style="font-size:48px;font-weight:800;background:linear-gradient(135deg,var(--accent),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">$0</div></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:13px"><div style="text-align:center;padding:12px;background:rgba(0,0,0,.3);border-radius:12px"><div style="color:var(--text2);margin-bottom:4px">Return</div><div id="calcReturn" style="font-weight:700;color:var(--accent)">0%</div></div><div style="text-align:center;padding:12px;background:rgba(0,0,0,.3);border-radius:12px"><div style="color:var(--text2);margin-bottom:4px">Annualized</div><div id="calcAnnual" style="font-weight:700;color:var(--green)">0%</div></div></div></div><div class="form-group"><label class="form-label">Stock Price</label><input type="number" class="form-input" id="calcPrice" placeholder="100" step="0.01" oninput="calculateOption()"></div><div class="form-group"><label class="form-label">Strike Price</label><input type="number" class="form-input" id="calcStrike" placeholder="95" step="0.5" oninput="calculateOption()"></div><div class="form-group"><label class="form-label">Days to Expiration</label><input type="number" class="form-input" id="calcDTE" placeholder="30" oninput="calculateOption()"></div><div class="form-group"><label class="form-label">Implied Volatility (%)</label><input type="number" class="form-input" id="calcIV" placeholder="30" step="1" oninput="calculateOption()"></div><div class="form-group"><label class="form-label">Contracts</label><input type="number" class="form-input" id="calcContracts" value="1" oninput="calculateOption()"></div><div style="text-align:center;font-size:12px;color:var(--text3);line-height:1.6;padding:16px;background:var(--card);border-radius:12px;margin-top:20px">This calculator uses a simplified Black-Scholes model. Actual premiums may vary based on market conditions.</div></div></div></div>
 
 <script>
 // Config
@@ -564,12 +568,69 @@ async function saveProfile(){
   else{profile={...profile,...updates};updateProfileUI();toast('Saved!')}
 }
 
-// Save Alpaca
+// Save Alpaca with API testing
 async function saveAlpaca(){
-  const updates={alpaca_api_key:$('alpacaKey').value,alpaca_secret_key:$('alpacaSecret').value};
-  const{error}=await db.from('profiles').update(updates).eq('id',user.id);
-  if(error){toast('Error','error')}
-  else{profile={...profile,...updates};updateProfileUI();toast('Connected!')}
+  const key=$('alpacaKey').value.trim();
+  const secret=$('alpacaSecret').value.trim();
+  if(!key||!secret){toast('Enter API credentials','error');return}
+
+  $('saveAlpacaBtn').disabled=true;
+  $('saveAlpacaBtn').textContent='Testing...';
+
+  try{
+    const testUrl='https://paper-api.alpaca.markets/v2/account';
+    const response=await fetch(testUrl,{
+      headers:{
+        'APCA-API-KEY-ID':key,
+        'APCA-API-SECRET-KEY':secret
+      }
+    });
+
+    if(response.ok){
+      const account=await response.json();
+      const updates={alpaca_api_key:key,alpaca_secret_key:secret};
+      const{error}=await db.from('profiles').update(updates).eq('id',user.id);
+      if(error)throw error;
+      profile={...profile,...updates};
+      updateProfileUI();
+      toast('Connected! Balance: $'+parseFloat(account.portfolio_value||0).toLocaleString());
+    }else{
+      throw new Error('Invalid credentials');
+    }
+  }catch(e){
+    toast(e.message,'error');
+  }finally{
+    $('saveAlpacaBtn').disabled=false;
+    $('saveAlpacaBtn').textContent='Test & Connect';
+  }
+}
+
+// Save other brokers
+async function saveBroker(broker){
+  const keyId=broker+'Key';
+  const secretId=broker+'Secret';
+  const key=$(keyId)?.value?.trim();
+  const secret=$(secretId)?.value?.trim();
+  if(!key||!secret){toast('Enter credentials','error');return}
+
+  const btnId='save'+broker.charAt(0).toUpperCase()+broker.slice(1)+'Btn';
+  $(btnId).disabled=true;
+  $(btnId).textContent='Connecting...';
+
+  try{
+    const updates={};
+    updates[broker+'_api_key']=key;
+    updates[broker+'_secret_key']=secret;
+    const{error}=await db.from('profiles').update(updates).eq('id',user.id);
+    if(error)throw error;
+    profile={...profile,...updates};
+    toast(broker.toUpperCase()+' connected!');
+  }catch(e){
+    toast('Error connecting','error');
+  }finally{
+    $(btnId).disabled=false;
+    $(btnId).textContent='Connect';
+  }
 }
 
 // Avatar
@@ -681,12 +742,48 @@ function updateStats(){
   const wr=total?Math.round(wins/total*100):0;
   const totalPnl=history.reduce((s,h)=>s+(h.pnl||0),0);
   const prem=history.reduce((s,h)=>s+(h.open_premium*(h.contracts||1)*100),0);
+  const avgReturn=total?(totalPnl/total):0;
+  const bestTrade=history.length?Math.max(...history.map(h=>h.pnl||0)):0;
+  const assignments=history.filter(h=>h.outcome==='assigned').length;
+
+  // Basic stats
   $('statWinRate').textContent=wr+'%';
   $('pWinRate').textContent=wr+'%';
   $('statTrades').textContent=total;
   $('pTrades').textContent=total;
   $('statPremium').textContent='$'+prem.toFixed(0);
   $('statTotalPnl').textContent='$'+totalPnl.toFixed(0);
+  $('statAvgReturn').textContent=avgReturn.toFixed(0)+'%';
+  $('statBestTrade').textContent='$'+bestTrade.toFixed(0);
+  $('statAssignments').textContent=assignments;
+  $('statMonthlyIncome').textContent='$'+(totalPnl/Math.max(1,(total/4))).toFixed(0);
+
+  // CSP vs CC breakdown
+  const cspTrades=history.filter(h=>h.type==='csp');
+  const ccTrades=history.filter(h=>h.type==='cc');
+  const cspWins=cspTrades.filter(h=>h.pnl>0).length;
+  const ccWins=ccTrades.filter(h=>h.pnl>0).length;
+  const cspWr=cspTrades.length?Math.round(cspWins/cspTrades.length*100):0;
+  const ccWr=ccTrades.length?Math.round(ccWins/ccTrades.length*100):0;
+  const cspAvg=cspTrades.length?cspTrades.reduce((s,h)=>s+(h.pnl||0),0)/cspTrades.length:0;
+  const ccAvg=ccTrades.length?ccTrades.reduce((s,h)=>s+(h.pnl||0),0)/ccTrades.length:0;
+
+  $('cspWinRate').textContent=cspWr+'%';
+  $('ccWinRate').textContent=ccWr+'%';
+  $('cspAvgPnl').textContent='$'+cspAvg.toFixed(0);
+  $('ccAvgPnl').textContent='$'+ccAvg.toFixed(0);
+
+  // Monthly chart (simple bars)
+  const months={};
+  history.forEach(h=>{
+    const month=new Date(h.closed_at||Date.now()).toLocaleDateString('en-US',{month:'short'});
+    months[month]=(months[month]||0)+(h.pnl||0);
+  });
+  const chartHtml=Object.entries(months).slice(-6).map(([month,pnl])=>{
+    const height=Math.min(100,Math.abs(pnl)/10);
+    return`<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:8px"><div style="width:100%;height:${height}px;background:${pnl>0?'var(--green)':'var(--red)'};border-radius:8px 8px 0 0"></div><div style="font-size:11px;color:var(--text3)">${month}</div></div>`;
+  }).join('');
+  $('monthlyChart').innerHTML=chartHtml||'<div style="text-align:center;color:var(--text3);width:100%">No data yet</div>';
 }
 
 // Signals
@@ -979,6 +1076,34 @@ function sendChat(){
   },800+Math.random()*400);
 }
 
+// Options Calculator
+function calculateOption(){
+  const price=parseFloat($('calcPrice')?.value)||0;
+  const strike=parseFloat($('calcStrike')?.value)||0;
+  const dte=parseFloat($('calcDTE')?.value)||0;
+  const iv=parseFloat($('calcIV')?.value)||0;
+  const contracts=parseInt($('calcContracts')?.value)||1;
+
+  if(!price||!strike||!dte||!iv){
+    $('calcResult').textContent='$0';
+    $('calcReturn').textContent='0%';
+    $('calcAnnual').textContent='0%';
+    return;
+  }
+
+  // Simplified Black-Scholes approximation for puts
+  const t=dte/365;
+  const d=(Math.log(price/strike)+0.5*Math.pow(iv/100,2)*t)/(iv/100*Math.sqrt(t));
+  const putValue=strike*0.5*(1-d/Math.sqrt(2*Math.PI))*Math.sqrt(t)*iv/100;
+  const premium=putValue*100*contracts;
+  const returnPct=(premium/(strike*100*contracts))*100;
+  const annualReturn=returnPct*(365/dte);
+
+  $('calcResult').textContent='$'+premium.toFixed(0);
+  $('calcReturn').textContent=returnPct.toFixed(2)+'%';
+  $('calcAnnual').textContent=annualReturn.toFixed(1)+'%';
+}
+
 // Navigation
 function nav(tab){
   document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
@@ -1011,13 +1136,14 @@ $('navSignals').addEventListener('click',()=>nav('signals'));
 $('navProfile').addEventListener('click',()=>nav('profile'));
 $('heroAvatar').addEventListener('click',()=>nav('profile'));
 $('seeAllBtn').addEventListener('click',()=>nav('calc'));
-$('statsBtn').addEventListener('click',()=>nav('stats'));
+$('statsBtn')?.addEventListener('click',()=>nav('stats'));
 $('analyticsBtn').addEventListener('click',()=>nav('stats'));
 $('signalsQuickBtn').addEventListener('click',()=>nav('signals'));
 
 // Event Listeners - Modals
-$('settingsBtn').addEventListener('click',()=>openModal('settingsModal'));
+$('settingsBtn')?.addEventListener('click',()=>openModal('settingsModal'));
 $('addBtn').addEventListener('click',()=>openModal('addModal'));
+$('calcBtn').addEventListener('click',()=>openModal('calculatorModal'));
 $('alertsBtn').addEventListener('click',()=>openModal('notifModal'));
 $('learnBtn').addEventListener('click',()=>openModal('learnModal'));
 $('wheelyBtn').addEventListener('click',()=>openModal('aiModal'));
@@ -1026,8 +1152,9 @@ $('postSignalBtn').addEventListener('click',()=>openModal('newSignalModal'));
 $('premiumBtn').addEventListener('click',()=>openModal('premiumModal'));
 
 // Event Listeners - Close Modals
-$('closeSettings').addEventListener('click',()=>closeModal('settingsModal'));
+$('closeSettings')?.addEventListener('click',()=>closeModal('settingsModal'));
 $('closeAdd').addEventListener('click',()=>closeModal('addModal'));
+$('closeCalculator').addEventListener('click',()=>closeModal('calculatorModal'));
 $('closeNotif').addEventListener('click',()=>closeModal('notifModal'));
 $('closeAi').addEventListener('click',()=>closeModal('aiModal'));
 $('closeLearn').addEventListener('click',()=>closeModal('learnModal'));
@@ -1036,8 +1163,9 @@ $('closeNewSignal').addEventListener('click',()=>closeModal('newSignalModal'));
 $('closePos').addEventListener('click',()=>closeModal('posModal'));
 $('closePremium').addEventListener('click',()=>closeModal('premiumModal'));
 $('closeAnnouncement').addEventListener('click',()=>closeModal('announcementModal'));
-$('settingsModal').addEventListener('click',()=>closeModal('settingsModal'));
+$('settingsModal')?.addEventListener('click',()=>closeModal('settingsModal'));
 $('addModal').addEventListener('click',()=>closeModal('addModal'));
+$('calculatorModal').addEventListener('click',()=>closeModal('calculatorModal'));
 $('notifModal').addEventListener('click',()=>closeModal('notifModal'));
 $('aiModal').addEventListener('click',()=>closeModal('aiModal'));
 $('learnModal').addEventListener('click',()=>closeModal('learnModal'));
@@ -1054,6 +1182,9 @@ $('submitSignal').addEventListener('click',postSignal);
 $('submitAnnouncement').addEventListener('click',postAnnouncement);
 $('saveProfileBtn').addEventListener('click',saveProfile);
 $('saveAlpacaBtn').addEventListener('click',saveAlpaca);
+$('saveIbkrBtn').addEventListener('click',()=>saveBroker('ibkr'));
+$('saveRobinhoodBtn').addEventListener('click',()=>saveBroker('robinhood'));
+$('saveThinkorswimBtn').addEventListener('click',()=>saveBroker('thinkorswim'));
 $('signOutBtn').addEventListener('click',handleSignOut);
 $('headerSignOutBtn').addEventListener('click',handleSignOut);
 $('postAnnouncementBtn').addEventListener('click',()=>openModal('announcementModal'));
