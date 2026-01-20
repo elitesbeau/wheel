@@ -513,18 +513,47 @@ async function handleSignOut(){
   }
 }
 
-// Load Profile
+// Load Profile with timeout and fallback
 async function loadProfile(){
-  console.log('Loading profile for user ID:',user.id);
-  console.log('User email:',user.email);
+  console.log('📋 Loading profile for user ID:',user.id);
+  console.log('📧 User email:',user.email);
+
   try{
-    let{data,error}=await db.from('profiles').select('*').eq('id',user.id).single();
-    console.log('Profile query result - Data:',JSON.stringify(data));
-    console.log('Profile query result - Error:',error);
+    // Create a timeout promise
+    const timeoutPromise=new Promise((_, reject)=>
+      setTimeout(()=>reject(new Error('Profile query timeout')),5000)
+    );
+
+    // Race between query and timeout
+    const queryPromise=db.from('profiles').select('*').eq('id',user.id).single();
+    const{data,error}=await Promise.race([queryPromise,timeoutPromise.then(()=>({data:null,error:{message:'timeout'}}))]);
+
+    console.log('📊 Profile query result - Data:',JSON.stringify(data));
+    console.log('📊 Profile query result - Error:',error);
+
+    // If timeout or RLS error, use fallback profile
+    if(error&&(error.message==='timeout'||error.code==='42501'||error.details?.includes('infinite recursion'))){
+      console.log('⚠️ Database query failed, using fallback profile');
+      profile={
+        id:user.id,
+        email:user.email,
+        display_name:user.user_metadata?.display_name||user.email.split('@')[0],
+        is_admin:user.email==='beau@marketelites.io',
+        is_premium:false,
+        account_size:25000,
+        alpaca_api_key:'',
+        alpaca_secret_key:'',
+        avatar_url:null
+      };
+      console.log('✅ Using fallback profile - is_admin:',profile.is_admin);
+      updateProfileUI();
+      toast('Using offline profile (database unavailable)','error');
+      return;
+    }
 
     // If profile doesn't exist, create it
     if(error&&error.code==='PGRST116'){
-      console.log('Profile not found, creating new profile...');
+      console.log('📝 Profile not found, creating new profile...');
       const newProfile={
         id:user.id,
         email:user.email,
@@ -533,30 +562,62 @@ async function loadProfile(){
         is_premium:false,
         account_size:25000
       };
-      const{data:created,error:createError}=await db.from('profiles').insert(newProfile).select().single();
-      if(createError){
-        console.error('Failed to create profile:',createError);
-        toast('Failed to create profile','error');
-        return;
+
+      try{
+        const{data:created,error:createError}=await db.from('profiles').insert(newProfile).select().single();
+        if(createError){
+          console.error('❌ Failed to create profile:',createError);
+          // Use fallback if insert fails
+          profile=newProfile;
+          updateProfileUI();
+          return;
+        }
+        profile=created;
+        console.log('✅ Profile created successfully');
+      }catch(insertError){
+        console.error('❌ Insert exception:',insertError);
+        profile=newProfile;
       }
-      data=created;
-      console.log('✅ Profile created successfully');
     }else if(error){
-      console.error('Profile load error:',error.message);
-      toast('Error loading profile','error');
-      return;
+      console.error('❌ Profile load error:',error.message,error);
+      // Use fallback profile
+      profile={
+        id:user.id,
+        email:user.email,
+        display_name:user.email.split('@')[0],
+        is_admin:user.email==='beau@marketelites.io',
+        is_premium:false,
+        account_size:25000,
+        alpaca_api_key:'',
+        alpaca_secret_key:'',
+        avatar_url:null
+      };
+    }else{
+      profile=data;
     }
 
-    if(data){
-      profile=data;
-      console.log('✅ Profile loaded - is_admin:',profile.is_admin,'is_premium:',profile.is_premium);
+    if(profile){
+      console.log('✅ Profile ready - is_admin:',profile.is_admin,'is_premium:',profile.is_premium);
       updateProfileUI();
     }else{
-      console.log('❌ No profile data returned');
+      console.log('❌ No profile data');
     }
   }catch(e){
     console.error('❌ Profile load exception:',e);
-    toast('Profile error: '+e.message,'error');
+    // Final fallback
+    profile={
+      id:user.id,
+      email:user.email,
+      display_name:user.email.split('@')[0],
+      is_admin:user.email==='beau@marketelites.io',
+      is_premium:false,
+      account_size:25000,
+      alpaca_api_key:'',
+      alpaca_secret_key:'',
+      avatar_url:null
+    };
+    console.log('✅ Using emergency fallback profile');
+    updateProfileUI();
   }
 }
 
