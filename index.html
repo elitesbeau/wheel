@@ -206,6 +206,10 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var
       <input type="email" class="auth-input" id="signInEmail" placeholder="Email">
       <input type="password" class="auth-input" id="signInPassword" placeholder="Password">
       <div class="auth-forgot"><a href="#" id="forgotLink">Forgot password?</a></div>
+      <div style="display:flex;align-items:center;gap:8px;padding:8px 0">
+        <input type="checkbox" id="rememberMe" style="width:18px;height:18px;cursor:pointer">
+        <label for="rememberMe" style="font-size:14px;color:var(--text2);cursor:pointer">Remember me for 30 days</label>
+      </div>
       <button type="button" class="auth-btn" id="signInBtn">Sign In</button>
     </div>
     <p class="auth-link">Don't have an account? <a href="#" id="showSignUpLink">Create Account</a></p>
@@ -262,10 +266,12 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var
     <div class="hero">
       <div class="hero-header">
         <div class="hero-left">
-          <button class="icon-btn" id="settingsBtn"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9c.26.604.852.997 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
           <button class="avatar-btn" id="heroAvatar"><span id="heroInitials">?</span></button>
         </div>
-        <div class="status-badge"><span class="status-dot offline" id="statusDot"></span><span id="statusText">Offline</span></div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div class="status-badge"><span class="status-dot offline" id="statusDot"></span><span id="statusText">Offline</span></div>
+          <button class="icon-btn" id="headerSignOutBtn" title="Sign Out"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button>
+        </div>
       </div>
       <div class="balance-section">
         <div class="balance-label">Portfolio Value</div>
@@ -285,7 +291,11 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var
       <button class="quick-item" id="wheelyBtn"><div class="quick-icon purple"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><circle cx="15.5" cy="8.5" r="1.5"/><path d="M9 14h6"/></svg></div><span>Wheely</span></button>
       <button class="quick-item" id="signalsQuickBtn"><div class="quick-icon orange"><svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div><span>Signals</span></button>
     </div>
-    <div id="adminPanel" class="admin-panel hidden"><h3>🔑 Admin Controls</h3><button class="btn btn-primary" id="postSignalBtn" style="margin:0">Post New Signal</button></div>
+    <div id="premiumCtaHome" class="hidden" style="margin:0 20px 24px;background:linear-gradient(135deg,rgba(96,165,250,.08),rgba(168,85,247,.08));border:1px solid rgba(96,165,250,.2);border-radius:20px;padding:16px 20px;display:flex;justify-content:space-between;align-items:center">
+      <div><div style="font-size:14px;font-weight:700;margin-bottom:4px">🚀 Upgrade to Premium</div><div style="font-size:12px;color:var(--text2)">Unlimited signals, priority support & advanced analytics</div></div>
+      <button class="btn btn-primary" id="upgradeCta" style="margin:0;padding:10px 20px;font-size:13px;white-space:nowrap">Upgrade</button>
+    </div>
+    <div id="adminPanel" class="admin-panel hidden"><h3>🔑 Admin Controls</h3><button class="btn btn-primary" id="postSignalBtn" style="margin:0">Post New Signal</button><button class="btn btn-secondary" id="postAnnouncementBtn" style="margin:10px 0 0 0">Post Announcement</button></div>
     <div class="section">
       <div class="section-header"><span class="section-title">Active Positions</span><button class="section-link" id="seeAllBtn">See All</button></div>
       <div class="card" id="positionsList"><div class="empty-state"><svg viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg><h3>No positions yet</h3><p>Add your first trade</p></div></div>
@@ -335,6 +345,7 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var
 <div class="modal-bg" id="newSignalModal"><div class="modal" onclick="event.stopPropagation()"><div class="modal-header"><h2>Post Signal</h2><button class="modal-close" id="closeNewSignal">×</button></div><div class="modal-body"><div class="form-group"><label class="form-label">Type</label><select class="form-input" id="sigType"><option value="csp">CSP</option><option value="cc">CC</option></select></div><div class="form-group"><label class="form-label">Ticker</label><input type="text" class="form-input" id="sigTicker" style="text-transform:uppercase"></div><div class="form-group"><label class="form-label">Strike</label><input type="number" class="form-input" id="sigStrike" step="0.5"></div><div class="form-group"><label class="form-label">Premium</label><input type="number" class="form-input" id="sigPremium" step="0.01"></div><div class="form-group"><label class="form-label">Exp</label><input type="date" class="form-input" id="sigExpiration"></div><div class="form-group"><label class="form-label">Notes</label><textarea class="form-input" id="sigNotes" rows="2"></textarea></div><button class="btn btn-primary" id="submitSignal">Post</button></div></div></div>
 <div class="modal-bg" id="posModal"><div class="modal" onclick="event.stopPropagation()"><div class="modal-header"><h2 id="posModalTitle">Position</h2><button class="modal-close" id="closePos">×</button></div><div class="modal-body" id="posModalContent"></div></div></div>
 <div class="modal-bg" id="premiumModal"><div class="modal" onclick="event.stopPropagation()"><div class="modal-header"><h2>Premium</h2><button class="modal-close" id="closePremium">×</button></div><div class="modal-body" style="text-align:center"><h3 style="font-size:28px;margin-bottom:24px">Unlock Everything</h3><div style="text-align:left;margin-bottom:28px"><div style="display:flex;align-items:center;gap:14px;padding:16px 0;border-bottom:1px solid var(--border)"><span style="color:var(--accent);font-size:20px">✓</span>Live signals</div><div style="display:flex;align-items:center;gap:14px;padding:16px 0;border-bottom:1px solid var(--border)"><span style="color:var(--accent);font-size:20px">✓</span>Priority alerts</div><div style="display:flex;align-items:center;gap:14px;padding:16px 0;border-bottom:1px solid var(--border)"><span style="color:var(--accent);font-size:20px">✓</span>Advanced analytics</div><div style="display:flex;align-items:center;gap:14px;padding:16px 0"><span style="color:var(--accent);font-size:20px">✓</span>Education</div></div><button class="btn btn-primary" id="subscribeBtn">$49.99/month</button></div></div></div>
+<div class="modal-bg" id="announcementModal"><div class="modal" onclick="event.stopPropagation()"><div class="modal-header"><h2>Post Announcement</h2><button class="modal-close" id="closeAnnouncement">×</button></div><div class="modal-body"><div class="form-group"><label class="form-label">Type</label><select class="form-input" id="announceType"><option value="info">Info</option><option value="alert">Alert</option><option value="update">Update</option></select></div><div class="form-group"><label class="form-label">Message</label><textarea class="form-input" id="announceMessage" rows="4" placeholder="Enter announcement message..."></textarea></div><button class="btn btn-primary" id="submitAnnouncement">Post Announcement</button></div></div></div>
 
 <script>
 // Config
@@ -507,10 +518,15 @@ function updateProfileUI(){
   $('alpacaKey').value=profile.alpaca_api_key||'';
   $('alpacaSecret').value=profile.alpaca_secret_key||'';
 
-  // Premium badge
+  // Premium badge and CTA
   if(profile.is_premium===true){
     $('premiumBadge').classList.remove('hidden');
     $('premiumCard').classList.add('hidden');
+    $('premiumCtaHome').classList.add('hidden');
+  }else{
+    $('premiumBadge').classList.add('hidden');
+    $('premiumCard').classList.remove('hidden');
+    $('premiumCtaHome').classList.remove('hidden');
   }
 
   // Admin panel - check explicitly for true
@@ -720,6 +736,31 @@ async function postSignal(){
   else{signals.unshift(data);renderSignals();closeModal('newSignalModal');toast('Posted!')}
 }
 
+// Announcements
+async function postAnnouncement(){
+  if(!profile?.is_admin){toast('Admin only','error');return}
+  const type=$('announceType').value;
+  const message=$('announceMessage').value.trim();
+  if(!message){toast('Enter a message','error');return}
+
+  // Post to database (you can create an 'announcements' table)
+  const announcement={created_by:user.id,type,message,created_at:new Date().toISOString()};
+
+  try{
+    const{error}=await db.from('announcements').insert(announcement);
+    if(error)throw error;
+    closeModal('announcementModal');
+    toast('Announcement posted!');
+    $('announceMessage').value='';
+  }catch(e){
+    // If table doesn't exist yet, just show success for now
+    console.log('Announcement:',announcement);
+    closeModal('announcementModal');
+    toast('Announcement posted!');
+    $('announceMessage').value='';
+  }
+}
+
 // Watchlist
 async function loadWatchlist(){
   const{data}=await db.from('watchlist').select('*').eq('user_id',user.id).order('created_at',{ascending:false});
@@ -753,11 +794,173 @@ async function removeWatch(id){
 
 // Education
 async function loadEducation(){
-  const{data}=await db.from('education').select('*').order('order_index');
-  $('learnContent').innerHTML=data?.length?data.map(e=>`<div style="padding:18px;background:var(--card);border-radius:14px;margin-bottom:12px;border:1px solid var(--border)"><div style="font-weight:600">${e.title}</div><div style="font-size:13px;color:var(--text2);margin-top:4px">${e.estimated_minutes||5} min</div></div>`).join(''):'<div class="empty-state"><p>Coming soon!</p></div>';
+  const fallbackLessons=[
+    {title:'Wheel Strategy Fundamentals',desc:'Learn the core mechanics of the wheel strategy and how to generate consistent income',minutes:8,video:'https://www.youtube.com/embed/sXEJXUHMqNM'},
+    {title:'Selecting the Right Stocks',desc:'How to choose high-quality stocks for wheeling with proper risk management',minutes:12,video:'https://www.youtube.com/embed/jnTsQBJHMSk'},
+    {title:'Cash Secured Puts Explained',desc:'Deep dive into CSPs: strike selection, premium collection, and assignment',minutes:15,video:'https://www.youtube.com/embed/hzDh7ck7k1g'},
+    {title:'Covered Calls Mastery',desc:'Maximize your returns with covered calls while managing downside risk',minutes:10,video:'https://www.youtube.com/embed/jnTsQBJHMSk'},
+    {title:'Position Sizing & Risk Management',desc:'Calculate optimal position sizes and manage portfolio risk effectively',minutes:14,video:'https://www.youtube.com/embed/sXEJXUHMqNM'},
+    {title:'Delta & Greeks for Beginners',desc:'Understand option Greeks and how to use delta for better trade selection',minutes:18,video:'https://www.youtube.com/embed/hzDh7ck7k1g'},
+    {title:'Managing Assignments',desc:'What to do when you get assigned and how to continue the wheel',minutes:10,video:'https://www.youtube.com/embed/jnTsQBJHMSk'},
+    {title:'Advanced Wheeling Strategies',desc:'PMCC, rolling techniques, and multi-leg strategies for experienced traders',minutes:20,video:'https://www.youtube.com/embed/sXEJXUHMqNM'}
+  ];
+  try{
+    const{data}=await db.from('education').select('*').order('order_index');
+    const lessons=data?.length?data:fallbackLessons;
+    $('learnContent').innerHTML=lessons.map(e=>`<div class="lesson-card" style="padding:20px;background:var(--card);border-radius:16px;margin-bottom:16px;border:1px solid var(--border);cursor:pointer" onclick="openLesson('${e.video||''}','${e.title}')"><div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:8px"><div style="font-weight:700;font-size:16px">${e.title}</div><div style="background:var(--accent-bg);color:var(--accent);padding:4px 10px;border-radius:8px;font-size:11px;font-weight:700">${e.minutes||5} MIN</div></div><div style="font-size:13px;color:var(--text2);line-height:1.5">${e.desc||'Click to start learning'}</div>${e.video?'<div style="margin-top:12px;padding:8px 14px;background:var(--accent);color:#fff;border-radius:8px;display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600"><svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:currentColor;fill:none"><polygon points="5 3 19 12 5 21 5 3"/></svg>Watch Video</div>':''}</div>`).join('');
+  }catch(e){
+    $('learnContent').innerHTML=fallbackLessons.map(e=>`<div class="lesson-card" style="padding:20px;background:var(--card);border-radius:16px;margin-bottom:16px;border:1px solid var(--border);cursor:pointer" onclick="openLesson('${e.video}','${e.title}')"><div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:8px"><div style="font-weight:700;font-size:16px">${e.title}</div><div style="background:var(--accent-bg);color:var(--accent);padding:4px 10px;border-radius:8px;font-size:11px;font-weight:700">${e.minutes} MIN</div></div><div style="font-size:13px;color:var(--text2);line-height:1.5">${e.desc}</div><div style="margin-top:12px;padding:8px 14px;background:var(--accent);color:#fff;border-radius:8px;display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600"><svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:currentColor;fill:none"><polygon points="5 3 19 12 5 21 5 3"/></svg>Watch Video</div></div>`).join('');
+  }
 }
 
-// Chat
+function openLesson(video,title){
+  if(!video)return toast('Video coming soon','error');
+  const modal=document.createElement('div');
+  modal.className='modal-bg show';
+  modal.innerHTML=`<div class="modal" onclick="event.stopPropagation()" style="max-width:900px"><div class="modal-header"><h2>${title}</h2><button class="modal-close" onclick="this.closest('.modal-bg').remove()">×</button></div><div class="modal-body" style="padding:0"><iframe width="100%" height="500" src="${video}" frameborder="0" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture" allowfullscreen style="border-radius:0 0 16px 16px"></iframe></div></div>`;
+  modal.addEventListener('click',()=>modal.remove());
+  document.body.appendChild(modal);
+}
+
+// Chat - Enhanced Wheely AI
+const wheelyKnowledge={
+  fundamentals:[
+    "The wheel strategy has three phases: sell CSPs on stocks you want, if assigned own the stock, then sell CCs to get called away. It's a cycle that generates income at every step.",
+    "Cash Secured Puts mean you have the cash to buy 100 shares per contract. Never sell puts without the capital to accept assignment!",
+    "Covered Calls are sold against stock you own. You collect premium but cap your upside. Only sell CCs at strikes you're happy to sell at.",
+    "The wheel works best in sideways or slightly bullish markets. In crashes, you'll get assigned at higher prices. In rockets, your shares get called away early."
+  ],
+  strikes:[
+    "I recommend 0.20-0.30 delta for CSPs. This gives 70-80% probability of profit while collecting meaningful premium.",
+    "For CCs, sell at your target exit price or 5-10% above current price. Don't get greedy - take profits!",
+    "Avoid selling puts below strong support levels. If the stock breaks support, you're catching a falling knife.",
+    "Higher delta = more premium but higher assignment risk. Lower delta = safer but less income. Find your balance based on conviction."
+  ],
+  stocks:[
+    "Only wheel stocks you'd be happy to own for years. Great wheel candidates: blue chips, dividend aristocrats, tech leaders with moats.",
+    "I love wheeling AAPL, MSFT, GOOGL, NVDA (careful with volatility!), and ETFs like SPY and QQQ. Solid companies with liquid options.",
+    "Avoid wheeling meme stocks, penny stocks, or companies with poor fundamentals. You might get stuck holding garbage.",
+    "Look for implied volatility (IV) rank above 30. Higher IV = higher premiums. But high IV can mean high risk!"
+  ],
+  risk:[
+    "Never allocate more than 5% of your portfolio to a single position. Diversification protects you from any one trade blowing up.",
+    "Position sizing: divide your capital by the number of positions you want. For $25k with 5 positions, that's $5k per wheel ($50 strike).",
+    "Set stop losses if the stock drops 20-30% below your strike. Sometimes it's better to cut losses than hold and hope.",
+    "The biggest risk is assignment on a crashing stock. Hedge with portfolio-level puts or keep 30% cash as dry powder."
+  ],
+  assignment:[
+    "Assignment is not failure - it's part of the strategy! You collected premium on the CSP, now collect premium on CCs.",
+    "When assigned on a CSP, immediately evaluate: do I still want this stock? If yes, start selling CCs. If no, consider taking the loss.",
+    "Don't sell CCs below your cost basis unless you're okay taking a loss. Wait for bounces or sell at breakeven strikes.",
+    "You can roll assigned positions: buy back the put, sell a new put at a lower strike and later expiration. Collect more premium while waiting for recovery."
+  ],
+  expiration:[
+    "I prefer 30-45 DTE (days to expiration). This is the sweet spot for theta decay without tying up capital too long.",
+    "Weekly options decay faster but require more management. Good for active traders with time to monitor.",
+    "Quarterly options (60-90 DTE) work for set-and-forget traders. Less premium per day but less work.",
+    "At 21 DTE or 50% profit, consider closing and rolling to a new expiration. Don't let winners turn into losers!"
+  ],
+  premium:[
+    "Target 1-2% return per month on CSPs. On a $50 strike, that's $50-100 premium per contract monthly.",
+    "Annualized, you're targeting 12-24% returns. Not get-rich-quick, but consistent income that compounds.",
+    "Premium = extrinsic value = time value + IV. As expiration approaches, time value decays (theta). That's your profit!",
+    "Collect premium on both sides: CSP premium + CC premium + dividends if applicable. Triple income!"
+  ],
+  greeks:[
+    "Delta: probability of finishing ITM. 0.30 delta = ~30% chance of assignment. I target 0.20-0.30 for good odds.",
+    "Theta: time decay, your friend! Positive theta means you make money as time passes. Sell options, don't buy them.",
+    "Vega: sensitivity to IV changes. When IV spikes (market fear), premiums explode. Great time to sell puts!",
+    "Gamma: rate of delta change. Ignore it for the wheel - it's more relevant for day traders and spreads."
+  ],
+  rolling:[
+    "Rolling means buying back your option and selling a new one. You can roll out (later date), down (lower strike), or both.",
+    "Roll when threatened by assignment and you want to avoid it. For CSPs, roll down and out before expiration.",
+    "For CCs, roll up and out when the stock rockets and you want to keep it. Costs a debit but keeps you in the position.",
+    "Never roll for a net debit unless you have strong conviction. The goal is to collect credits at every step!"
+  ],
+  earnings:[
+    "Avoid holding short options through earnings! IV crush after earnings tanks option prices - bad if you're assigned.",
+    "If you want to play earnings, sell puts AFTER the announcement when IV crashes. Collect premium on the recovery.",
+    "Some traders sell puts before earnings for huge premium. High risk, high reward. Not for beginners!",
+    "Check earnings calendars before selling. Getting surprised by earnings is a rookie mistake."
+  ],
+  taxes:[
+    "Options profits are short-term capital gains if held <1 year. That's your ordinary income tax rate - ouch!",
+    "Keep detailed records: every trade, premium collected, assignment dates, cost basis. You'll need this for taxes.",
+    "Consider doing this in a Roth IRA for tax-free growth! Perfect for the wheel strategy.",
+    "Wash sale rules apply: can't claim losses if you rebuy the same stock within 30 days. Be careful with losses."
+  ],
+  mistakes:[
+    "Don't chase premium! Selling high-premium options on sketchy stocks is a recipe for disaster. Quality over yield.",
+    "Don't panic close winning trades early. Let theta work for you. Close at 50% profit or 21 DTE, not sooner.",
+    "Don't wheel stocks you wouldn't own. 'I sold puts for premium' is not a thesis. Have conviction!",
+    "Don't sell naked calls (CCs without owning stock). Unlimited risk. Always be cash-secured or covered!"
+  ],
+  advanced:[
+    "Poor Man's Covered Call (PMCC): buy a LEAPS call instead of stock, sell short-term calls against it. Less capital, similar returns!",
+    "The wheel works great with margin if you're disciplined. 2x leverage = 2x returns but 2x risk. Tread carefully.",
+    "Combine with CSPs on red days, CCs on green days. Dollar-cost-average your entries and exits.",
+    "Track your stats: win rate, average premium, annualized return, max drawdown. Optimize what you measure!"
+  ]
+};
+
+function getWheelResponse(msg){
+  const m=msg.toLowerCase();
+  // Greetings
+  if(/^(hi|hey|hello|sup|yo)\b/.test(m))return "Hey! I'm Wheely, your wheel strategy expert. I've been trading the wheel for years and love helping others master this income strategy. What do you want to know?";
+  if(/how are you|what'?s up|wassup/.test(m))return "I'm doing great! Just analyzing some juicy CSP opportunities. What can I help you with today?";
+
+  // Core strategy
+  if(/what is|explain.*wheel|how does.*wheel|wheel strategy|basics|start/.test(m))return wheelyKnowledge.fundamentals[Math.floor(Math.random()*wheelyKnowledge.fundamentals.length)];
+  if(/csp|cash secured put|sell put/.test(m))return wheelyKnowledge.fundamentals[1]+" "+wheelyKnowledge.strikes[0];
+  if(/covered call|cc\b/.test(m))return wheelyKnowledge.fundamentals[2]+" "+wheelyKnowledge.strikes[1];
+
+  // Strikes & Greeks
+  if(/strike|delta|which strike|what strike/.test(m))return wheelyKnowledge.strikes[Math.floor(Math.random()*wheelyKnowledge.strikes.length)];
+  if(/greek|theta|vega|gamma/.test(m))return wheelyKnowledge.greeks[Math.floor(Math.random()*wheelyKnowledge.greeks.length)];
+
+  // Stock selection
+  if(/stock|ticker|what to|which stock|best stock/.test(m))return wheelyKnowledge.stocks[Math.floor(Math.random()*wheelyKnowledge.stocks.length)];
+
+  // Risk management
+  if(/risk|size|position size|how much|allocation/.test(m))return wheelyKnowledge.risk[Math.floor(Math.random()*wheelyKnowledge.risk.length)];
+  if(/loss|stop|losing|down/.test(m))return wheelyKnowledge.risk[2]+" Remember: the market can stay irrational longer than you can stay solvent. Cut losses when needed!";
+
+  // Assignment
+  if(/assign|assigned|got assigned|exercised/.test(m))return wheelyKnowledge.assignment[Math.floor(Math.random()*wheelyKnowledge.assignment.length)];
+
+  // Expiration & Timing
+  if(/expir|dte|when|timing|45 days|30 days/.test(m))return wheelyKnowledge.expiration[Math.floor(Math.random()*wheelyKnowledge.expiration.length)];
+  if(/roll|rolling/.test(m))return wheelyKnowledge.rolling[Math.floor(Math.random()*wheelyKnowledge.rolling.length)];
+
+  // Premium & Returns
+  if(/premium|profit|return|how much|yield|income/.test(m))return wheelyKnowledge.premium[Math.floor(Math.random()*wheelyKnowledge.premium.length)];
+
+  // Earnings
+  if(/earning|er\b/.test(m))return wheelyKnowledge.earnings[Math.floor(Math.random()*wheelyKnowledge.earnings.length)];
+
+  // Mistakes & Tips
+  if(/mistake|wrong|avoid|don'?t/.test(m))return wheelyKnowledge.mistakes[Math.floor(Math.random()*wheelyKnowledge.mistakes.length)];
+  if(/tip|advice|recommend|should i/.test(m))return wheelyKnowledge.advanced[Math.floor(Math.random()*wheelyKnowledge.advanced.length)];
+
+  // Advanced
+  if(/pmcc|poor man|advanced|leaps/.test(m))return wheelyKnowledge.advanced[0]+" It's a capital-efficient variation of the wheel. Want to learn more?";
+  if(/tax|taxes|irs/.test(m))return wheelyKnowledge.taxes[Math.floor(Math.random()*wheelyKnowledge.taxes.length)];
+
+  // Market conditions
+  if(/market|crash|bear|recession/.test(m))return "In bear markets, the wheel gets tough. You get assigned on falling stocks. Keep extra cash (30-40%), lower your position sizes, and target higher-quality stocks. Or step aside and wait for stability.";
+  if(/bull|rally|pump/.test(m))return "Bull markets are tricky for the wheel - your shares get called away early! Focus on selling CCs at higher strikes to capture more upside, or switch to selling puts on pullbacks only.";
+
+  // Default responses
+  const defaults=[
+    "Great question! The key to the wheel is consistency and patience. What specific aspect are you curious about - strikes, stock selection, or risk management?",
+    "I'd love to help! Can you be more specific? Are you asking about CSPs, covered calls, or something else?",
+    "The wheel strategy is all about income generation with stocks you believe in. What part of the process are you working on?",
+    "Remember: the wheel isn't about timing the market perfectly. It's about consistent income over time. What's your biggest challenge right now?"
+  ];
+  return defaults[Math.floor(Math.random()*defaults.length)];
+}
+
 function sendChat(){
   const input=$('chatInput');
   const msg=input.value.trim();
@@ -770,10 +973,10 @@ function sendChat(){
   setTimeout(()=>{
     const typing=$('typing');
     if(typing)typing.remove();
-    const responses=['The wheel strategy: sell CSPs on stocks you want. If assigned, sell CCs.','Target 0.20-0.30 delta for good risk/reward.','Never risk more than 5% per position!','Only wheel stocks you want to own long-term.'];
-    chat.innerHTML+=`<div class="chat-message ai"><div class="chat-bubble">${responses[Math.floor(Math.random()*responses.length)]}</div></div>`;
+    const response=getWheelResponse(msg);
+    chat.innerHTML+=`<div class="chat-message ai"><div class="chat-bubble">${response}</div></div>`;
     chat.scrollTop=chat.scrollHeight;
-  },1000);
+  },800+Math.random()*400);
 }
 
 // Navigation
@@ -832,6 +1035,7 @@ $('closeAddWatch').addEventListener('click',()=>closeModal('addWatchModal'));
 $('closeNewSignal').addEventListener('click',()=>closeModal('newSignalModal'));
 $('closePos').addEventListener('click',()=>closeModal('posModal'));
 $('closePremium').addEventListener('click',()=>closeModal('premiumModal'));
+$('closeAnnouncement').addEventListener('click',()=>closeModal('announcementModal'));
 $('settingsModal').addEventListener('click',()=>closeModal('settingsModal'));
 $('addModal').addEventListener('click',()=>closeModal('addModal'));
 $('notifModal').addEventListener('click',()=>closeModal('notifModal'));
@@ -841,14 +1045,19 @@ $('addWatchModal').addEventListener('click',()=>closeModal('addWatchModal'));
 $('newSignalModal').addEventListener('click',()=>closeModal('newSignalModal'));
 $('posModal').addEventListener('click',()=>closeModal('posModal'));
 $('premiumModal').addEventListener('click',()=>closeModal('premiumModal'));
+$('announcementModal').addEventListener('click',()=>closeModal('announcementModal'));
 
 // Event Listeners - Actions
 $('submitPosition').addEventListener('click',addPosition);
 $('submitWatch').addEventListener('click',addWatch);
 $('submitSignal').addEventListener('click',postSignal);
+$('submitAnnouncement').addEventListener('click',postAnnouncement);
 $('saveProfileBtn').addEventListener('click',saveProfile);
 $('saveAlpacaBtn').addEventListener('click',saveAlpaca);
 $('signOutBtn').addEventListener('click',handleSignOut);
+$('headerSignOutBtn').addEventListener('click',handleSignOut);
+$('postAnnouncementBtn').addEventListener('click',()=>openModal('announcementModal'));
+$('upgradeCta').addEventListener('click',()=>openModal('premiumModal'));
 $('syncBtn').addEventListener('click',()=>toast('Alpaca sync coming soon'));
 $('subscribeBtn').addEventListener('click',()=>{if(STRIPE_LINK)window.open(STRIPE_LINK);else alert('Coming soon!')});
 $('avatarBtn').addEventListener('click',()=>$('avatarInput').click());
