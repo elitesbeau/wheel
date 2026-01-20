@@ -362,8 +362,15 @@ const LOGOS={AAPL:'https://logo.clearbit.com/apple.com',NVDA:'https://logo.clear
 let db, user=null, profile=null, positions=[], history=[], signals=[], watchlist=[];
 const $=id=>document.getElementById(id);
 
-// Initialize Supabase
-db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+// Initialize Supabase with proper persistence
+db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: true,
+    storage: window.localStorage
+  }
+});
 
 // Toast
 function toast(msg, type='success'){
@@ -414,12 +421,25 @@ function checkPasswordMatch(){
 async function handleSignIn(){
   const email=$('signInEmail').value.trim();
   const pw=$('signInPassword').value;
+  const rememberMe=$('rememberMe').checked;
   $('signInError').classList.add('hidden');
   if(!email||!pw){$('signInError').textContent='Enter email and password';$('signInError').classList.remove('hidden');return}
   $('signInBtn').disabled=true;$('signInBtn').textContent='Signing in...';
   try{
-    const{error}=await db.auth.signInWithPassword({email,password:pw});
-    if(error)throw error;
+    // Set session persistence based on remember me
+    if(rememberMe){
+      await db.auth.signInWithPassword({email,password:pw});
+    }else{
+      // Use session storage for non-persistent session
+      const tempDb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{
+        auth:{persistSession:false,storage:window.sessionStorage}
+      });
+      const{error}=await tempDb.auth.signInWithPassword({email,password:pw});
+      if(error)throw error;
+      // Copy session to main db
+      const{data:{session}}=await tempDb.auth.getSession();
+      if(session)await db.auth.setSession(session);
+    }
   }catch(e){
     $('signInError').textContent=e.message;$('signInError').classList.remove('hidden');
   }
@@ -470,8 +490,20 @@ async function handleSignOut(){
   try{
     console.log('Calling db.auth.signOut()...');
     await db.auth.signOut();
-    console.log('Sign out successful');
-    user=null;profile=null;
+
+    // Clear all local data
+    user=null;
+    profile=null;
+    positions=[];
+    history=[];
+    signals=[];
+    watchlist=[];
+
+    // Clear storage
+    window.localStorage.clear();
+    window.sessionStorage.clear();
+
+    console.log('✅ Sign out successful');
     $('mainApp').classList.add('hidden');
     showSignIn();
     toast('Signed out','success');
@@ -486,24 +518,45 @@ async function loadProfile(){
   console.log('Loading profile for user ID:',user.id);
   console.log('User email:',user.email);
   try{
-    const{data,error}=await db.from('profiles').select('*').eq('id',user.id).single();
+    let{data,error}=await db.from('profiles').select('*').eq('id',user.id).single();
     console.log('Profile query result - Data:',JSON.stringify(data));
     console.log('Profile query result - Error:',error);
-    if(error){
+
+    // If profile doesn't exist, create it
+    if(error&&error.code==='PGRST116'){
+      console.log('Profile not found, creating new profile...');
+      const newProfile={
+        id:user.id,
+        email:user.email,
+        display_name:user.user_metadata?.display_name||user.email.split('@')[0],
+        is_admin:user.email==='beau@marketelites.io',
+        is_premium:false,
+        account_size:25000
+      };
+      const{data:created,error:createError}=await db.from('profiles').insert(newProfile).select().single();
+      if(createError){
+        console.error('Failed to create profile:',createError);
+        toast('Failed to create profile','error');
+        return;
+      }
+      data=created;
+      console.log('✅ Profile created successfully');
+    }else if(error){
       console.error('Profile load error:',error.message);
       toast('Error loading profile','error');
       return;
     }
+
     if(data){
       profile=data;
-      console.log('Profile is_admin value:',profile.is_admin);
-      console.log('Profile is_premium value:',profile.is_premium);
+      console.log('✅ Profile loaded - is_admin:',profile.is_admin,'is_premium:',profile.is_premium);
       updateProfileUI();
     }else{
-      console.log('No profile data returned');
+      console.log('❌ No profile data returned');
     }
   }catch(e){
-    console.error('Profile load exception:',e);
+    console.error('❌ Profile load exception:',e);
+    toast('Profile error: '+e.message,'error');
   }
 }
 
