@@ -443,12 +443,30 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 </div>
 
 <script>
+// Error handling
+window.onerror = function(msg, url, lineNo, columnNo, error) {
+  console.error('Global error:', msg, 'at', url, lineNo, columnNo, error);
+  return false;
+};
+
 // Supabase Configuration
 const SUPABASE_URL = 'https://cqzlkohrrrgbgspjphrq.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNxemxrb2hycnJnYmdzcGpwaHJxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgwNzgzNjIsImV4cCI6MjA4MzY1NDM2Mn0.RAUlj093Y9ods0KXehm-SiuNevwcBfuYVhe65ApY9NA';
 
 // Initialize Supabase
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+let supabase;
+try {
+  if (typeof window.supabase === 'undefined') {
+    console.error('Supabase library not loaded');
+    alert('Error: Unable to load authentication library. Please refresh the page.');
+  } else {
+    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    console.log('Supabase initialized successfully');
+  }
+} catch (error) {
+  console.error('Failed to initialize Supabase:', error);
+  alert('Error initializing app. Please refresh the page.');
+}
 
 // Global state
 let currentUser = null;
@@ -467,31 +485,60 @@ function toast(msg, type = 'success') {
 
 // Auth Functions
 function showSignIn() {
+  console.log('Showing sign in screen');
   show('signInScreen');
   hide('signUpScreen');
   hide('mainApp');
+  hide('adminPanel');
 }
 
 function showSignUp() {
+  console.log('Showing sign up screen');
   hide('signInScreen');
   show('signUpScreen');
   hide('mainApp');
+  hide('adminPanel');
 }
 
 async function signIn() {
-  const email = $('signInEmail').value.trim();
-  const password = $('signInPassword').value;
-
-  if (!email || !password) {
-    show('signInError');
-    $('signInError').textContent = 'Please enter email and password';
-    return;
-  }
+  console.log('signIn function called');
 
   try {
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) throw error;
+    const emailInput = $('signInEmail');
+    const passwordInput = $('signInPassword');
 
+    if (!emailInput || !passwordInput) {
+      console.error('Email or password input not found');
+      alert('Error: Form inputs not found. Please refresh the page.');
+      return;
+    }
+
+    const email = emailInput.value.trim();
+    const password = passwordInput.value;
+
+    console.log('Email:', email);
+
+    if (!email || !password) {
+      show('signInError');
+      $('signInError').textContent = 'Please enter email and password';
+      return;
+    }
+
+    if (!supabase) {
+      console.error('Supabase not initialized');
+      alert('Error: Authentication system not loaded. Please refresh the page.');
+      return;
+    }
+
+    console.log('Attempting sign in...');
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+
+    if (error) {
+      console.error('Sign in error:', error);
+      throw error;
+    }
+
+    console.log('Sign in successful');
     currentUser = data.user;
     isAdmin = (email === 'beau@marketelites.io'); // Hardcoded admin check
 
@@ -501,6 +548,7 @@ async function signIn() {
 
     // Show admin panel if admin
     if (isAdmin) {
+      console.log('Admin user detected');
       show('adminPanel');
     }
 
@@ -510,29 +558,39 @@ async function signIn() {
 
     toast('Signed in successfully!');
   } catch (error) {
+    console.error('Sign in exception:', error);
     show('signInError');
-    $('signInError').textContent = error.message;
+    $('signInError').textContent = error.message || 'Failed to sign in';
   }
 }
 
 async function signUp() {
-  const name = $('signUpName').value.trim();
-  const email = $('signUpEmail').value.trim();
-  const password = $('signUpPassword').value;
-
-  if (!name || !email || !password) {
-    show('signUpError');
-    $('signUpError').textContent = 'Please fill all fields';
-    return;
-  }
-
-  if (password.length < 6) {
-    show('signUpError');
-    $('signUpError').textContent = 'Password must be at least 6 characters';
-    return;
-  }
+  console.log('signUp function called');
 
   try {
+    if (!supabase) {
+      console.error('Supabase not initialized');
+      alert('Error: Authentication system not loaded. Please refresh the page.');
+      return;
+    }
+
+    const name = $('signUpName').value.trim();
+    const email = $('signUpEmail').value.trim();
+    const password = $('signUpPassword').value;
+
+    if (!name || !email || !password) {
+      show('signUpError');
+      $('signUpError').textContent = 'Please fill all fields';
+      return;
+    }
+
+    if (password.length < 6) {
+      show('signUpError');
+      $('signUpError').textContent = 'Password must be at least 6 characters';
+      return;
+    }
+
+    console.log('Attempting sign up for:', email);
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -543,11 +601,13 @@ async function signUp() {
 
     if (error) throw error;
 
+    console.log('Sign up successful');
     toast('Account created! Check your email to verify.');
     showSignIn();
   } catch (error) {
+    console.error('Sign up error:', error);
     show('signUpError');
-    $('signUpError').textContent = error.message;
+    $('signUpError').textContent = error.message || 'Failed to create account';
   }
 }
 
@@ -949,29 +1009,44 @@ function showBrokerGuide(broker) {
 }
 
 // Check auth state on load
-supabase.auth.onAuthStateChange((event, session) => {
-  console.log('Auth state changed:', event);
-  if (session?.user) {
-    currentUser = session.user;
-    isAdmin = (session.user.email === 'beau@marketelites.io');
+if (supabase) {
+  supabase.auth.onAuthStateChange((event, session) => {
+    console.log('Auth state changed:', event, session?.user?.email);
+    try {
+      if (session?.user) {
+        currentUser = session.user;
+        isAdmin = (session.user.email === 'beau@marketelites.io');
 
-    hide('signInScreen');
-    hide('signUpScreen');
-    show('mainApp');
+        hide('signInScreen');
+        hide('signUpScreen');
+        show('mainApp');
 
-    if (isAdmin) {
-      show('adminPanel');
+        if (isAdmin) {
+          console.log('Showing admin panel');
+          show('adminPanel');
+        }
+
+        const initial = session.user.email.charAt(0).toUpperCase();
+        const avatarEl = $('avatar');
+        if (avatarEl) {
+          avatarEl.textContent = initial;
+        }
+      } else {
+        console.log('No session, showing sign in');
+        showSignIn();
+      }
+    } catch (error) {
+      console.error('Error in auth state change handler:', error);
     }
-
-    const initial = session.user.email.charAt(0).toUpperCase();
-    $('avatar').textContent = initial;
-  } else {
-    showSignIn();
-  }
-});
+  });
+} else {
+  console.error('Supabase not available, showing sign in');
+  showSignIn();
+}
 
 // Initialize
 console.log('Market Elites initialized');
+console.log('All functions loaded:', typeof signIn, typeof signOut, typeof signUp);
 </script>
 </body>
 </html>
