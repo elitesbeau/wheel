@@ -451,11 +451,11 @@ window.onerror = function(msg, url, lineNo, columnNo, error) {
 };
 
 // Supabase Configuration
-const SUPABASE_URL = 'https://cqzlkohrrrgbgspjphrq.supabaseClient.co';
+const SUPABASE_URL = 'https://cqzlkohrrrgbgspjphrq.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNxemxrb2hycnJnYmdzcGpwaHJxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgwNzgzNjIsImV4cCI6MjA4MzY1NDM2Mn0.RAUlj093Y9ods0KXehm-SiuNevwcBfuYVhe65ApY9NA';
 
 // Initialize Supabase client
-let supabaseClientClient;
+let supabaseClient;
 try {
   if (typeof window.supabase === 'undefined') {
     console.error('Supabase library not loaded');
