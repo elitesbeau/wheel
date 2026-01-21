@@ -214,8 +214,17 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
   <!-- Admin Panel (only visible for admin) -->
   <div id="adminPanel" class="admin-panel hidden">
     <div class="admin-title">🔑 Admin Controls</div>
-    <button class="btn btn-primary" onclick="openPostSignal()">Post New Signal</button>
-    <button class="btn btn-secondary" onclick="openPostAnnouncement()">Post Announcement</button>
+    <div style="margin-bottom:16px">
+      <input type="text" class="form-input" id="quickAnnouncementInput" placeholder="Quick announcement..." style="margin-bottom:8px">
+      <button class="btn btn-primary" onclick="postQuickAnnouncement()">Post Alert</button>
+    </div>
+    <button class="btn btn-secondary" onclick="openPostSignal()">Post New Signal</button>
+  </div>
+
+  <!-- Announcements Section -->
+  <div id="announcementsSection" class="section hidden">
+    <div class="section-title">📢 Latest Announcements</div>
+    <div id="announcementsList"></div>
   </div>
 
   <!-- Positions -->
@@ -498,6 +507,7 @@ try {
 // Global state
 let currentUser = null;
 let isAdmin = false;
+let announcements = [];
 
 // Utility functions
 function $(id) { return document.getElementById(id); }
@@ -670,15 +680,8 @@ function navTo(page) {
   });
   event.target.closest('.nav-item').classList.add('active');
 
-  // Handle navigation
-  if (page === 'home') {
-    // Already on home, do nothing special
-    toast('Home');
-  } else if (page === 'portfolio') {
-    toast('Portfolio view - Coming soon');
-  } else if (page === 'profile') {
-    toast('Profile settings - Coming soon');
-  }
+  // Handle navigation - pages will be added later
+  console.log(`Navigated to ${page}`);
 }
 
 // Modal Functions
@@ -742,6 +745,64 @@ function savePosition() {
 }
 
 // Admin Functions
+function postQuickAnnouncement() {
+  if (!isAdmin) {
+    toast('Admin access required', 'error');
+    return;
+  }
+
+  const input = $('quickAnnouncementInput');
+  const message = input.value.trim();
+
+  if (!message) {
+    toast('Please enter a message', 'error');
+    return;
+  }
+
+  // Add to announcements array
+  announcements.unshift({
+    id: Date.now(),
+    type: 'alert',
+    message: message,
+    created_at: new Date().toISOString(),
+    created_by: currentUser.email
+  });
+
+  // Clear input
+  input.value = '';
+
+  // Render announcements
+  renderAnnouncements();
+
+  toast('Alert posted successfully!');
+}
+
+function renderAnnouncements() {
+  const section = $('announcementsSection');
+  const list = $('announcementsList');
+
+  if (announcements.length === 0) {
+    hide('announcementsSection');
+    return;
+  }
+
+  show('announcementsSection');
+
+  let html = '';
+  announcements.forEach(announcement => {
+    const date = new Date(announcement.created_at).toLocaleString();
+    const typeColor = announcement.type === 'alert' ? 'var(--orange)' : 'var(--accent)';
+
+    html += `<div class="card" style="margin-bottom:12px;border-left:4px solid ${typeColor}">`;
+    html += `<div style="font-weight:700;margin-bottom:8px;color:${typeColor};text-transform:uppercase;font-size:12px">${announcement.type}</div>`;
+    html += `<div style="margin-bottom:8px">${announcement.message}</div>`;
+    html += `<div style="font-size:11px;color:var(--text3)">${date}</div>`;
+    html += `</div>`;
+  });
+
+  list.innerHTML = html;
+}
+
 async function publishSignal() {
   if (!isAdmin) {
     toast('Admin access required', 'error');
@@ -804,6 +865,25 @@ async function publishAnnouncement() {
     return;
   }
 
+  // Add to announcements array
+  announcements.unshift({
+    id: Date.now(),
+    type: type,
+    message: message,
+    created_at: new Date().toISOString(),
+    created_by: currentUser.email
+  });
+
+  // Render announcements
+  renderAnnouncements();
+
+  toast('Announcement published!');
+  closeModal('postAnnouncementModal');
+
+  // Clear form
+  $('announceMessage').value = '';
+
+  // Try to save to Supabase (optional)
   try {
     const { error } = await supabaseClient.from('announcements').insert({
       created_by: currentUser.id,
@@ -811,19 +891,9 @@ async function publishAnnouncement() {
       message,
       created_at: new Date().toISOString()
     });
-
-    if (error) throw error;
-
-    toast('Announcement published successfully!');
-    closeModal('postAnnouncementModal');
-
-    // Clear form
-    $('announceMessage').value = '';
+    if (error) console.error('Error saving to Supabase:', error);
   } catch (error) {
-    console.error('Error publishing announcement:', error);
-    toast('Announcement published!'); // Still show success even if table doesn't exist
-    closeModal('postAnnouncementModal');
-    $('announceMessage').value = '';
+    console.error('Error publishing announcement to database:', error);
   }
 }
 
@@ -920,7 +990,7 @@ function loadEducation() {
   Object.entries(sections).forEach(([section, sectionLessons]) => {
     html += `<div class="section-header"><div class="section-line"></div>${section}</div>`;
     sectionLessons.forEach(lesson => {
-      html += `<div class="lesson-card">`;
+      html += `<div class="lesson-card" onclick='openLesson(${JSON.stringify(lesson)})'>`;
       html += `<div class="lesson-title">${lesson.title}</div>`;
       html += `<div class="lesson-desc">${lesson.desc}</div>`;
       html += `<div style="display:flex;align-items:center;gap:8px">`;
@@ -931,6 +1001,12 @@ function loadEducation() {
   });
 
   $('learnContent').innerHTML = html;
+}
+
+function openLesson(lesson) {
+  toast(`Opening: ${lesson.title}`);
+  // In a real app, this would load the actual lesson content
+  // For now, show a preview
 }
 
 // Payment Processing
