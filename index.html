@@ -443,6 +443,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 </div>
 
 <script>
+// Market Elites v2.0.0 - Production Build
 // Error handling
 window.onerror = function(msg, url, lineNo, columnNo, error) {
   console.error('Global error:', msg, 'at', url, lineNo, columnNo, error);
@@ -450,17 +451,17 @@ window.onerror = function(msg, url, lineNo, columnNo, error) {
 };
 
 // Supabase Configuration
-const SUPABASE_URL = 'https://cqzlkohrrrgbgspjphrq.supabase.co';
+const SUPABASE_URL = 'https://cqzlkohrrrgbgspjphrq.supabaseClient.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNxemxrb2hycnJnYmdzcGpwaHJxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgwNzgzNjIsImV4cCI6MjA4MzY1NDM2Mn0.RAUlj093Y9ods0KXehm-SiuNevwcBfuYVhe65ApY9NA';
 
-// Initialize Supabase
-let supabase;
+// Initialize Supabase client
+let supabaseClientClient;
 try {
   if (typeof window.supabase === 'undefined') {
     console.error('Supabase library not loaded');
     alert('Error: Unable to load authentication library. Please refresh the page.');
   } else {
-    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     console.log('Supabase initialized successfully');
   }
 } catch (error) {
@@ -524,14 +525,14 @@ async function signIn() {
       return;
     }
 
-    if (!supabase) {
+    if (!supabaseClient) {
       console.error('Supabase not initialized');
       alert('Error: Authentication system not loaded. Please refresh the page.');
       return;
     }
 
     console.log('Attempting sign in...');
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
 
     if (error) {
       console.error('Sign in error:', error);
@@ -568,7 +569,7 @@ async function signUp() {
   console.log('signUp function called');
 
   try {
-    if (!supabase) {
+    if (!supabaseClient) {
       console.error('Supabase not initialized');
       alert('Error: Authentication system not loaded. Please refresh the page.');
       return;
@@ -591,7 +592,7 @@ async function signUp() {
     }
 
     console.log('Attempting sign up for:', email);
-    const { data, error } = await supabase.auth.signUp({
+    const { data, error } = await supabaseClient.auth.signUp({
       email,
       password,
       options: {
@@ -616,7 +617,7 @@ async function signOut() {
 
   // Try to sign out from Supabase server
   try {
-    const { error } = await supabase.auth.signOut();
+    const { error } = await supabaseClient.auth.signOut();
     if (error) {
       console.error('Supabase signOut error:', error);
     }
@@ -713,7 +714,7 @@ async function publishSignal() {
   }
 
   try {
-    const { error } = await supabase.from('signals').insert({
+    const { error } = await supabaseClient.from('signals').insert({
       created_by: currentUser.id,
       type,
       ticker: symbol,
@@ -757,7 +758,7 @@ async function publishAnnouncement() {
   }
 
   try {
-    const { error } = await supabase.from('announcements').insert({
+    const { error } = await supabaseClient.from('announcements').insert({
       created_by: currentUser.id,
       type,
       message,
@@ -1009,8 +1010,8 @@ function showBrokerGuide(broker) {
 }
 
 // Check auth state on load
-if (supabase) {
-  supabase.auth.onAuthStateChange((event, session) => {
+if (supabaseClient) {
+  supabaseClient.auth.onAuthStateChange((event, session) => {
     console.log('Auth state changed:', event, session?.user?.email);
     try {
       if (session?.user) {
