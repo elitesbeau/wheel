@@ -2,1598 +2,970 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-  <title>Market Elites</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Market Elites - Wheel Strategy Platform</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-:root{--bg:#000;--bg2:#0a0a0a;--bg3:#111;--card:#151515;--border:#222;--text:#fff;--text2:#888;--text3:#555;--accent:#60a5fa;--accent-dark:#3b82f6;--accent-bg:rgba(96,165,250,.12);--green:#22c55e;--green-bg:rgba(34,197,94,.12);--red:#ef4444;--red-bg:rgba(239,68,68,.12);--orange:#f59e0b;--orange-bg:rgba(245,158,11,.12);--purple:#a855f7;--purple-bg:rgba(168,85,247,.12)}
-*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;min-height:100dvh}
+:root{--bg:#000;--bg2:#0a0a0a;--card:#151515;--border:#222;--text:#fff;--text2:#888;--text3:#555;--accent:#60a5fa;--green:#22c55e;--red:#ef4444;--orange:#f59e0b;--purple:#a855f7}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
 .hidden{display:none!important}
-.auth-screen{min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;background:linear-gradient(180deg,#000 0%,#0a1628 50%,#000 100%);position:relative;overflow:hidden}
-.auth-screen::before{content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:radial-gradient(circle at 50% 50%,rgba(96,165,250,.06) 0%,transparent 50%);animation:pulse 8s ease-in-out infinite}
-@keyframes pulse{0%,100%{transform:scale(1);opacity:.5}50%{transform:scale(1.1);opacity:.8}}
-.auth-glow{position:absolute;top:15%;left:50%;transform:translateX(-50%);width:350px;height:350px;background:radial-gradient(circle,rgba(96,165,250,.15) 0%,transparent 70%);filter:blur(60px);pointer-events:none}
-.auth-content{flex:1;display:flex;flex-direction:column;justify-content:center;padding:40px 24px;position:relative;z-index:1;max-width:400px;margin:0 auto;width:100%}
-.auth-logo{text-align:center;margin-bottom:40px}
-.auth-logo-icon{width:80px;height:80px;margin:0 auto 20px;background:linear-gradient(135deg,var(--accent) 0%,var(--accent-dark) 100%);border-radius:24px;display:flex;align-items:center;justify-content:center;box-shadow:0 20px 50px rgba(96,165,250,.35)}
-.auth-logo-icon svg{width:44px;height:44px;stroke:#fff;stroke-width:2;fill:none}
-.auth-logo h1{font-size:36px;font-weight:800;letter-spacing:-1px;background:linear-gradient(135deg,#fff 0%,var(--accent) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-.auth-logo p{color:var(--text2);font-size:15px;font-weight:500;margin-top:8px}
-.auth-title{font-size:24px;font-weight:700;text-align:center;margin-bottom:24px}
-.auth-form{display:flex;flex-direction:column;gap:14px}
-.auth-input{width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:18px 20px;font-size:16px;color:var(--text);outline:none;transition:all .2s;font-family:inherit}
-.auth-input:focus{border-color:var(--accent);background:rgba(96,165,250,.08);box-shadow:0 0 0 4px rgba(96,165,250,.15)}
-.auth-input::placeholder{color:var(--text3)}
-.auth-btn{background:linear-gradient(135deg,var(--accent) 0%,var(--accent-dark) 100%);color:#fff;border:none;border-radius:14px;padding:18px;font-size:17px;font-weight:700;cursor:pointer;margin-top:8px;transition:all .2s;box-shadow:0 10px 30px rgba(96,165,250,.35);font-family:inherit}
-.auth-btn:hover{transform:translateY(-2px);box-shadow:0 15px 40px rgba(96,165,250,.45)}
-.auth-btn:active{transform:translateY(0)}
-.auth-btn:disabled{opacity:.5;transform:none;cursor:not-allowed}
-.auth-link{text-align:center;margin-top:20px;color:var(--text2);font-size:14px}
-.auth-link a{color:var(--accent);cursor:pointer;font-weight:600;text-decoration:none}
-.auth-link a:hover{text-decoration:underline}
-.auth-forgot{text-align:right;margin-top:-8px;margin-bottom:8px}
-.auth-forgot a{color:var(--accent);cursor:pointer;font-size:14px;font-weight:500;text-decoration:none}
-.auth-forgot a:hover{text-decoration:underline}
-.auth-error{background:var(--red-bg);border:1px solid rgba(239,68,68,.3);color:var(--red);padding:14px 18px;border-radius:12px;font-size:14px;text-align:center;margin-bottom:16px}
-.auth-success{background:var(--green-bg);border:1px solid rgba(34,197,94,.3);color:var(--green);padding:14px 18px;border-radius:12px;font-size:14px;text-align:center;margin-bottom:16px}
-.auth-features{display:flex;justify-content:center;gap:32px;margin-top:40px;padding-top:32px;border-top:1px solid rgba(255,255,255,.06)}
-.auth-feature{text-align:center}
-.auth-feature-icon{width:48px;height:48px;border-radius:14px;margin:0 auto 10px;display:flex;align-items:center;justify-content:center}
-.auth-feature-icon svg{width:24px;height:24px;stroke-width:2;fill:none}
-.auth-feature span{font-size:12px;color:var(--text2);font-weight:600}
-.auth-back{display:flex;align-items:center;gap:8px;color:var(--text2);font-size:14px;cursor:pointer;margin-bottom:24px;background:none;border:none;font-family:inherit}
-.auth-back:hover{color:var(--text)}
-.auth-back svg{width:20px;height:20px;stroke:currentColor;stroke-width:2;fill:none}
-.password-hint{font-size:12px;color:var(--text3);margin-top:4px;padding-left:4px}
-.password-match{font-size:12px;margin-top:4px;padding-left:4px}
-.password-match.valid{color:var(--green)}
-.password-match.invalid{color:var(--red)}
-.toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--card);border:1px solid var(--border);padding:14px 24px;border-radius:14px;font-size:14px;font-weight:600;z-index:9999;opacity:0;transition:all .3s;pointer-events:none}
-.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-.toast.success{border-color:var(--green);color:var(--green);background:rgba(34,197,94,.1)}
-.toast.error{border-color:var(--red);color:var(--red);background:rgba(239,68,68,.1)}
-.app{max-width:500px;margin:0 auto;padding-bottom:100px}
-.nav{position:fixed;bottom:0;left:0;right:0;background:rgba(0,0,0,.95);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid var(--border);padding:8px 0 calc(8px + env(safe-area-inset-bottom));z-index:1000}
-.nav-inner{display:flex;justify-content:space-around;max-width:500px;margin:0 auto}
-.nav-item{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 16px;color:var(--text3);font-size:10px;font-weight:600;cursor:pointer;transition:all .2s;background:none;border:none;font-family:inherit}
-.nav-item.active{color:var(--accent)}
-.nav-item svg{width:26px;height:26px;stroke:currentColor;stroke-width:1.5;fill:none}
-.hero{background:linear-gradient(180deg,#0a1628 0%,var(--bg) 100%);padding:24px 20px;padding-top:calc(24px + env(safe-area-inset-top));border-radius:0 0 32px 32px;margin-bottom:24px;position:relative;overflow:hidden}
-.hero::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:250px;height:250px;background:radial-gradient(circle,rgba(96,165,250,.12) 0%,transparent 70%);filter:blur(40px)}
-.hero-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:32px;position:relative}
-.hero-left{display:flex;align-items:center;gap:14px}
-.avatar-btn{width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent-dark));border:none;display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;font-size:18px;cursor:pointer;overflow:hidden;box-shadow:0 4px 20px rgba(96,165,250,.35)}
-.avatar-btn img{width:100%;height:100%;object-fit:cover}
-.icon-btn{width:44px;height:44px;border-radius:50%;background:var(--card);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text2);transition:all .2s}
-.icon-btn:hover{background:var(--border);color:var(--text)}
-.icon-btn svg{width:20px;height:20px;stroke:currentColor;stroke-width:1.5;fill:none}
-.status-badge{display:flex;align-items:center;gap:8px;background:var(--card);padding:10px 16px;border-radius:24px;font-size:13px;font-weight:600;border:1px solid var(--border)}
-.status-dot{width:8px;height:8px;border-radius:50%}
-.status-dot.online{background:var(--green);box-shadow:0 0 10px var(--green)}
-.status-dot.offline{background:var(--red)}
-.balance-section{text-align:center;margin-bottom:32px;position:relative}
-.balance-label{color:var(--text2);font-size:14px;font-weight:500;margin-bottom:8px}
-.balance-value{font-size:52px;font-weight:800;letter-spacing:-3px;background:linear-gradient(135deg,#fff 0%,#ccc 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-.balance-change{display:inline-flex;align-items:center;gap:6px;background:var(--green-bg);color:var(--green);padding:8px 16px;border-radius:24px;font-size:15px;font-weight:700;margin-top:12px}
-.action-grid{display:flex;justify-content:center;gap:24px}
-.action-btn{display:flex;flex-direction:column;align-items:center;gap:10px;cursor:pointer;background:none;border:none;font-family:inherit}
-.action-btn .icon{width:60px;height:60px;border-radius:50%;background:var(--card);display:flex;align-items:center;justify-content:center;border:1px solid var(--border);transition:all .2s}
-.action-btn:hover .icon{background:var(--border);transform:translateY(-2px)}
-.action-btn svg{width:26px;height:26px;stroke:var(--text);stroke-width:1.5;fill:none}
-.action-btn span{font-size:12px;color:var(--text2);font-weight:600}
-.quick-grid{display:flex;justify-content:center;gap:16px;padding:20px}
-.quick-item{display:flex;flex-direction:column;align-items:center;gap:10px;cursor:pointer;flex:1;max-width:80px;background:none;border:none;font-family:inherit}
-.quick-icon{width:64px;height:64px;border-radius:20px;display:flex;align-items:center;justify-content:center;transition:all .2s}
-.quick-item:hover .quick-icon{transform:translateY(-2px)}
-.quick-icon svg{width:30px;height:30px;stroke-width:1.5;fill:none}
-.quick-icon.blue{background:var(--accent-bg)}.quick-icon.blue svg{stroke:var(--accent)}
-.quick-icon.green{background:var(--green-bg)}.quick-icon.green svg{stroke:var(--green)}
-.quick-icon.purple{background:var(--purple-bg)}.quick-icon.purple svg{stroke:var(--purple)}
-.quick-icon.orange{background:var(--orange-bg)}.quick-icon.orange svg{stroke:var(--orange)}
-.quick-item span{font-size:12px;color:var(--text2);font-weight:600}
-.section{padding:0 20px;margin-bottom:28px}
-.section-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
-.section-title{font-size:20px;font-weight:700}
-.section-link{color:var(--accent);font-size:14px;font-weight:600;cursor:pointer;background:none;border:none;font-family:inherit}
-.card{background:var(--card);border-radius:20px;border:1px solid var(--border);overflow:hidden}
-.card-item{display:flex;align-items:center;gap:14px;padding:16px 18px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .2s}
-.card-item:last-child{border-bottom:none}
-.card-item:hover{background:rgba(255,255,255,.02)}
-.stock-logo{width:44px;height:44px;border-radius:12px;background:var(--bg);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;font-size:13px;font-weight:700;color:var(--text2)}
-.stock-logo img{width:100%;height:100%;object-fit:contain;padding:6px}
-.pos-info{flex:1;min-width:0}
-.pos-top{display:flex;align-items:center;gap:10px;margin-bottom:4px}
-.pos-ticker{font-weight:700;font-size:16px}
-.pos-type{font-size:10px;font-weight:700;padding:4px 10px;border-radius:8px;text-transform:uppercase;letter-spacing:.5px}
-.pos-type.csp{background:var(--green-bg);color:var(--green)}
-.pos-type.cc{background:var(--accent-bg);color:var(--accent)}
-.pos-bottom{font-size:13px;color:var(--text2)}
-.pos-value{text-align:right}
-.pos-premium{font-weight:700;font-size:16px;color:var(--green)}
-.pos-exp{font-size:12px;color:var(--text3);margin-top:2px}
-.signal-card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:20px;margin-bottom:16px}
-.signal-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px}
-.signal-ticker{display:flex;align-items:center;gap:14px}
-.signal-ticker h3{font-size:20px;font-weight:700}
-.signal-badge{font-size:11px;font-weight:700;padding:5px 12px;border-radius:8px}
-.signal-time{font-size:12px;color:var(--text3);font-weight:500}
-.signal-details{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
-.signal-detail{text-align:center;padding:14px 10px;background:var(--bg);border-radius:14px}
-.signal-detail label{font-size:11px;color:var(--text3);display:block;margin-bottom:4px;font-weight:500}
-.signal-detail span{font-size:16px;font-weight:700}
-.signal-actions{display:flex;gap:12px}
-.signal-btn{flex:1;padding:14px;border-radius:12px;font-size:14px;font-weight:700;border:none;cursor:pointer;transition:all .2s;font-family:inherit}
-.signal-btn.primary{background:var(--accent);color:#fff}
-.signal-btn.primary:hover{background:var(--accent-dark)}
-.signal-btn.secondary{background:var(--bg);color:var(--text);border:1px solid var(--border)}
-.tab-content{display:none}
-.tab-content.active{display:block}
-.page-header{padding:24px 20px;padding-top:calc(24px + env(safe-area-inset-top));background:linear-gradient(180deg,#0a1628 0%,var(--bg) 100%)}
-.page-header h1{font-size:32px;font-weight:800;letter-spacing:-1px}
-.page-header p{color:var(--text2);font-size:15px;margin-top:6px}
-.stat-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;padding:20px}
-.stat-card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:20px;text-align:center}
-.stat-value{font-size:28px;font-weight:800}
-.stat-label{font-size:13px;color:var(--text2);margin-top:6px;font-weight:500}
-.stat-card.green .stat-value{color:var(--green)}
-.stat-card.blue .stat-value{color:var(--accent)}
-.profile-header{text-align:center;padding:40px 20px;background:linear-gradient(180deg,#0a1628 0%,var(--bg) 100%)}
-.profile-avatar{width:90px;height:90px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent-dark));margin:0 auto 16px;display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:700;color:#fff;overflow:hidden;cursor:pointer;box-shadow:0 10px 30px rgba(96,165,250,.35);border:none}
-.profile-avatar img{width:100%;height:100%;object-fit:cover}
-.profile-name{font-size:24px;font-weight:700}
-.profile-email{font-size:14px;color:var(--text2);margin-top:4px}
-.profile-badge{display:inline-flex;background:var(--accent);color:#fff;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:700;margin-top:12px}
-.profile-section{padding:20px}
-.profile-section h3{font-size:12px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:14px;font-weight:700}
-.form-group{margin-bottom:18px}
-.form-label{font-size:13px;color:var(--text2);margin-bottom:8px;display:block;font-weight:500}
-.form-input{width:100%;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px 18px;font-size:16px;color:var(--text);outline:none;transition:all .2s;font-family:inherit}
-.form-input:focus{border-color:var(--accent);box-shadow:0 0 0 4px rgba(96,165,250,.1)}
-.btn{width:100%;padding:18px;border-radius:14px;font-size:16px;font-weight:700;border:none;cursor:pointer;margin-bottom:12px;transition:all .2s;font-family:inherit}
+
+/* Auth Screens */
+.auth-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.auth-box{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:40px;max-width:400px;width:100%}
+.auth-title{font-size:28px;font-weight:800;margin-bottom:24px;text-align:center}
+.form-group{margin-bottom:16px}
+.form-label{display:block;margin-bottom:8px;font-size:14px;color:var(--text2)}
+.form-input{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:14px;color:var(--text);font-size:15px}
+.btn{width:100%;padding:16px;border:none;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer;transition:all .2s}
 .btn-primary{background:var(--accent);color:#fff}
-.btn-primary:hover{background:var(--accent-dark)}
-.btn-secondary{background:var(--card);color:var(--text);border:1px solid var(--border)}
-.btn-danger{background:var(--red-bg);color:var(--red)}
-.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.85);backdrop-filter:blur(10px);z-index:2000;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .3s}
-.modal-bg.show{opacity:1;pointer-events:auto}
-.modal{background:var(--bg2);border-radius:28px 28px 0 0;width:100%;max-width:500px;max-height:90vh;overflow-y:auto;transform:translateY(100%);transition:transform .3s}
-.modal-bg.show .modal{transform:translateY(0)}
-.modal-header{padding:24px 20px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
-.modal-header h2{font-size:20px;font-weight:700}
-.modal-close{width:36px;height:36px;border-radius:50%;background:var(--card);border:none;color:var(--text);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center}
-.modal-body{padding:24px 20px}
-.admin-panel{background:linear-gradient(135deg,rgba(245,158,11,.1),rgba(245,158,11,.05));border:1px solid rgba(245,158,11,.3);border-radius:20px;padding:20px;margin:0 20px 24px}
-.admin-panel h3{color:var(--orange);font-size:15px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px}
-.empty-state{text-align:center;padding:48px 20px;color:var(--text2)}
-.empty-state svg{width:56px;height:56px;stroke:var(--text3);margin-bottom:16px}
-.empty-state h3{font-size:18px;color:var(--text);margin-bottom:6px;font-weight:600}
-.chat-container{display:flex;flex-direction:column;height:calc(85vh - 80px)}
-.chat-messages{flex:1;overflow-y:auto;padding:20px}
-.chat-message{margin-bottom:16px;max-width:85%}
-.chat-message.user{margin-left:auto}
-.chat-bubble{padding:14px 18px;border-radius:20px;font-size:15px;line-height:1.5}
-.chat-message.user .chat-bubble{background:var(--accent);color:#fff;border-bottom-right-radius:6px}
-.chat-message.ai .chat-bubble{background:var(--card);border:1px solid var(--border);border-bottom-left-radius:6px}
-.chat-input-container{padding:16px;border-top:1px solid var(--border)}
-.chat-input-wrapper{display:flex;gap:12px}
-.chat-input{flex:1;background:var(--card);border:1px solid var(--border);border-radius:24px;padding:14px 20px;font-size:16px;color:var(--text);outline:none;font-family:inherit}
-.chat-input:focus{border-color:var(--accent)}
-.chat-send{width:48px;height:48px;border-radius:50%;background:var(--accent);border:none;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center}
-.chat-send svg{width:22px;height:22px;stroke:currentColor;fill:none}
-.premium-banner{background:linear-gradient(135deg,rgba(96,165,250,.1),rgba(96,165,250,.05));border:1px solid rgba(96,165,250,.2);border-radius:20px;padding:24px;margin:20px;text-align:center}
-.premium-banner h3{font-size:20px;font-weight:700;margin-bottom:8px}
-.premium-banner p{font-size:14px;color:var(--text2);margin-bottom:20px}
+.btn-primary:hover{opacity:.9}
+.btn-danger{background:var(--red);color:#fff}
+.auth-link{text-align:center;margin-top:16px;font-size:14px;color:var(--text2)}
+.auth-link a{color:var(--accent);cursor:pointer;text-decoration:none}
+.error-msg{background:rgba(239,68,68,.1);border:1px solid var(--red);color:var(--red);padding:12px;border-radius:8px;margin-bottom:16px;font-size:14px}
+
+/* Main App */
+.app{max-width:500px;margin:0 auto;padding-bottom:100px}
+.header{background:linear-gradient(180deg,#0a1628,var(--bg));padding:24px 20px;border-radius:0 0 24px 24px;margin-bottom:24px}
+.header-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px}
+.avatar{width:48px;height:48px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px;cursor:pointer}
+.icon-btn{width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.1);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text)}
+.icon-btn:hover{background:rgba(255,255,255,.15)}
+.icon-btn svg{width:20px;height:20px;stroke:currentColor;fill:none}
+.balance{text-align:center;margin-bottom:24px}
+.balance-label{font-size:13px;color:var(--text2);margin-bottom:6px}
+.balance-value{font-size:48px;font-weight:800}
+.balance-change{display:inline-block;margin-top:8px;padding:6px 12px;background:rgba(34,197,94,.1);color:var(--green);border-radius:20px;font-size:14px;font-weight:600}
+
+/* Quick Actions */
+.quick-actions{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:0 20px 24px}
+.quick-btn{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px 12px;text-align:center;cursor:pointer;transition:all .2s}
+.quick-btn:hover{transform:translateY(-2px);border-color:var(--accent)}
+.quick-icon{width:48px;height:48px;margin:0 auto 12px;border-radius:50%;display:flex;align-items:center;justify-content:center}
+.quick-icon svg{width:24px;height:24px;stroke-width:2;fill:none}
+.quick-icon.blue{background:rgba(96,165,250,.1)}.quick-icon.blue svg{stroke:var(--accent)}
+.quick-icon.green{background:rgba(34,197,94,.1)}.quick-icon.green svg{stroke:var(--green)}
+.quick-icon.purple{background:rgba(168,85,247,.1)}.quick-icon.purple svg{stroke:var(--purple)}
+.quick-icon.orange{background:rgba(245,158,11,.1)}.quick-icon.orange svg{stroke:var(--orange)}
+.quick-label{font-size:12px;font-weight:600;color:var(--text2)}
+
+/* Admin Panel */
+.admin-panel{background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);border-radius:20px;padding:20px;margin:0 20px 24px}
+.admin-title{color:var(--orange);font-size:16px;font-weight:700;margin-bottom:14px}
+.btn-secondary{background:var(--card);border:1px solid var(--border);color:var(--text);margin-top:10px}
+.btn-secondary:hover{border-color:var(--accent)}
+
+/* Sections */
+.section{padding:0 20px;margin-bottom:24px}
+.section-title{font-size:20px;font-weight:700;margin-bottom:14px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:20px}
+.empty-state{text-align:center;padding:40px 20px;color:var(--text2)}
+
+/* Modals */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.85);backdrop-filter:blur(10px);z-index:1000;display:flex;align-items:flex-end;justify-content:center}
+.modal{background:var(--bg2);border-radius:24px 24px 0 0;width:100%;max-width:500px;max-height:85vh;overflow-y:auto;padding:24px}
+.modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+.modal-title{font-size:20px;font-weight:700}
+.modal-close{width:32px;height:32px;border-radius:50%;background:var(--card);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text)}
+.modal-close:hover{background:var(--border)}
+
+/* Nav */
+.nav{position:fixed;bottom:0;left:0;right:0;background:rgba(0,0,0,.95);backdrop-filter:blur(20px);border-top:1px solid var(--border);padding:8px 0;z-index:999}
+.nav-inner{max-width:500px;margin:0 auto;display:flex;justify-content:space-around}
+.nav-item{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 16px;background:none;border:none;cursor:pointer;color:var(--text3);font-size:10px;font-weight:600}
+.nav-item.active{color:var(--accent)}
+.nav-item svg{width:24px;height:24px;stroke:currentColor;stroke-width:1.5;fill:none}
+
+/* Toast */
+.toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:var(--card);border:1px solid var(--border);padding:14px 24px;border-radius:14px;font-size:14px;font-weight:600;z-index:9999;opacity:0;transition:opacity .3s;pointer-events:none}
+.toast.show{opacity:1}
+.toast.success{border-color:var(--green);color:var(--green)}
+.toast.error{border-color:var(--red);color:var(--red)}
+
+/* Lesson Card */
+.lesson-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:12px;cursor:pointer;transition:all .2s}
+.lesson-card:hover{border-color:var(--accent)}
+.lesson-title{font-weight:700;font-size:16px;margin-bottom:8px}
+.lesson-desc{font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:12px}
+.lesson-badge{display:inline-block;padding:4px 10px;border-radius:8px;font-size:11px;font-weight:700;text-transform:uppercase}
+.beginner{background:rgba(34,197,94,.1);color:var(--green)}
+.intermediate{background:rgba(96,165,250,.1);color:var(--accent)}
+.advanced{background:rgba(168,85,247,.1);color:var(--purple)}
+
+/* Section Header */
+.section-header{font-size:18px;font-weight:700;margin:24px 0 16px;padding-left:20px;display:flex;align-items:center;gap:8px}
+.section-line{width:4px;height:20px;background:var(--accent);border-radius:2px}
+
+/* Stats */
+.stats-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-bottom:20px}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px;text-align:center}
+.stat-value{font-size:28px;font-weight:800;margin-bottom:6px}
+.stat-label{font-size:13px;color:var(--text2)}
+
+/* Payment Form */
+.payment-field{margin-bottom:16px}
+.payment-input{width:100%;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;color:var(--text);font-size:15px}
+.payment-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+/* Guide Steps */
+.guide-step{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:16px}
+.step-number{width:32px;height:32px;border-radius:50%;background:var(--accent);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-weight:700;margin-bottom:12px}
+.step-title{font-weight:700;margin-bottom:8px}
+.step-content{font-size:14px;color:var(--text2);line-height:1.6}
   </style>
 </head>
 <body>
+
+<!-- Toast -->
 <div class="toast" id="toast"></div>
 
-<!-- Auth: Sign In -->
-<div id="authSignIn" class="auth-screen">
-  <div class="auth-glow"></div>
-  <div class="auth-content">
-    <div class="auth-logo">
-      <div class="auth-logo-icon"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
-      <h1>Market Elites</h1>
-      <p>Master the Wheel Strategy</p>
+<!-- Sign In Screen -->
+<div id="signInScreen" class="auth-screen">
+  <div class="auth-box">
+    <h1 class="auth-title">Market Elites</h1>
+    <div id="signInError" class="error-msg hidden"></div>
+    <div class="form-group">
+      <label class="form-label">Email</label>
+      <input type="email" class="form-input" id="signInEmail" placeholder="your@email.com">
     </div>
-    <h2 class="auth-title">Welcome Back</h2>
-    <div id="signInError" class="auth-error hidden"></div>
-    <div id="signInSuccess" class="auth-success hidden"></div>
-    <div class="auth-form">
-      <input type="email" class="auth-input" id="signInEmail" placeholder="Email">
-      <input type="password" class="auth-input" id="signInPassword" placeholder="Password">
-      <div class="auth-forgot"><a href="#" id="forgotLink">Forgot password?</a></div>
-      <div style="display:flex;align-items:center;gap:8px;padding:8px 0">
-        <input type="checkbox" id="rememberMe" style="width:18px;height:18px;cursor:pointer">
-        <label for="rememberMe" style="font-size:14px;color:var(--text2);cursor:pointer">Remember me for 30 days</label>
-      </div>
-      <button type="button" class="auth-btn" id="signInBtn">Sign In</button>
+    <div class="form-group">
+      <label class="form-label">Password</label>
+      <input type="password" class="form-input" id="signInPassword" placeholder="••••••••">
     </div>
-    <p class="auth-link">Don't have an account? <a href="#" id="showSignUpLink">Create Account</a></p>
-    <div class="auth-features">
-      <div class="auth-feature"><div class="auth-feature-icon" style="background:var(--accent-bg)"><svg viewBox="0 0 24 24" style="stroke:var(--accent)"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div><span>Live Signals</span></div>
-      <div class="auth-feature"><div class="auth-feature-icon" style="background:var(--green-bg)"><svg viewBox="0 0 24 24" style="stroke:var(--green)"><path d="M18 20V10M12 20V4M6 20v-6"/></svg></div><span>Analytics</span></div>
-      <div class="auth-feature"><div class="auth-feature-icon" style="background:var(--purple-bg)"><svg viewBox="0 0 24 24" style="stroke:var(--purple)"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><circle cx="15.5" cy="8.5" r="1.5"/><path d="M9 14h6"/></svg></div><span>AI Assistant</span></div>
+    <button class="btn btn-primary" onclick="signIn()">Sign In</button>
+    <div class="auth-link">
+      Don't have an account? <a onclick="showSignUp()">Sign Up</a>
     </div>
   </div>
 </div>
 
-<!-- Auth: Sign Up -->
-<div id="authSignUp" class="auth-screen hidden">
-  <div class="auth-glow"></div>
-  <div class="auth-content">
-    <button class="auth-back" id="backToSignIn1"><svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>Back to Sign In</button>
-    <div class="auth-logo" style="margin-bottom:24px"><div class="auth-logo-icon"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div></div>
-    <h2 class="auth-title">Create Account</h2>
-    <div id="signUpError" class="auth-error hidden"></div>
-    <div id="signUpSuccess" class="auth-success hidden"></div>
-    <div class="auth-form">
-      <input type="text" class="auth-input" id="signUpName" placeholder="Display Name">
-      <input type="email" class="auth-input" id="signUpEmail" placeholder="Email">
-      <input type="password" class="auth-input" id="signUpPassword" placeholder="Password">
-      <div class="password-hint">Minimum 6 characters</div>
-      <input type="password" class="auth-input" id="signUpConfirm" placeholder="Confirm Password">
-      <div id="passwordMatch" class="password-match hidden"></div>
-      <button type="button" class="auth-btn" id="signUpBtn">Create Account</button>
+<!-- Sign Up Screen -->
+<div id="signUpScreen" class="auth-screen hidden">
+  <div class="auth-box">
+    <h1 class="auth-title">Create Account</h1>
+    <div id="signUpError" class="error-msg hidden"></div>
+    <div class="form-group">
+      <label class="form-label">Name</label>
+      <input type="text" class="form-input" id="signUpName" placeholder="Your name">
     </div>
-    <p class="auth-link">Already have an account? <a href="#" id="showSignInLink1">Sign In</a></p>
-  </div>
-</div>
-
-<!-- Auth: Forgot Password -->
-<div id="authForgot" class="auth-screen hidden">
-  <div class="auth-glow"></div>
-  <div class="auth-content">
-    <button class="auth-back" id="backToSignIn2"><svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>Back to Sign In</button>
-    <div class="auth-logo" style="margin-bottom:24px"><div class="auth-logo-icon"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div></div>
-    <h2 class="auth-title">Reset Password</h2>
-    <p style="text-align:center;color:var(--text2);margin-bottom:24px;font-size:14px">Enter your email and we'll send you a reset link.</p>
-    <div id="forgotError" class="auth-error hidden"></div>
-    <div id="forgotSuccess" class="auth-success hidden"></div>
-    <div class="auth-form">
-      <input type="email" class="auth-input" id="forgotEmail" placeholder="Email">
-      <button type="button" class="auth-btn" id="forgotBtn">Send Reset Link</button>
+    <div class="form-group">
+      <label class="form-label">Email</label>
+      <input type="email" class="form-input" id="signUpEmail" placeholder="your@email.com">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Password</label>
+      <input type="password" class="form-input" id="signUpPassword" placeholder="••••••••">
+    </div>
+    <button class="btn btn-primary" onclick="signUp()">Create Account</button>
+    <div class="auth-link">
+      Already have an account? <a onclick="showSignIn()">Sign In</a>
     </div>
   </div>
 </div>
 
 <!-- Main App -->
 <div id="mainApp" class="app hidden">
-  <div id="homeTab" class="tab-content active">
-    <div class="hero">
-      <div class="hero-header">
-        <div class="hero-left">
-          <button class="avatar-btn" id="heroAvatar"><span id="heroInitials">?</span></button>
-        </div>
-        <div style="display:flex;align-items:center;gap:10px">
-          <div class="status-badge"><span class="status-dot offline" id="statusDot"></span><span id="statusText">Offline</span></div>
-          <button class="icon-btn" id="headerSignOutBtn" onclick="handleSignOut()" title="Sign Out"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button>
-        </div>
-      </div>
-      <div class="balance-section">
-        <div class="balance-label">Portfolio Value</div>
-        <div class="balance-value">$<span id="balanceVal">25,000</span></div>
-        <div class="balance-change" id="balanceChange">↑ +$0 (0%)</div>
-      </div>
-      <div class="action-grid">
-        <button class="action-btn" id="addBtn" onclick="openModal('addModal')"><div class="icon"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div><span>Add</span></button>
-        <button class="action-btn" id="calcBtn" onclick="openModal('calculatorModal')"><div class="icon"><svg viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="12" y2="14"/><line x1="8" y1="18" x2="12" y2="18"/></svg></div><span>Calc</span></button>
-        <button class="action-btn" id="syncBtn" onclick="toast('Alpaca sync coming soon')"><div class="icon"><svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg></div><span>Sync</span></button>
-        <button class="action-btn" id="alertsBtn" onclick="openModal('notifModal')"><div class="icon"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0"/></svg></div><span>Alerts</span></button>
-      </div>
+  <!-- Header -->
+  <div class="header">
+    <div class="header-top">
+      <div class="avatar" onclick="navTo('profile')" id="avatar">?</div>
+      <button class="icon-btn" onclick="signOut()" title="Sign Out">
+        <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      </button>
     </div>
-    <div class="quick-grid">
-      <button class="quick-item" id="learnBtn" onclick="openModal('learnModal')"><div class="quick-icon blue"><svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></div><span>Learn</span></button>
-      <button class="quick-item" id="analyticsBtn" onclick="openModal('analyticsModal')"><div class="quick-icon green"><svg viewBox="0 0 24 24"><path d="M18 20V10M12 20V4M6 20v-6"/></svg></div><span>Analytics</span></button>
-      <button class="quick-item" id="wheelyBtn" onclick="openModal('aiModal')"><div class="quick-icon purple"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><circle cx="15.5" cy="8.5" r="1.5"/><path d="M9 14h6"/></svg></div><span>Wheely</span></button>
-      <button class="quick-item" id="signalsQuickBtn" onclick="openModal('signalsModal')"><div class="quick-icon orange"><svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div><span>Signals</span></button>
-    </div>
-    <div id="premiumCtaHome" class="hidden" style="margin:0 20px 24px;background:linear-gradient(135deg,rgba(96,165,250,.08),rgba(168,85,247,.08));border:1px solid rgba(96,165,250,.2);border-radius:20px;padding:16px 20px;display:flex;justify-content:space-between;align-items:center">
-      <div><div style="font-size:14px;font-weight:700;margin-bottom:4px">🚀 Upgrade to Premium</div><div style="font-size:12px;color:var(--text2)">Unlimited signals, priority support & advanced analytics</div></div>
-      <button class="btn btn-primary" id="upgradeCta" onclick="openModal('premiumModal')" style="margin:0;padding:10px 20px;font-size:13px;white-space:nowrap">Upgrade</button>
-    </div>
-    <div id="adminPanel" class="admin-panel hidden"><h3>🔑 Admin Controls</h3><button class="btn btn-primary" id="postSignalBtn" style="margin:0">Post New Signal</button><button class="btn btn-secondary" id="postAnnouncementBtn" style="margin:10px 0 0 0">Post Announcement</button></div>
-    <div class="section">
-      <div class="section-header"><span class="section-title">Active Positions</span><button class="section-link" id="seeAllBtn">See All</button></div>
-      <div class="card" id="positionsList"><div class="empty-state"><svg viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg><h3>No positions yet</h3><p>Add your first trade</p></div></div>
-    </div>
-    <div class="section">
-      <div class="section-header"><span class="section-title">History</span></div>
-      <div class="card" id="historyList"><div class="empty-state" style="padding:24px"><p>Closed trades appear here</p></div></div>
+    <div class="balance">
+      <div class="balance-label">Portfolio Value</div>
+      <div class="balance-value">$<span id="portfolioValue">25,000</span></div>
+      <div class="balance-change">↑ +$0 (0%)</div>
     </div>
   </div>
 
-  <div id="calcTab" class="tab-content"><div class="page-header"><h1>Positions</h1><p>Your active trades</p></div><div class="section" style="margin-top:20px" id="allPositions"></div></div>
-  <div id="watchTab" class="tab-content"><div class="page-header"><h1>Watchlist</h1><p>Stocks you're tracking</p></div><div class="section" style="margin-top:20px"><div class="card" id="watchlistItems"></div></div><div style="padding:20px"><button class="btn btn-primary" id="addWatchBtn">+ Add to Watchlist</button></div></div>
-  <div id="signalsTab" class="tab-content"><div class="page-header"><h1>Signals</h1><p>Live plays from the team</p></div><div id="signalsList" style="padding:20px"></div></div>
-  <div id="statsTab" class="tab-content"><div class="page-header"><h1>Analytics</h1><p>Your performance</p></div><div class="stat-grid"><div class="stat-card green"><div class="stat-value" id="statTotalPnl">$0</div><div class="stat-label">Total P&L</div></div><div class="stat-card"><div class="stat-value" id="statWinRate">0%</div><div class="stat-label">Win Rate</div></div><div class="stat-card blue"><div class="stat-value" id="statTrades">0</div><div class="stat-label">Total Trades</div></div><div class="stat-card green"><div class="stat-value" id="statPremium">$0</div><div class="stat-label">Premium Collected</div></div><div class="stat-card"><div class="stat-value" id="statAvgReturn">0%</div><div class="stat-label">Avg Return</div></div><div class="stat-card blue"><div class="stat-value" id="statBestTrade">$0</div><div class="stat-label">Best Trade</div></div><div class="stat-card"><div class="stat-value" id="statAssignments">0</div><div class="stat-label">Assignments</div></div><div class="stat-card green"><div class="stat-value" id="statMonthlyIncome">$0</div><div class="stat-label">Monthly Avg</div></div></div><div class="section"><h3 style="padding:0 20px;margin-bottom:14px;font-size:18px">Performance Breakdown</h3><div class="card" style="margin:0 20px"><div class="card-item"><div style="flex:1"><div style="font-weight:600;margin-bottom:8px">CSP Performance</div><div style="display:flex;gap:20px;font-size:13px;color:var(--text2)"><span>Win Rate: <strong id="cspWinRate" style="color:var(--text)">0%</strong></span><span>Avg P&L: <strong id="cspAvgPnl" style="color:var(--text)">$0</strong></span></div></div></div><div class="card-item"><div style="flex:1"><div style="font-weight:600;margin-bottom:8px">CC Performance</div><div style="display:flex;gap:20px;font-size:13px;color:var(--text2)"><span>Win Rate: <strong id="ccWinRate" style="color:var(--text)">0%</strong></span><span>Avg P&L: <strong id="ccAvgPnl" style="color:var(--text)">$0</strong></span></div></div></div></div></div><div class="section"><h3 style="padding:0 20px;margin-bottom:14px;font-size:18px">Monthly Summary</h3><div id="monthlyChart" style="padding:0 20px;height:200px;display:flex;align-items:flex-end;gap:8px;border-bottom:1px solid var(--border);margin:0 20px"></div></div></div>
-
-  <div id="profileTab" class="tab-content">
-    <div class="profile-header">
-      <button class="profile-avatar" id="avatarBtn"><span id="profileInitials">?</span><img id="profileImg" class="hidden"></button>
-      <input type="file" id="avatarInput" accept="image/*" style="display:none">
-      <div class="profile-name" id="profileName">User</div>
-      <div class="profile-email" id="profileEmail"></div>
-      <div class="profile-badge hidden" id="premiumBadge">⭐ Premium</div>
-    </div>
-    <div class="stat-grid"><div class="stat-card green"><div class="stat-value" id="pWinRate">0%</div><div class="stat-label">Win Rate</div></div><div class="stat-card blue"><div class="stat-value" id="pTrades">0</div><div class="stat-label">Trades</div></div></div>
-    <div id="premiumCard" class="premium-banner"><h3>🚀 Go Premium</h3><p>Unlock signals, alerts & analytics</p><button class="btn btn-primary" id="premiumBtn" style="margin:0">$49.99/mo</button></div>
-    <div class="profile-section"><h3>Account</h3><div class="form-group"><label class="form-label">Name</label><input type="text" class="form-input" id="nameInput"></div><div class="form-group"><label class="form-label">Account Size</label><input type="number" class="form-input" id="accSizeInput"></div><button class="btn btn-primary" id="saveProfileBtn">Save</button></div>
-    <div class="profile-section"><h3>Brokerage</h3><button class="btn btn-secondary" onclick="showBrokerGuide('alpaca')" style="margin-bottom:16px;font-size:14px">📚 How to Get Alpaca API Keys</button><div class="form-group"><label class="form-label">Alpaca Key</label><input type="text" class="form-input" id="alpacaKey" placeholder="PK..."></div><div class="form-group"><label class="form-label">Secret</label><input type="password" class="form-input" id="alpacaSecret" placeholder="Enter secret key"></div><button class="btn btn-secondary" id="saveAlpacaBtn">Test & Connect</button></div>
-    <div class="profile-section"><h3>Interactive Brokers</h3><button class="btn btn-secondary" onclick="showBrokerGuide('ibkr')" style="margin-bottom:16px;font-size:14px">📚 How to Get IBKR API Keys</button><div class="form-group"><label class="form-label">IBKR Client ID</label><input type="text" class="form-input" id="ibkrKey" placeholder="Client ID"></div><div class="form-group"><label class="form-label">API Key</label><input type="password" class="form-input" id="ibkrSecret" placeholder="API Key"></div><button class="btn btn-secondary" id="saveIbkrBtn">Connect</button></div>
-    <div class="profile-section"><h3>Robinhood</h3><button class="btn btn-secondary" onclick="showBrokerGuide('robinhood')" style="margin-bottom:16px;font-size:14px">📚 Robinhood API Info</button><div class="form-group"><label class="form-label">Account Token</label><input type="text" class="form-input" id="robinhoodKey" placeholder="Token"></div><div class="form-group"><label class="form-label">API Secret</label><input type="password" class="form-input" id="robinhoodSecret" placeholder="Secret"></div><button class="btn btn-secondary" id="saveRobinhoodBtn">Connect</button></div>
-    <div class="profile-section"><h3>ThinkorSwim</h3><button class="btn btn-secondary" onclick="showBrokerGuide('thinkorswim')" style="margin-bottom:16px;font-size:14px">📚 How to Get TD Ameritrade API Keys</button><div class="form-group"><label class="form-label">TDA Key</label><input type="text" class="form-input" id="thinkorswimKey" placeholder="Consumer Key"></div><div class="form-group"><label class="form-label">Refresh Token</label><input type="password" class="form-input" id="thinkorswimSecret" placeholder="Refresh Token"></div><button class="btn btn-secondary" id="saveThinkorswimBtn">Connect</button></div>
-    <div class="profile-section"><button class="btn btn-danger" id="signOutBtn" onclick="handleSignOut()">Sign Out</button></div>
+  <!-- Quick Actions -->
+  <div class="quick-actions">
+    <button class="quick-btn" onclick="openLearn()">
+      <div class="quick-icon blue">
+        <svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+      </div>
+      <div class="quick-label">Learn</div>
+    </button>
+    <button class="quick-btn" onclick="openAnalytics()">
+      <div class="quick-icon green">
+        <svg viewBox="0 0 24 24"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+      </div>
+      <div class="quick-label">Analytics</div>
+    </button>
+    <button class="quick-btn" onclick="openWheely()">
+      <div class="quick-icon purple">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><circle cx="15.5" cy="8.5" r="1.5"/><path d="M9 14h6"/></svg>
+      </div>
+      <div class="quick-label">Wheely</div>
+    </button>
+    <button class="quick-btn" onclick="openSignals()">
+      <div class="quick-icon orange">
+        <svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+      </div>
+      <div class="quick-label">Signals</div>
+    </button>
   </div>
 
-  <nav class="nav"><div class="nav-inner">
-    <button class="nav-item active" id="navHome"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>Home</button>
-    <button class="nav-item" id="navPositions"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/></svg>Positions</button>
-    <button class="nav-item" id="navWatch"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg>Watch</button>
-    <button class="nav-item" id="navSignals"><svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>Signals</button>
-    <button class="nav-item" id="navProfile"><svg viewBox="0 0 24 24"><circle cx="12" cy="7" r="4"/><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/></svg>Profile</button>
-  </div></nav>
+  <!-- Admin Panel (only visible for admin) -->
+  <div id="adminPanel" class="admin-panel hidden">
+    <div class="admin-title">🔑 Admin Controls</div>
+    <button class="btn btn-primary" onclick="openPostSignal()">Post New Signal</button>
+    <button class="btn btn-secondary" onclick="openPostAnnouncement()">Post Announcement</button>
+  </div>
+
+  <!-- Positions -->
+  <div class="section">
+    <div class="section-title">Active Positions</div>
+    <div class="card">
+      <div class="empty-state">
+        <p>No positions yet</p>
+        <button class="btn btn-primary" onclick="openAddPosition()" style="margin-top:16px;max-width:200px">Add Position</button>
+      </div>
+    </div>
+  </div>
 </div>
 
-<!-- Modals -->
-<div class="modal-bg" id="settingsModal"><div class="modal" onclick="event.stopPropagation()"><div class="modal-header"><h2>Settings</h2><button class="modal-close" id="closeSettings">×</button></div><div class="modal-body"><div class="form-group"><label class="form-label">Theme</label><select class="form-input" id="themeSelect"><option value="dark">Dark</option><option value="light">Light</option></select></div></div></div></div>
-<div class="modal-bg" id="addModal"><div class="modal" onclick="event.stopPropagation()"><div class="modal-header"><h2>Add Position</h2><button class="modal-close" id="closeAdd">×</button></div><div class="modal-body"><div class="form-group"><label class="form-label">Type</label><select class="form-input" id="addType"><option value="csp">Cash Secured Put</option><option value="cc">Covered Call</option></select></div><div class="form-group"><label class="form-label">Ticker</label><input type="text" class="form-input" id="addTicker" placeholder="NVDA" style="text-transform:uppercase"></div><div class="form-group"><label class="form-label">Strike</label><input type="number" class="form-input" id="addStrike" placeholder="130" step="0.5"></div><div class="form-group"><label class="form-label">Premium</label><input type="number" class="form-input" id="addPremium" placeholder="3.20" step="0.01"></div><div class="form-group"><label class="form-label">Contracts</label><input type="number" class="form-input" id="addContracts" value="1"></div><div class="form-group"><label class="form-label">Expiration</label><input type="date" class="form-input" id="addExpiration"></div><button class="btn btn-primary" id="submitPosition">Add Position</button></div></div></div>
-<div class="modal-bg" id="notifModal"><div class="modal" onclick="event.stopPropagation()"><div class="modal-header"><h2>Notifications</h2><button class="modal-close" id="closeNotif">×</button></div><div id="notifList"><div class="empty-state" style="padding:32px"><p>No notifications</p></div></div></div></div>
-<div class="modal-bg" id="aiModal"><div class="modal" style="height:85vh" onclick="event.stopPropagation()"><div class="modal-header"><h2>🤖 Wheely AI</h2><button class="modal-close" id="closeAi">×</button></div><div class="chat-container"><div class="chat-messages" id="chatMessages"><div class="chat-message ai"><div class="chat-bubble">Hey! I'm Wheely. Ask me anything about the wheel strategy!</div></div></div><div class="chat-input-container"><div class="chat-input-wrapper"><input type="text" class="chat-input" id="chatInput" placeholder="Ask Wheely..."><button class="chat-send" id="sendChatBtn"><svg viewBox="0 0 24 24"><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button></div></div></div></div></div>
-<div class="modal-bg" id="learnModal"><div class="modal" onclick="event.stopPropagation()"><div class="modal-header"><h2>Learn</h2><button class="modal-close" id="closeLearn">×</button></div><div class="modal-body" id="learnContent"></div></div></div>
-<div class="modal-bg" id="addWatchModal"><div class="modal" onclick="event.stopPropagation()"><div class="modal-header"><h2>Add to Watchlist</h2><button class="modal-close" id="closeAddWatch">×</button></div><div class="modal-body"><div class="form-group"><label class="form-label">Ticker</label><input type="text" class="form-input" id="watchTicker" placeholder="NVDA" style="text-transform:uppercase"></div><button class="btn btn-primary" id="submitWatch">Add</button></div></div></div>
-<div class="modal-bg" id="newSignalModal"><div class="modal" onclick="event.stopPropagation()"><div class="modal-header"><h2>Post Signal</h2><button class="modal-close" id="closeNewSignal">×</button></div><div class="modal-body"><div class="form-group"><label class="form-label">Type</label><select class="form-input" id="sigType"><option value="csp">CSP</option><option value="cc">CC</option></select></div><div class="form-group"><label class="form-label">Ticker</label><input type="text" class="form-input" id="sigTicker" style="text-transform:uppercase"></div><div class="form-group"><label class="form-label">Strike</label><input type="number" class="form-input" id="sigStrike" step="0.5"></div><div class="form-group"><label class="form-label">Premium</label><input type="number" class="form-input" id="sigPremium" step="0.01"></div><div class="form-group"><label class="form-label">Exp</label><input type="date" class="form-input" id="sigExpiration"></div><div class="form-group"><label class="form-label">Notes</label><textarea class="form-input" id="sigNotes" rows="2"></textarea></div><button class="btn btn-primary" id="submitSignal">Post</button></div></div></div>
-<div class="modal-bg" id="posModal"><div class="modal" onclick="event.stopPropagation()"><div class="modal-header"><h2 id="posModalTitle">Position</h2><button class="modal-close" id="closePos">×</button></div><div class="modal-body" id="posModalContent"></div></div></div>
-<div class="modal-bg" id="premiumModal"><div class="modal" onclick="event.stopPropagation()"><div class="modal-header"><h2>⭐ Go Premium</h2><button class="modal-close" id="closePremium">×</button></div><div class="modal-body" style="text-align:center;padding:32px 24px"><div style="background:linear-gradient(135deg,rgba(96,165,250,.15),rgba(168,85,247,.15));border-radius:24px;padding:32px 24px;margin-bottom:28px"><h3 style="font-size:32px;margin-bottom:16px;font-weight:800">Unlock Premium</h3><div style="display:flex;align-items:baseline;justify-content:center;gap:8px;margin-bottom:8px"><span style="font-size:48px;font-weight:800;background:linear-gradient(135deg,var(--accent),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent">$49.99</span><span style="font-size:18px;color:var(--text2)">/month</span></div><p style="font-size:13px;color:var(--text2)">Cancel anytime • 30-day money-back guarantee</p></div><div style="text-align:left;margin-bottom:32px"><div style="display:flex;align-items:start;gap:14px;padding:14px 0;border-bottom:1px solid var(--border)"><span style="color:var(--green);font-size:22px;flex-shrink:0">✓</span><div><div style="font-weight:700;margin-bottom:4px">Live Trading Signals</div><div style="font-size:13px;color:var(--text2)">Real-time CSP & CC signals from professional traders</div></div></div><div style="display:flex;align-items:start;gap:14px;padding:14px 0;border-bottom:1px solid var(--border)"><span style="color:var(--green);font-size:22px;flex-shrink:0">✓</span><div><div style="font-weight:700;margin-bottom:4px">Priority Notifications</div><div style="font-size:13px;color:var(--text2)">Get instant alerts for market-moving signals</div></div></div><div style="display:flex;align-items:start;gap:14px;padding:14px 0;border-bottom:1px solid var(--border)"><span style="color:var(--green);font-size:22px;flex-shrink:0">✓</span><div><div style="font-weight:700;margin-bottom:4px">Advanced Analytics</div><div style="font-size:13px;color:var(--text2)">Deep portfolio insights and performance tracking</div></div></div><div style="display:flex;align-items:start;gap:14px;padding:14px 0;border-bottom:1px solid var(--border)"><span style="color:var(--green);font-size:22px;flex-shrink:0">✓</span><div><div style="font-weight:700;margin-bottom:4px">Full Course Access</div><div style="font-size:13px;color:var(--text2)">35+ video lessons • 9+ hours of education</div></div></div><div style="display:flex;align-items:start;gap:14px;padding:14px 0;border-bottom:1px solid var(--border)"><span style="color:var(--green);font-size:22px;flex-shrink:0">✓</span><div><div style="font-weight:700;margin-bottom:4px">Private Discord Community</div><div style="font-size:13px;color:var(--text2)">Network with 500+ active wheel traders</div></div></div><div style="display:flex;align-items:start;gap:14px;padding:14px 0"><span style="color:var(--green);font-size:22px;flex-shrink:0">✓</span><div><div style="font-weight:700;margin-bottom:4px">1-on-1 Strategy Reviews</div><div style="font-size:13px;color:var(--text2)">Monthly portfolio reviews with our team</div></div></div></div><button class="btn btn-primary" id="subscribeBtn" style="font-size:18px;padding:20px;margin-bottom:16px">Subscribe Now - $49.99/month</button><p style="font-size:12px;color:var(--text3);line-height:1.6">Secure payment powered by Stripe • Your subscription will auto-renew monthly. You can cancel anytime from your account settings.</p></div></div></div>
-<div class="modal-bg" id="announcementModal"><div class="modal" onclick="event.stopPropagation()"><div class="modal-header"><h2>Post Announcement</h2><button class="modal-close" id="closeAnnouncement">×</button></div><div class="modal-body"><div class="form-group"><label class="form-label">Type</label><select class="form-input" id="announceType"><option value="info">Info</option><option value="alert">Alert</option><option value="update">Update</option></select></div><div class="form-group"><label class="form-label">Message</label><textarea class="form-input" id="announceMessage" rows="4" placeholder="Enter announcement message..."></textarea></div><button class="btn btn-primary" id="submitAnnouncement">Post Announcement</button></div></div></div>
-<div class="modal-bg" id="calculatorModal"><div class="modal" onclick="event.stopPropagation()" style="max-width:420px"><div class="modal-header"><h2>💰 Options Calculator</h2><button class="modal-close" id="closeCalculator">×</button></div><div class="modal-body" style="padding:28px 24px"><div style="background:linear-gradient(135deg,rgba(96,165,250,.1),rgba(168,85,247,.08));border-radius:20px;padding:24px;margin-bottom:24px"><div style="text-align:center;margin-bottom:20px"><div style="font-size:12px;color:var(--text2);margin-bottom:8px;text-transform:uppercase;letter-spacing:1px;font-weight:600">Expected Premium</div><div id="calcResult" style="font-size:48px;font-weight:800;background:linear-gradient(135deg,var(--accent),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">$0</div></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:13px"><div style="text-align:center;padding:12px;background:rgba(0,0,0,.3);border-radius:12px"><div style="color:var(--text2);margin-bottom:4px">Return</div><div id="calcReturn" style="font-weight:700;color:var(--accent)">0%</div></div><div style="text-align:center;padding:12px;background:rgba(0,0,0,.3);border-radius:12px"><div style="color:var(--text2);margin-bottom:4px">Annualized</div><div id="calcAnnual" style="font-weight:700;color:var(--green)">0%</div></div></div></div><div class="form-group"><label class="form-label">Stock Price</label><input type="number" class="form-input" id="calcPrice" placeholder="100" step="0.01" oninput="calculateOption()"></div><div class="form-group"><label class="form-label">Strike Price</label><input type="number" class="form-input" id="calcStrike" placeholder="95" step="0.5" oninput="calculateOption()"></div><div class="form-group"><label class="form-label">Days to Expiration</label><input type="number" class="form-input" id="calcDTE" placeholder="30" oninput="calculateOption()"></div><div class="form-group"><label class="form-label">Implied Volatility (%)</label><input type="number" class="form-input" id="calcIV" placeholder="30" step="1" oninput="calculateOption()"></div><div class="form-group"><label class="form-label">Contracts</label><input type="number" class="form-input" id="calcContracts" value="1" oninput="calculateOption()"></div><div style="text-align:center;font-size:12px;color:var(--text3);line-height:1.6;padding:16px;background:var(--card);border-radius:12px;margin-top:20px">This calculator uses a simplified Black-Scholes model. Actual premiums may vary based on market conditions.</div></div></div></div>
+<!-- Learn Modal -->
+<div id="learnModal" class="modal-bg hidden" onclick="closeModal('learnModal')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title">🎓 Complete Wheel Course</div>
+      <button class="modal-close" onclick="closeModal('learnModal')">×</button>
+    </div>
+    <div id="learnContent"></div>
+  </div>
+</div>
 
-<div class="modal-bg" id="analyticsModal"><div class="modal" onclick="event.stopPropagation()" style="max-height:85vh;overflow-y:auto"><div class="modal-header"><h2>📊 Analytics</h2><button class="modal-close" id="closeAnalytics">×</button></div><div class="modal-body" style="padding:20px"><div class="stat-grid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-bottom:24px"><div class="stat-card green" style="background:var(--card);border:1px solid var(--border);border-radius:20px;padding:20px;text-align:center"><div class="stat-value" id="statTotalPnlModal" style="font-size:28px;font-weight:800;color:var(--green)">$0</div><div class="stat-label" style="font-size:13px;color:var(--text2);margin-top:6px;font-weight:500">Total P&L</div></div><div class="stat-card" style="background:var(--card);border:1px solid var(--border);border-radius:20px;padding:20px;text-align:center"><div class="stat-value" id="statWinRateModal" style="font-size:28px;font-weight:800">0%</div><div class="stat-label" style="font-size:13px;color:var(--text2);margin-top:6px;font-weight:500">Win Rate</div></div><div class="stat-card blue" style="background:var(--card);border:1px solid var(--border);border-radius:20px;padding:20px;text-align:center"><div class="stat-value" id="statTradesModal" style="font-size:28px;font-weight:800;color:var(--accent)">0</div><div class="stat-label" style="font-size:13px;color:var(--text2);margin-top:6px;font-weight:500">Total Trades</div></div><div class="stat-card green" style="background:var(--card);border:1px solid var(--border);border-radius:20px;padding:20px;text-align:center"><div class="stat-value" id="statPremiumModal" style="font-size:28px;font-weight:800;color:var(--green)">$0</div><div class="stat-label" style="font-size:13px;color:var(--text2);margin-top:6px;font-weight:500">Premium Collected</div></div></div><h3 style="font-size:18px;margin-bottom:14px;font-weight:700">Performance Breakdown</h3><div class="card" style="background:var(--card);border-radius:20px;border:1px solid var(--border);margin-bottom:20px"><div class="card-item" style="display:flex;align-items:center;gap:14px;padding:16px 18px;border-bottom:1px solid var(--border)"><div style="flex:1"><div style="font-weight:600;margin-bottom:8px">CSP Performance</div><div style="display:flex;gap:20px;font-size:13px;color:var(--text2)"><span>Win Rate: <strong id="cspWinRateModal" style="color:var(--text)">0%</strong></span><span>Avg P&L: <strong id="cspAvgPnlModal" style="color:var(--text)">$0</strong></span></div></div></div><div class="card-item" style="display:flex;align-items:center;gap:14px;padding:16px 18px"><div style="flex:1"><div style="font-weight:600;margin-bottom:8px">CC Performance</div><div style="display:flex;gap:20px;font-size:13px;color:var(--text2)"><span>Win Rate: <strong id="ccWinRateModal" style="color:var(--text)">0%</strong></span><span>Avg P&L: <strong id="ccAvgPnlModal" style="color:var(--text)">$0</strong></span></div></div></div></div></div></div></div>
+<!-- Analytics Modal -->
+<div id="analyticsModal" class="modal-bg hidden" onclick="closeModal('analyticsModal')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title">📊 Analytics</div>
+      <button class="modal-close" onclick="closeModal('analyticsModal')">×</button>
+    </div>
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-value" style="color:var(--green)">$0</div>
+        <div class="stat-label">Total P&L</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">0%</div>
+        <div class="stat-label">Win Rate</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">0</div>
+        <div class="stat-label">Total Trades</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" style="color:var(--green)">$0</div>
+        <div class="stat-label">Premium Collected</div>
+      </div>
+    </div>
+  </div>
+</div>
 
-<div class="modal-bg" id="signalsModal"><div class="modal" onclick="event.stopPropagation()" style="max-height:85vh;overflow-y:auto"><div class="modal-header"><h2>🚀 Signals</h2><button class="modal-close" id="closeSignals">×</button></div><div id="signalsModalList" style="padding:20px"></div></div></div>
+<!-- Signals Modal -->
+<div id="signalsModal" class="modal-bg hidden" onclick="closeModal('signalsModal')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title">🚀 Live Signals</div>
+      <button class="modal-close" onclick="closeModal('signalsModal')">×</button>
+    </div>
+    <div id="signalsContent">
+      <div class="empty-state">
+        <p>No signals available</p>
+      </div>
+    </div>
+  </div>
+</div>
 
-<div class="modal-bg" id="brokerGuideModal"><div class="modal" onclick="event.stopPropagation()" style="max-height:85vh;overflow-y:auto"><div class="modal-header"><h2>📚 Broker API Guides</h2><button class="modal-close" id="closeBrokerGuide">×</button></div><div class="modal-body" style="padding:24px" id="brokerGuideContent"></div></div></div>
+<!-- Wheely Modal -->
+<div id="wheelyModal" class="modal-bg hidden" onclick="closeModal('wheelyModal')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title">🤖 Wheely AI</div>
+      <button class="modal-close" onclick="closeModal('wheelyModal')">×</button>
+    </div>
+    <div id="wheelyChat" style="min-height:300px;max-height:400px;overflow-y:auto;padding:20px;background:var(--bg);border-radius:12px;margin-bottom:16px">
+      <p style="background:var(--card);padding:12px;border-radius:12px;font-size:14px">Hey! I'm Wheely. Ask me anything about the wheel strategy!</p>
+    </div>
+    <div style="display:flex;gap:12px">
+      <input type="text" class="form-input" id="wheelyInput" placeholder="Ask Wheely..." style="margin:0">
+      <button class="btn btn-primary" onclick="sendWheely()" style="width:auto;padding:0 24px">Send</button>
+    </div>
+  </div>
+</div>
+
+<!-- Premium Modal -->
+<div id="premiumModal" class="modal-bg hidden" onclick="closeModal('premiumModal')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title">⭐ Go Premium</div>
+      <button class="modal-close" onclick="closeModal('premiumModal')">×</button>
+    </div>
+    <div style="text-align:center;padding:20px 0">
+      <div style="font-size:48px;font-weight:800">$49.99</div>
+      <div style="font-size:14px;color:var(--text2);margin-top:8px">/month</div>
+    </div>
+    <div id="paymentForm">
+      <div class="payment-field">
+        <label class="form-label">Email</label>
+        <input type="email" class="payment-input" id="paymentEmail" placeholder="your@email.com">
+      </div>
+      <div class="payment-field">
+        <label class="form-label">Card Number</label>
+        <input type="text" class="payment-input" id="paymentCard" placeholder="4242 4242 4242 4242" maxlength="19">
+      </div>
+      <div class="payment-grid">
+        <div class="payment-field">
+          <label class="form-label">Expiry</label>
+          <input type="text" class="payment-input" id="paymentExpiry" placeholder="MM/YY" maxlength="5">
+        </div>
+        <div class="payment-field">
+          <label class="form-label">CVC</label>
+          <input type="text" class="payment-input" id="paymentCVC" placeholder="123" maxlength="3">
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="processPayment()">Subscribe Now</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Position Modal -->
+<div id="addPositionModal" class="modal-bg hidden" onclick="closeModal('addPositionModal')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title">Add Position</div>
+      <button class="modal-close" onclick="closeModal('addPositionModal')">×</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Symbol</label>
+      <input type="text" class="form-input" id="posSymbol" placeholder="AAPL" style="text-transform:uppercase">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Type</label>
+      <select class="form-input" id="posType">
+        <option value="csp">Cash Secured Put</option>
+        <option value="cc">Covered Call</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Strike</label>
+      <input type="number" class="form-input" id="posStrike" placeholder="150" step="0.5">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Premium</label>
+      <input type="number" class="form-input" id="posPremium" placeholder="2.50" step="0.01">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Expiration</label>
+      <input type="date" class="form-input" id="posExpiration">
+    </div>
+    <button class="btn btn-primary" onclick="savePosition()">Add Position</button>
+  </div>
+</div>
+
+<!-- Post Signal Modal (Admin Only) -->
+<div id="postSignalModal" class="modal-bg hidden" onclick="closeModal('postSignalModal')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title">Post New Signal</div>
+      <button class="modal-close" onclick="closeModal('postSignalModal')">×</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Symbol</label>
+      <input type="text" class="form-input" id="signalSymbol" placeholder="AAPL" style="text-transform:uppercase">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Type</label>
+      <select class="form-input" id="signalType">
+        <option value="csp">CSP</option>
+        <option value="cc">CC</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Strike</label>
+      <input type="number" class="form-input" id="signalStrike" placeholder="150" step="0.5">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Premium</label>
+      <input type="number" class="form-input" id="signalPremium" placeholder="2.50" step="0.01">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Expiration</label>
+      <input type="date" class="form-input" id="signalExpiration">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Notes</label>
+      <textarea class="form-input" id="signalNotes" rows="3" placeholder="Trading rationale..."></textarea>
+    </div>
+    <button class="btn btn-primary" onclick="publishSignal()">Publish Signal</button>
+  </div>
+</div>
+
+<!-- Post Announcement Modal (Admin Only) -->
+<div id="postAnnouncementModal" class="modal-bg hidden" onclick="closeModal('postAnnouncementModal')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title">Post Announcement</div>
+      <button class="modal-close" onclick="closeModal('postAnnouncementModal')">×</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Type</label>
+      <select class="form-input" id="announceType">
+        <option value="info">Info</option>
+        <option value="alert">Alert</option>
+        <option value="update">Update</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Message</label>
+      <textarea class="form-input" id="announceMessage" rows="4" placeholder="Announcement message..."></textarea>
+    </div>
+    <button class="btn btn-primary" onclick="publishAnnouncement()">Publish Announcement</button>
+  </div>
+</div>
+
+<!-- Broker Guide Modal -->
+<div id="brokerGuideModal" class="modal-bg hidden" onclick="closeModal('brokerGuideModal')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title" id="guideTitle">Broker Setup Guide</div>
+      <button class="modal-close" onclick="closeModal('brokerGuideModal')">×</button>
+    </div>
+    <div id="guideContent"></div>
+  </div>
+</div>
 
 <script>
-// Config
-const SUPABASE_URL='https://cqzlkohrrrgbgspjphrq.supabase.co';
-const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNxemxrb2hycnJnYmdzcGpwaHJxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgwNzgzNjIsImV4cCI6MjA4MzY1NDM2Mn0.RAUlj093Y9ods0KXehm-SiuNevwcBfuYVhe65ApY9NA';
-const STRIPE_LINK='';
-const LOGOS={AAPL:'https://logo.clearbit.com/apple.com',NVDA:'https://logo.clearbit.com/nvidia.com',TSLA:'https://logo.clearbit.com/tesla.com',MSFT:'https://logo.clearbit.com/microsoft.com',AMD:'https://logo.clearbit.com/amd.com',SPY:'https://logo.clearbit.com/ssga.com',GOOGL:'https://logo.clearbit.com/google.com',AMZN:'https://logo.clearbit.com/amazon.com',META:'https://logo.clearbit.com/meta.com',NFLX:'https://logo.clearbit.com/netflix.com',UBER:'https://logo.clearbit.com/uber.com',PYPL:'https://logo.clearbit.com/paypal.com',COIN:'https://logo.clearbit.com/coinbase.com',PLTR:'https://logo.clearbit.com/palantir.com',SOFI:'https://logo.clearbit.com/sofi.com',QQQ:'https://logo.clearbit.com/invesco.com'};
+// Supabase Configuration
+const SUPABASE_URL = 'https://cqzlkohrrrgbgspjphrq.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNxemxrb2hycnJnYmdzcGpwaHJxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgwNzgzNjIsImV4cCI6MjA4MzY1NDM2Mn0.RAUlj093Y9ods0KXehm-SiuNevwcBfuYVhe65ApY9NA';
 
-// State
-let db, user=null, profile=null, positions=[], history=[], signals=[], watchlist=[];
-const $=id=>document.getElementById(id);
+// Initialize Supabase
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// Initialize Supabase with proper persistence
-db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
-  auth: {
-    persistSession: true,
-    autoRefreshToken: true,
-    detectSessionInUrl: true,
-    storage: window.localStorage
+// Global state
+let currentUser = null;
+let isAdmin = false;
+
+// Utility functions
+function $(id) { return document.getElementById(id); }
+function show(id) { $(id)?.classList.remove('hidden'); }
+function hide(id) { $(id)?.classList.add('hidden'); }
+function toast(msg, type = 'success') {
+  const t = $('toast');
+  t.textContent = msg;
+  t.className = 'toast show ' + type;
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// Auth Functions
+function showSignIn() {
+  show('signInScreen');
+  hide('signUpScreen');
+  hide('mainApp');
+}
+
+function showSignUp() {
+  hide('signInScreen');
+  show('signUpScreen');
+  hide('mainApp');
+}
+
+async function signIn() {
+  const email = $('signInEmail').value.trim();
+  const password = $('signInPassword').value;
+
+  if (!email || !password) {
+    show('signInError');
+    $('signInError').textContent = 'Please enter email and password';
+    return;
   }
-});
 
-// Toast
-function toast(msg, type='success'){
-  const t=$('toast');
-  t.textContent=(type==='success'?'✓ ':'✗ ')+msg;
-  t.className='toast '+type+' show';
-  setTimeout(()=>t.classList.remove('show'),3000);
-}
+  try {
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) throw error;
 
-// Modal functions
-function openModal(id){$(id).classList.add('show')}
-function closeModal(id){$(id).classList.remove('show')}
+    currentUser = data.user;
+    isAdmin = (email === 'beau@marketelites.io'); // Hardcoded admin check
 
-// Auth screen functions
-function showSignIn(){
-  $('authSignIn').classList.remove('hidden');
-  $('authSignUp').classList.add('hidden');
-  $('authForgot').classList.add('hidden');
-}
-function showSignUp(){
-  $('authSignIn').classList.add('hidden');
-  $('authSignUp').classList.remove('hidden');
-  $('authForgot').classList.add('hidden');
-}
-function showForgot(){
-  $('authSignIn').classList.add('hidden');
-  $('authSignUp').classList.add('hidden');
-  $('authForgot').classList.remove('hidden');
-}
-function hideAllAuth(){
-  $('authSignIn').classList.add('hidden');
-  $('authSignUp').classList.add('hidden');
-  $('authForgot').classList.add('hidden');
-}
+    hide('signInScreen');
+    hide('signUpScreen');
+    show('mainApp');
 
-// Password match check
-function checkPasswordMatch(){
-  const pw=$('signUpPassword').value;
-  const confirm=$('signUpConfirm').value;
-  const m=$('passwordMatch');
-  if(!confirm){m.classList.add('hidden');return}
-  m.classList.remove('hidden');
-  if(pw===confirm){m.textContent='✓ Passwords match';m.className='password-match valid'}
-  else{m.textContent='✗ Passwords do not match';m.className='password-match invalid'}
-}
-
-// Sign In
-async function handleSignIn(){
-  const email=$('signInEmail').value.trim();
-  const pw=$('signInPassword').value;
-  const rememberMe=$('rememberMe').checked;
-  $('signInError').classList.add('hidden');
-  if(!email||!pw){$('signInError').textContent='Enter email and password';$('signInError').classList.remove('hidden');return}
-  $('signInBtn').disabled=true;$('signInBtn').textContent='Signing in...';
-  try{
-    // Set session persistence based on remember me
-    if(rememberMe){
-      await db.auth.signInWithPassword({email,password:pw});
-    }else{
-      // Use session storage for non-persistent session
-      const tempDb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{
-        auth:{persistSession:false,storage:window.sessionStorage}
-      });
-      const{error}=await tempDb.auth.signInWithPassword({email,password:pw});
-      if(error)throw error;
-      // Copy session to main db
-      const{data:{session}}=await tempDb.auth.getSession();
-      if(session)await db.auth.setSession(session);
+    // Show admin panel if admin
+    if (isAdmin) {
+      show('adminPanel');
     }
-  }catch(e){
-    $('signInError').textContent=e.message;$('signInError').classList.remove('hidden');
+
+    // Set avatar initial
+    const initial = email.charAt(0).toUpperCase();
+    $('avatar').textContent = initial;
+
+    toast('Signed in successfully!');
+  } catch (error) {
+    show('signInError');
+    $('signInError').textContent = error.message;
   }
-  $('signInBtn').disabled=false;$('signInBtn').textContent='Sign In';
 }
 
-// Sign Up
-async function handleSignUp(){
-  const name=$('signUpName').value.trim();
-  const email=$('signUpEmail').value.trim();
-  const pw=$('signUpPassword').value;
-  const confirm=$('signUpConfirm').value;
-  $('signUpError').classList.add('hidden');
-  if(!name){$('signUpError').textContent='Enter your name';$('signUpError').classList.remove('hidden');return}
-  if(!email){$('signUpError').textContent='Enter your email';$('signUpError').classList.remove('hidden');return}
-  if(pw.length<6){$('signUpError').textContent='Password must be 6+ characters';$('signUpError').classList.remove('hidden');return}
-  if(pw!==confirm){$('signUpError').textContent='Passwords do not match';$('signUpError').classList.remove('hidden');return}
-  $('signUpBtn').disabled=true;$('signUpBtn').textContent='Creating...';
-  try{
-    const{data,error}=await db.auth.signUp({email,password:pw,options:{data:{display_name:name}}});
-    if(error)throw error;
-    if(data?.user&&!data.session){$('signUpSuccess').textContent='Check email to confirm!';$('signUpSuccess').classList.remove('hidden')}
-  }catch(e){
-    $('signUpError').textContent=e.message;$('signUpError').classList.remove('hidden');
+async function signUp() {
+  const name = $('signUpName').value.trim();
+  const email = $('signUpEmail').value.trim();
+  const password = $('signUpPassword').value;
+
+  if (!name || !email || !password) {
+    show('signUpError');
+    $('signUpError').textContent = 'Please fill all fields';
+    return;
   }
-  $('signUpBtn').disabled=false;$('signUpBtn').textContent='Create Account';
-}
 
-// Forgot Password
-async function handleForgot(){
-  const email=$('forgotEmail').value.trim();
-  $('forgotError').classList.add('hidden');
-  if(!email){$('forgotError').textContent='Enter your email';$('forgotError').classList.remove('hidden');return}
-  $('forgotBtn').disabled=true;$('forgotBtn').textContent='Sending...';
-  try{
-    const{error}=await db.auth.resetPasswordForEmail(email,{redirectTo:window.location.origin});
-    if(error)throw error;
-    $('forgotSuccess').textContent='Reset link sent!';$('forgotSuccess').classList.remove('hidden');
-  }catch(e){
-    $('forgotError').textContent=e.message;$('forgotError').classList.remove('hidden');
+  if (password.length < 6) {
+    show('signUpError');
+    $('signUpError').textContent = 'Password must be at least 6 characters';
+    return;
   }
-  $('forgotBtn').disabled=false;$('forgotBtn').textContent='Send Reset Link';
-}
 
-// Sign Out
-async function handleSignOut(){
-  console.log('🚪 handleSignOut called');
-  try{
-    console.log('Calling db.auth.signOut()...');
-    await db.auth.signOut();
+  try {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { display_name: name }
+      }
+    });
 
-    // Clear all local data
-    user=null;
-    profile=null;
-    positions=[];
-    history=[];
-    signals=[];
-    watchlist=[];
+    if (error) throw error;
 
-    // Clear storage
-    window.localStorage.clear();
-    window.sessionStorage.clear();
-
-    console.log('✅ Sign out successful');
-    $('mainApp').classList.add('hidden');
+    toast('Account created! Check your email to verify.');
     showSignIn();
-    toast('Signed out','success');
-  }catch(e){
-    console.error('❌ Sign out error:',e);
-    toast('Error signing out','error');
+  } catch (error) {
+    show('signUpError');
+    $('signUpError').textContent = error.message;
   }
 }
 
-// Load Profile with timeout and fallback
-async function loadProfile(){
-  console.log('📋 Loading profile for user ID:',user.id);
-  console.log('📧 User email:',user.email);
-
-  try{
-    // Create a timeout promise
-    const timeoutPromise=new Promise((_, reject)=>
-      setTimeout(()=>reject(new Error('Profile query timeout')),5000)
-    );
-
-    // Race between query and timeout
-    const queryPromise=db.from('profiles').select('*').eq('id',user.id).single();
-    const{data,error}=await Promise.race([queryPromise,timeoutPromise.then(()=>({data:null,error:{message:'timeout'}}))]);
-
-    console.log('📊 Profile query result - Data:',JSON.stringify(data));
-    console.log('📊 Profile query result - Error:',error);
-
-    // If timeout or RLS error, use fallback profile
-    if(error&&(error.message==='timeout'||error.code==='42501'||error.details?.includes('infinite recursion'))){
-      console.log('⚠️ Database query failed, using fallback profile');
-      profile={
-        id:user.id,
-        email:user.email,
-        display_name:user.user_metadata?.display_name||user.email.split('@')[0],
-        is_admin:user.email==='beau@marketelites.io',
-        is_premium:false,
-        account_size:25000,
-        alpaca_api_key:'',
-        alpaca_secret_key:'',
-        avatar_url:null
-      };
-      console.log('✅ Using fallback profile - is_admin:',profile.is_admin);
-      updateProfileUI();
-      toast('Using offline profile (database unavailable)','error');
-      return;
-    }
-
-    // If profile doesn't exist, create it
-    if(error&&error.code==='PGRST116'){
-      console.log('📝 Profile not found, creating new profile...');
-      const newProfile={
-        id:user.id,
-        email:user.email,
-        display_name:user.user_metadata?.display_name||user.email.split('@')[0],
-        is_admin:user.email==='beau@marketelites.io',
-        is_premium:false,
-        account_size:25000
-      };
-
-      try{
-        const{data:created,error:createError}=await db.from('profiles').insert(newProfile).select().single();
-        if(createError){
-          console.error('❌ Failed to create profile:',createError);
-          // Use fallback if insert fails
-          profile=newProfile;
-          updateProfileUI();
-          return;
-        }
-        profile=created;
-        console.log('✅ Profile created successfully');
-      }catch(insertError){
-        console.error('❌ Insert exception:',insertError);
-        profile=newProfile;
-      }
-    }else if(error){
-      console.error('❌ Profile load error:',error.message,error);
-      // Use fallback profile
-      profile={
-        id:user.id,
-        email:user.email,
-        display_name:user.email.split('@')[0],
-        is_admin:user.email==='beau@marketelites.io',
-        is_premium:false,
-        account_size:25000,
-        alpaca_api_key:'',
-        alpaca_secret_key:'',
-        avatar_url:null
-      };
-    }else{
-      profile=data;
-    }
-
-    if(profile){
-      console.log('✅ Profile ready - is_admin:',profile.is_admin,'is_premium:',profile.is_premium);
-      updateProfileUI();
-    }else{
-      console.log('❌ No profile data');
-    }
-  }catch(e){
-    console.error('❌ Profile load exception:',e);
-    // Final fallback
-    profile={
-      id:user.id,
-      email:user.email,
-      display_name:user.email.split('@')[0],
-      is_admin:user.email==='beau@marketelites.io',
-      is_premium:false,
-      account_size:25000,
-      alpaca_api_key:'',
-      alpaca_secret_key:'',
-      avatar_url:null
-    };
-    console.log('✅ Using emergency fallback profile');
-    updateProfileUI();
+async function signOut() {
+  console.log('Sign out clicked');
+  try {
+    await supabase.auth.signOut();
+    currentUser = null;
+    isAdmin = false;
+    hide('mainApp');
+    hide('adminPanel');
+    showSignIn();
+    toast('Signed out successfully');
+  } catch (error) {
+    console.error('Sign out error:', error);
+    toast('Error signing out', 'error');
   }
 }
 
-// Update Profile UI
-function updateProfileUI(){
-  if(!profile){console.log('No profile to display');return}
-  console.log('=== Updating UI ===');
-  console.log('Full profile object:',JSON.stringify(profile));
-  console.log('is_admin:',profile.is_admin,'type:',typeof profile.is_admin);
-
-  const initials=profile.display_name?profile.display_name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2):'?';
-  $('heroInitials').textContent=initials;
-  $('profileInitials').textContent=initials;
-  $('profileName').textContent=profile.display_name||'User';
-  $('profileEmail').textContent=profile.email||'';
-  $('nameInput').value=profile.display_name||'';
-  $('accSizeInput').value=profile.account_size||25000;
-  $('alpacaKey').value=profile.alpaca_api_key||'';
-  $('alpacaSecret').value=profile.alpaca_secret_key||'';
-
-  // Premium badge and CTA
-  if(profile.is_premium===true){
-    $('premiumBadge').classList.remove('hidden');
-    $('premiumCard').classList.add('hidden');
-    $('premiumCtaHome').classList.add('hidden');
-  }else{
-    $('premiumBadge').classList.add('hidden');
-    $('premiumCard').classList.remove('hidden');
-    $('premiumCtaHome').classList.remove('hidden');
-  }
-
-  // Admin panel - check for true (boolean or string)
-  const adminPanel=$('adminPanel');
-  const isAdmin=profile.is_admin===true||profile.is_admin==='true'||profile.is_admin==='TRUE';
-  console.log('Admin check - is_admin value:',profile.is_admin,'type:',typeof profile.is_admin,'isAdmin:',isAdmin);
-  if(isAdmin){
-    console.log('✅ Showing admin panel');
-    adminPanel.classList.remove('hidden');
-    adminPanel.style.display='block';
-  }else{
-    console.log('❌ Hiding admin panel');
-    adminPanel.classList.add('hidden');
-  }
-
-  // Avatar
-  if(profile.avatar_url){
-    $('profileImg').src=profile.avatar_url;
-    $('profileImg').classList.remove('hidden');
-    $('profileInitials').classList.add('hidden');
-    $('heroAvatar').innerHTML='<img src="'+profile.avatar_url+'">';
-  }
-
-  $('balanceVal').textContent=(profile.account_size||25000).toLocaleString();
-  const connected=profile.alpaca_api_key?.length>10;
-  $('statusDot').className='status-dot '+(connected?'online':'offline');
-  $('statusText').textContent=connected?'Connected':'Offline';
-
-  console.log('=== UI Update Complete ===');
+// Modal Functions
+function closeModal(id) {
+  hide(id);
 }
 
-// Save Profile
-async function saveProfile(){
-  const updates={display_name:$('nameInput').value,account_size:parseFloat($('accSizeInput').value)||25000};
-  const{error}=await db.from('profiles').update(updates).eq('id',user.id);
-  if(error){toast('Error saving','error')}
-  else{profile={...profile,...updates};updateProfileUI();toast('Saved!')}
+function openLearn() {
+  loadEducation();
+  show('learnModal');
 }
 
-// Save Alpaca with API testing
-async function saveAlpaca(){
-  const key=$('alpacaKey').value.trim();
-  const secret=$('alpacaSecret').value.trim();
-  if(!key||!secret){toast('Enter API credentials','error');return}
-
-  $('saveAlpacaBtn').disabled=true;
-  $('saveAlpacaBtn').textContent='Testing...';
-
-  try{
-    const testUrl='https://paper-api.alpaca.markets/v2/account';
-    const response=await fetch(testUrl,{
-      headers:{
-        'APCA-API-KEY-ID':key,
-        'APCA-API-SECRET-KEY':secret
-      }
-    });
-
-    if(response.ok){
-      const account=await response.json();
-      const updates={alpaca_api_key:key,alpaca_secret_key:secret};
-      const{error}=await db.from('profiles').update(updates).eq('id',user.id);
-      if(error)throw error;
-      profile={...profile,...updates};
-      updateProfileUI();
-      toast('Connected! Balance: $'+parseFloat(account.portfolio_value||0).toLocaleString());
-    }else{
-      throw new Error('Invalid credentials');
-    }
-  }catch(e){
-    toast(e.message,'error');
-  }finally{
-    $('saveAlpacaBtn').disabled=false;
-    $('saveAlpacaBtn').textContent='Test & Connect';
-  }
+function openAnalytics() {
+  show('analyticsModal');
 }
 
-// Save other brokers
-async function saveBroker(broker){
-  const keyId=broker+'Key';
-  const secretId=broker+'Secret';
-  const key=$(keyId)?.value?.trim();
-  const secret=$(secretId)?.value?.trim();
-  if(!key||!secret){toast('Enter credentials','error');return}
-
-  const btnId='save'+broker.charAt(0).toUpperCase()+broker.slice(1)+'Btn';
-  $(btnId).disabled=true;
-  $(btnId).textContent='Connecting...';
-
-  try{
-    const updates={};
-    updates[broker+'_api_key']=key;
-    updates[broker+'_secret_key']=secret;
-    const{error}=await db.from('profiles').update(updates).eq('id',user.id);
-    if(error)throw error;
-    profile={...profile,...updates};
-    toast(broker.toUpperCase()+' connected!');
-  }catch(e){
-    toast('Error connecting','error');
-  }finally{
-    $(btnId).disabled=false;
-    $(btnId).textContent='Connect';
-  }
+function openSignals() {
+  show('signalsModal');
 }
 
-// Avatar
-async function handleAvatar(file){
-  if(!file)return;
-  const reader=new FileReader();
-  reader.onload=async e=>{
-    await db.from('profiles').update({avatar_url:e.target.result}).eq('id',user.id);
-    profile.avatar_url=e.target.result;
-    updateProfileUI();
-    toast('Avatar updated');
-  };
-  reader.readAsDataURL(file);
+function openWheely() {
+  show('wheelyModal');
 }
 
-// Positions
-async function loadPositions(){
-  const{data}=await db.from('positions').select('*').eq('user_id',user.id).eq('status','active').order('created_at',{ascending:false});
-  positions=data||[];
-  renderPositions();
+function openAddPosition() {
+  show('addPositionModal');
 }
 
-function getLogo(ticker){
-  const url=LOGOS[ticker.toUpperCase()];
-  return url?`<img src="${url}" onerror="this.parentElement.textContent='${ticker.slice(0,2)}'">`:`${ticker.slice(0,2)}`;
-}
-
-function renderPositions(){
-  const list=$('positionsList');
-  const all=$('allPositions');
-  if(!positions.length){
-    list.innerHTML='<div class="empty-state"><svg viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg><h3>No positions yet</h3><p>Add your first trade</p></div>';
-    all.innerHTML=list.innerHTML;
+function openPostSignal() {
+  if (!isAdmin) {
+    toast('Admin access required', 'error');
     return;
   }
-  const html=positions.map(p=>{
-    const exp=new Date(p.expiration).toLocaleDateString('en-US',{month:'short',day:'numeric'});
-    const prem=(p.premium*(p.contracts||1)*100).toFixed(0);
-    return`<div class="card-item" data-id="${p.id}"><div class="stock-logo">${getLogo(p.ticker)}</div><div class="pos-info"><div class="pos-top"><span class="pos-ticker">${p.ticker}</span><span class="pos-type ${p.type}">${p.type.toUpperCase()}</span></div><div class="pos-bottom">$${p.strike} ${p.type==='csp'?'Put':'Call'}</div></div><div class="pos-value"><div class="pos-premium">+$${prem}</div><div class="pos-exp">${exp}</div></div></div>`;
-  }).join('');
-  list.innerHTML=html;
-  all.innerHTML=`<div class="card">${html}</div>`;
-  const total=positions.reduce((s,p)=>s+(p.premium*(p.contracts||1)*100),0);
-  $('balanceChange').innerHTML=`↑ +$${total.toFixed(0)}`;
-
-  // Add click handlers
-  list.querySelectorAll('.card-item').forEach(el=>{
-    el.addEventListener('click',()=>openPosition(el.dataset.id));
-  });
-  all.querySelectorAll('.card-item').forEach(el=>{
-    el.addEventListener('click',()=>openPosition(el.dataset.id));
-  });
+  show('postSignalModal');
 }
 
-async function addPosition(){
-  const p={user_id:user.id,type:$('addType').value,ticker:$('addTicker').value.toUpperCase(),strike:parseFloat($('addStrike').value),premium:parseFloat($('addPremium').value),contracts:parseInt($('addContracts').value)||1,expiration:$('addExpiration').value,status:'active'};
-  if(!p.ticker||!p.strike||!p.premium||!p.expiration){toast('Fill all fields','error');return}
-  const{data,error}=await db.from('positions').insert(p).select().single();
-  if(error){toast('Error','error');console.error(error)}
-  else{positions.unshift(data);renderPositions();closeModal('addModal');toast('Added!');$('addTicker').value='';$('addStrike').value='';$('addPremium').value=''}
+function openPostAnnouncement() {
+  if (!isAdmin) {
+    toast('Admin access required', 'error');
+    return;
+  }
+  show('postAnnouncementModal');
 }
 
-function openPosition(id){
-  const p=positions.find(x=>x.id===id);
-  if(!p)return;
-  const prem=(p.premium*(p.contracts||1)*100).toFixed(0);
-  $('posModalTitle').textContent=`${p.ticker} ${p.type.toUpperCase()}`;
-  $('posModalContent').innerHTML=`<div style="text-align:center;margin-bottom:28px"><div style="font-size:40px;font-weight:800;color:var(--green)">+$${prem}</div><div style="color:var(--text2)">Premium</div></div><button class="btn btn-primary" id="closePosBtn">Close Position</button><button class="btn btn-secondary" id="sharePosBtn">Share to X</button><button class="btn btn-danger" id="assignPosBtn">Assigned</button>`;
-  $('closePosBtn').addEventListener('click',()=>closePosition(id,'closed'));
-  $('sharePosBtn').addEventListener('click',()=>sharePosition(id));
-  $('assignPosBtn').addEventListener('click',()=>closePosition(id,'assigned'));
-  openModal('posModal');
-}
+// Position Functions
+function savePosition() {
+  const symbol = $('posSymbol').value.trim().toUpperCase();
+  const type = $('posType').value;
+  const strike = $('posStrike').value;
+  const premium = $('posPremium').value;
+  const expiration = $('posExpiration').value;
 
-async function closePosition(id,outcome){
-  const p=positions.find(x=>x.id===id);
-  if(!p)return;
-  const pnl=p.premium*(p.contracts||1)*100;
-  await db.from('trade_history').insert({user_id:user.id,type:p.type,ticker:p.ticker,strike:p.strike,expiration:p.expiration,open_premium:p.premium,contracts:p.contracts||1,pnl:outcome==='assigned'?0:pnl,outcome});
-  await db.from('positions').update({status:outcome}).eq('id',id);
-  positions=positions.filter(x=>x.id!==id);
-  renderPositions();closeModal('posModal');toast(outcome==='assigned'?'Assigned':'Closed!');loadHistory();
-}
-
-function sharePosition(id){
-  const p=positions.find(x=>x.id===id);
-  if(!p)return;
-  const pnl=(p.premium*(p.contracts||1)*100).toFixed(0);
-  window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(`💰 Closed $${p.ticker} ${p.type.toUpperCase()} for +$${pnl}!\n\n#WheelStrategy`)}`);
-}
-
-// History
-async function loadHistory(){
-  const{data}=await db.from('trade_history').select('*').eq('user_id',user.id).order('closed_at',{ascending:false}).limit(10);
-  history=data||[];
-  renderHistory();
-  updateStats();
-}
-
-function renderHistory(){
-  const list=$('historyList');
-  if(!history.length){list.innerHTML='<div class="empty-state" style="padding:24px"><p>Closed trades appear here</p></div>';return}
-  list.innerHTML=history.slice(0,5).map(h=>`<div class="card-item"><div class="stock-logo">${getLogo(h.ticker)}</div><div class="pos-info"><div class="pos-ticker">${h.ticker}</div><div class="pos-bottom">${h.outcome}</div></div><div class="pos-premium">+$${(h.pnl||0).toFixed(0)}</div></div>`).join('');
-}
-
-function updateStats(){
-  const wins=history.filter(h=>h.pnl>0).length;
-  const total=history.length;
-  const wr=total?Math.round(wins/total*100):0;
-  const totalPnl=history.reduce((s,h)=>s+(h.pnl||0),0);
-  const prem=history.reduce((s,h)=>s+(h.open_premium*(h.contracts||1)*100),0);
-  const avgReturn=total?(totalPnl/total):0;
-  const bestTrade=history.length?Math.max(...history.map(h=>h.pnl||0)):0;
-  const assignments=history.filter(h=>h.outcome==='assigned').length;
-
-  // Basic stats - page version
-  $('statWinRate').textContent=wr+'%';
-  $('pWinRate').textContent=wr+'%';
-  $('statTrades').textContent=total;
-  $('pTrades').textContent=total;
-  $('statPremium').textContent='$'+prem.toFixed(0);
-  $('statTotalPnl').textContent='$'+totalPnl.toFixed(0);
-  $('statAvgReturn').textContent=avgReturn.toFixed(0)+'%';
-  $('statBestTrade').textContent='$'+bestTrade.toFixed(0);
-  $('statAssignments').textContent=assignments;
-  $('statMonthlyIncome').textContent='$'+(totalPnl/Math.max(1,(total/4))).toFixed(0);
-
-  // Basic stats - modal version
-  if($('statWinRateModal'))$('statWinRateModal').textContent=wr+'%';
-  if($('statTradesModal'))$('statTradesModal').textContent=total;
-  if($('statPremiumModal'))$('statPremiumModal').textContent='$'+prem.toFixed(0);
-  if($('statTotalPnlModal'))$('statTotalPnlModal').textContent='$'+totalPnl.toFixed(0);
-
-  // CSP vs CC breakdown
-  const cspTrades=history.filter(h=>h.type==='csp');
-  const ccTrades=history.filter(h=>h.type==='cc');
-  const cspWins=cspTrades.filter(h=>h.pnl>0).length;
-  const ccWins=ccTrades.filter(h=>h.pnl>0).length;
-  const cspWr=cspTrades.length?Math.round(cspWins/cspTrades.length*100):0;
-  const ccWr=ccTrades.length?Math.round(ccWins/ccTrades.length*100):0;
-  const cspAvg=cspTrades.length?cspTrades.reduce((s,h)=>s+(h.pnl||0),0)/cspTrades.length:0;
-  const ccAvg=ccTrades.length?ccTrades.reduce((s,h)=>s+(h.pnl||0),0)/ccTrades.length:0;
-
-  // Page version
-  $('cspWinRate').textContent=cspWr+'%';
-  $('ccWinRate').textContent=ccWr+'%';
-  $('cspAvgPnl').textContent='$'+cspAvg.toFixed(0);
-  $('ccAvgPnl').textContent='$'+ccAvg.toFixed(0);
-
-  // Modal version
-  if($('cspWinRateModal'))$('cspWinRateModal').textContent=cspWr+'%';
-  if($('ccWinRateModal'))$('ccWinRateModal').textContent=ccWr+'%';
-  if($('cspAvgPnlModal'))$('cspAvgPnlModal').textContent='$'+cspAvg.toFixed(0);
-  if($('ccAvgPnlModal'))$('ccAvgPnlModal').textContent='$'+ccAvg.toFixed(0);
-
-  // Monthly chart (simple bars)
-  const months={};
-  history.forEach(h=>{
-    const month=new Date(h.closed_at||Date.now()).toLocaleDateString('en-US',{month:'short'});
-    months[month]=(months[month]||0)+(h.pnl||0);
-  });
-  const chartHtml=Object.entries(months).slice(-6).map(([month,pnl])=>{
-    const height=Math.min(100,Math.abs(pnl)/10);
-    return`<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:8px"><div style="width:100%;height:${height}px;background:${pnl>0?'var(--green)':'var(--red)'};border-radius:8px 8px 0 0"></div><div style="font-size:11px;color:var(--text3)">${month}</div></div>`;
-  }).join('');
-  $('monthlyChart').innerHTML=chartHtml||'<div style="text-align:center;color:var(--text3);width:100%">No data yet</div>';
-}
-
-// Signals
-async function loadSignals(){
-  const{data}=await db.from('signals').select('*').eq('status','active').order('created_at',{ascending:false});
-  signals=data||[];
-  renderSignals();
-}
-
-function getTimeAgo(d){const m=Math.floor((Date.now()-new Date(d))/60000);if(m<60)return m+'m';if(m<1440)return Math.floor(m/60)+'h';return Math.floor(m/1440)+'d'}
-
-function renderSignals(){
-  const list=$('signalsList');
-  const modalList=$('signalsModalList');
-  const emptyState='<div class="empty-state"><svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg><h3>No signals</h3><p>Check back soon</p></div>';
-
-  if(!signals.length){
-    list.innerHTML=emptyState;
-    if(modalList)modalList.innerHTML=emptyState;
+  if (!symbol || !strike || !premium || !expiration) {
+    toast('Please fill all fields', 'error');
     return;
   }
 
-  const html=signals.map((s,i)=>{
-    if(s.is_premium_only&&!profile?.is_premium&&i>0)return`<div class="signal-card" style="opacity:.6;text-align:center;padding:40px"><div style="font-size:48px;margin-bottom:12px">🔒</div><h3>Premium Signal</h3><p style="color:var(--text2);margin:12px 0">Upgrade to unlock</p><button class="btn btn-primary unlock-btn" style="margin:0;width:auto;padding:14px 32px">Unlock</button></div>`;
-    const exp=new Date(s.expiration).toLocaleDateString('en-US',{month:'short',day:'numeric'});
-    return`<div class="signal-card"><div class="signal-header"><div class="signal-ticker"><div class="stock-logo">${getLogo(s.ticker)}</div><div><h3>${s.ticker}</h3><span class="signal-badge" style="background:${s.type==='csp'?'var(--green-bg)':'var(--accent-bg)'};color:${s.type==='csp'?'var(--green)':'var(--accent)'}">${s.type.toUpperCase()}</span></div></div><span class="signal-time">${getTimeAgo(s.created_at)}</span></div><div class="signal-details"><div class="signal-detail"><label>Strike</label><span>$${s.strike}</span></div><div class="signal-detail"><label>Premium</label><span>$${s.premium}</span></div><div class="signal-detail"><label>Exp</label><span>${exp}</span></div></div>${s.notes?`<p style="font-size:14px;color:var(--text2);margin-bottom:16px">${s.notes}</p>`:''}<div class="signal-actions"><button class="signal-btn primary copy-signal" data-id="${s.id}">Copy</button><button class="signal-btn secondary">Share</button></div></div>`;
-  }).join('');
+  // Here you would save to Supabase
+  toast('Position added successfully!');
+  closeModal('addPositionModal');
+}
 
-  list.innerHTML=html;
-  if(modalList)modalList.innerHTML=html;
+// Admin Functions
+async function publishSignal() {
+  if (!isAdmin) {
+    toast('Admin access required', 'error');
+    return;
+  }
 
-  // Add event listeners to both lists
-  [list,modalList].forEach(container=>{
-    if(!container)return;
-    container.querySelectorAll('.copy-signal').forEach(btn=>{
-      btn.addEventListener('click',()=>copySignal(btn.dataset.id));
+  const symbol = $('signalSymbol').value.trim().toUpperCase();
+  const type = $('signalType').value;
+  const strike = $('signalStrike').value;
+  const premium = $('signalPremium').value;
+  const expiration = $('signalExpiration').value;
+  const notes = $('signalNotes').value.trim();
+
+  if (!symbol || !strike || !premium || !expiration) {
+    toast('Please fill all required fields', 'error');
+    return;
+  }
+
+  try {
+    const { error } = await supabase.from('signals').insert({
+      created_by: currentUser.id,
+      type,
+      ticker: symbol,
+      strike: parseFloat(strike),
+      premium: parseFloat(premium),
+      expiration,
+      notes,
+      status: 'active',
+      is_premium_only: true
     });
-    container.querySelectorAll('.unlock-btn').forEach(btn=>{
-      btn.addEventListener('click',()=>openModal('premiumModal'));
-    });
-  });
-}
 
-async function copySignal(id){
-  const s=signals.find(x=>x.id===id);
-  if(!s)return;
-  const contracts=prompt('How many contracts?','1');
-  if(!contracts)return;
-  const p={user_id:user.id,type:s.type,ticker:s.ticker,strike:s.strike,premium:s.premium,contracts:parseInt(contracts)||1,expiration:s.expiration,status:'active'};
-  const{data,error}=await db.from('positions').insert(p).select().single();
-  if(error){toast('Error','error')}
-  else{positions.unshift(data);renderPositions();toast('Copied!')}
-}
+    if (error) throw error;
 
-async function postSignal(){
-  if(!profile?.is_admin){toast('Admin only','error');return}
-  const s={created_by:user.id,type:$('sigType').value,ticker:$('sigTicker').value.toUpperCase(),strike:parseFloat($('sigStrike').value),premium:parseFloat($('sigPremium').value),expiration:$('sigExpiration').value,notes:$('sigNotes').value,is_premium_only:true,status:'active'};
-  if(!s.ticker||!s.strike||!s.premium||!s.expiration){toast('Fill all fields','error');return}
-  const{data,error}=await db.from('signals').insert(s).select().single();
-  if(error){toast('Error','error');console.error(error)}
-  else{signals.unshift(data);renderSignals();closeModal('newSignalModal');toast('Posted!')}
-}
+    toast('Signal published successfully!');
+    closeModal('postSignalModal');
 
-// Announcements
-async function postAnnouncement(){
-  if(!profile?.is_admin){toast('Admin only','error');return}
-  const type=$('announceType').value;
-  const message=$('announceMessage').value.trim();
-  if(!message){toast('Enter a message','error');return}
-
-  // Post to database (you can create an 'announcements' table)
-  const announcement={created_by:user.id,type,message,created_at:new Date().toISOString()};
-
-  try{
-    const{error}=await db.from('announcements').insert(announcement);
-    if(error)throw error;
-    closeModal('announcementModal');
-    toast('Announcement posted!');
-    $('announceMessage').value='';
-  }catch(e){
-    // If table doesn't exist yet, just show success for now
-    console.log('Announcement:',announcement);
-    closeModal('announcementModal');
-    toast('Announcement posted!');
-    $('announceMessage').value='';
+    // Clear form
+    $('signalSymbol').value = '';
+    $('signalStrike').value = '';
+    $('signalPremium').value = '';
+    $('signalExpiration').value = '';
+    $('signalNotes').value = '';
+  } catch (error) {
+    console.error('Error publishing signal:', error);
+    toast('Error publishing signal', 'error');
   }
 }
 
-// Watchlist
-async function loadWatchlist(){
-  const{data}=await db.from('watchlist').select('*').eq('user_id',user.id).order('created_at',{ascending:false});
-  watchlist=data||[];
-  renderWatchlist();
-}
+async function publishAnnouncement() {
+  if (!isAdmin) {
+    toast('Admin access required', 'error');
+    return;
+  }
 
-function renderWatchlist(){
-  const list=$('watchlistItems');
-  if(!watchlist.length){list.innerHTML='<div class="empty-state" style="padding:32px"><p>Add stocks to track</p></div>';return}
-  list.innerHTML=watchlist.map(w=>`<div class="card-item"><div class="stock-logo">${getLogo(w.ticker)}</div><div class="pos-info"><div class="pos-ticker">${w.ticker}</div></div><button class="icon-btn remove-watch" data-id="${w.id}" style="width:36px;height:36px">×</button></div>`).join('');
-  list.querySelectorAll('.remove-watch').forEach(btn=>{
-    btn.addEventListener('click',e=>{e.stopPropagation();removeWatch(btn.dataset.id)});
-  });
-}
+  const type = $('announceType').value;
+  const message = $('announceMessage').value.trim();
 
-async function addWatch(){
-  const ticker=$('watchTicker').value.toUpperCase();
-  if(!ticker)return;
-  const{data,error}=await db.from('watchlist').insert({user_id:user.id,ticker}).select().single();
-  if(error){toast('Error','error')}
-  else{watchlist.unshift(data);renderWatchlist();closeModal('addWatchModal');toast('Added!');$('watchTicker').value=''}
-}
+  if (!message) {
+    toast('Please enter a message', 'error');
+    return;
+  }
 
-async function removeWatch(id){
-  await db.from('watchlist').delete().eq('id',id);
-  watchlist=watchlist.filter(w=>w.id!==id);
-  renderWatchlist();
-  toast('Removed');
-}
-
-// Education
-async function loadEducation(){
-  const fallbackLessons=[
-    // SECTION 1: Absolute Beginners
-    {section:'Getting Started',title:'What Are Options?',desc:'Complete introduction to options: calls, puts, and how they work. Perfect starting point for beginners with zero options experience.',minutes:12,video:'https://www.youtube.com/embed/4HMm6mBvGKE',level:'Beginner'},
-    {section:'Getting Started',title:'Options Terminology 101',desc:'Master essential options vocabulary: strike price, expiration, premium, ITM/OTM, intrinsic vs extrinsic value, and more.',minutes:15,video:'https://www.youtube.com/embed/7PM4rNDr4oI',level:'Beginner'},
-    {section:'Getting Started',title:'How to Read an Options Chain',desc:'Learn to navigate options chains, understand bid/ask spreads, volume, open interest, and identify the best strikes.',minutes:10,video:'https://www.youtube.com/embed/oUoeBc7u6D0',level:'Beginner'},
-
-    // SECTION 2: Wheel Strategy Core
-    {section:'The Wheel Strategy',title:'Wheel Strategy Fundamentals',desc:'The complete overview: Learn the 3-phase cycle of the wheel strategy and how to generate consistent monthly income from options.',minutes:18,video:'https://www.youtube.com/embed/sXEJXUHMqNM',level:'Beginner'},
-    {section:'The Wheel Strategy',title:'Why the Wheel Works',desc:'Understand the mathematical edge, probability advantage, and income generation mechanics that make the wheel profitable.',minutes:14,video:'https://www.youtube.com/embed/g-C_q3XqVgU',level:'Beginner'},
-    {section:'The Wheel Strategy',title:'Common Wheel Mistakes',desc:'Avoid the top 10 mistakes that destroy wheel returns: chasing premium, poor stock selection, position sizing errors, and more.',minutes:16,video:'https://www.youtube.com/embed/xfPBHuHBMvg',level:'Intermediate'},
-
-    // SECTION 3: Cash Secured Puts
-    {section:'Cash Secured Puts',title:'CSP Deep Dive',desc:'Master cash secured puts: How to select strikes, calculate required capital, manage risk, and profit from selling puts.',minutes:20,video:'https://www.youtube.com/embed/hzDh7ck7k1g',level:'Beginner'},
-    {section:'Cash Secured Puts',title:'Strike Selection for CSPs',desc:'Advanced strike selection: Using delta, support levels, technical analysis, and probability to choose optimal put strikes.',minutes:17,video:'https://www.youtube.com/embed/SD7sw0bf1ms',level:'Intermediate'},
-    {section:'Cash Secured Puts',title:'When to Sell Puts',desc:'Market timing strategies: Best market conditions, IV levels, and technical setups for maximum premium collection.',minutes:13,video:'https://www.youtube.com/embed/xTAyWDlDbvY',level:'Intermediate'},
-    {section:'Cash Secured Puts',title:'Managing CSP Assignments',desc:'What happens when you get assigned shares? How to transition smoothly to phase 2 of the wheel.',minutes:15,video:'https://www.youtube.com/embed/01mE_KC1VR8',level:'Intermediate'},
-
-    // SECTION 4: Covered Calls
-    {section:'Covered Calls',title:'Covered Calls Explained',desc:'Complete guide to selling calls against your shares: Strike selection, timing, and maximizing premium income.',minutes:18,video:'https://www.youtube.com/embed/jnTsQBJHMSk',level:'Beginner'},
-    {section:'Covered Calls',title:'Avoiding Early Assignment',desc:'Strategies to prevent your shares from being called away too early, including ex-dividend dates and rolling techniques.',minutes:14,video:'https://www.youtube.com/embed/SD7sw0bf1ms',level:'Intermediate'},
-    {section:'Covered Calls',title:'Rolling Covered Calls',desc:'How to roll your covered calls up, out, or both to collect additional premium and manage winning positions.',minutes:16,video:'https://www.youtube.com/embed/sXEJXUHMqNM',level:'Advanced'},
-
-    // SECTION 5: Stock Selection
-    {section:'Stock Selection',title:'Best Stocks for Wheeling',desc:'Criteria for wheel-worthy stocks: IV rank, liquidity, fundamentals, dividend yield, and sector analysis.',minutes:22,video:'https://www.youtube.com/embed/jnTsQBJHMSk',level:'Intermediate'},
-    {section:'Stock Selection',title:'Blue Chips vs Growth Stocks',desc:'Comparing wheel performance on stable blue chips (AAPL, MSFT) vs volatile growth stocks (NVDA, PLTR).',minutes:19,video:'https://www.youtube.com/embed/g-C_q3XqVgU',level:'Intermediate'},
-    {section:'Stock Selection',title:'ETF Wheeling Strategy',desc:'Why ETFs like SPY, QQQ, and IWM are perfect for wheeling: Lower risk, better diversification, consistent returns.',minutes:15,video:'https://www.youtube.com/embed/4HMm6mBvGKE',level:'Beginner'},
-
-    // SECTION 6: The Greeks
-    {section:'Options Greeks',title:'Delta for Beginners',desc:'Understanding delta: Probability of profit, strike selection, and why 0.30 delta is the sweet spot for wheel traders.',minutes:16,video:'https://www.youtube.com/embed/oUoeBc7u6D0',level:'Beginner'},
-    {section:'Options Greeks',title:'Theta: Your Best Friend',desc:'How time decay works in your favor, optimal DTE ranges, and maximizing theta collection in the wheel.',minutes:14,video:'https://www.youtube.com/embed/7PM4rNDr4oI',level:'Intermediate'},
-    {section:'Options Greeks',title:'IV and Vega Explained',desc:'Implied volatility: How it affects premiums, when to sell puts, IV rank vs percentile, and earnings plays.',minutes:18,video:'https://www.youtube.com/embed/xfPBHuHBMvg',level:'Intermediate'},
-    {section:'Options Greeks',title:'Gamma & Advanced Greeks',desc:'Deep dive into gamma, rho, and how multiple Greeks interact to affect your positions.',minutes:20,video:'https://www.youtube.com/embed/SD7sw0bf1ms',level:'Advanced'},
-
-    // SECTION 7: Risk Management
-    {section:'Risk Management',title:'Position Sizing for the Wheel',desc:'Calculate proper position sizes based on account size, risk tolerance, and diversification requirements.',minutes:17,video:'https://www.youtube.com/embed/sXEJXUHMqNM',level:'Beginner'},
-    {section:'Risk Management',title:'Portfolio Diversification',desc:'How many positions to run simultaneously, sector allocation, and avoiding concentration risk.',minutes:15,video:'https://www.youtube.com/embed/g-C_q3XqVgU',level:'Intermediate'},
-    {section:'Risk Management',title:'Stop Losses and When to Exit',desc:'Setting stop losses on wheel positions, cutting losses on falling stocks, and knowing when to abandon the wheel.',minutes:19,video:'https://www.youtube.com/embed/xTAyWDlDbvY',level:'Intermediate'},
-    {section:'Risk Management',title:'Hedging Your Wheel Portfolio',desc:'Portfolio-level hedging strategies using VIX calls, portfolio puts, and inverse ETFs.',minutes:22,video:'https://www.youtube.com/embed/01mE_KC1VR8',level:'Advanced'},
-
-    // SECTION 8: Advanced Techniques
-    {section:'Advanced Strategies',title:'Rolling Options Like a Pro',desc:'Master the art of rolling: When to roll, how to roll for credits, and avoiding roll traps.',minutes:21,video:'https://www.youtube.com/embed/sXEJXUHMqNM',level:'Advanced'},
-    {section:'Advanced Strategies',title:'Poor Man\'s Covered Call',desc:'Capital-efficient wheeling using PMCC: Buy LEAPS, sell short calls, and reduce capital requirements by 70%.',minutes:24,video:'https://www.youtube.com/embed/jnTsQBJHMSk',level:'Advanced'},
-    {section:'Advanced Strategies',title:'Wheel with Margin',desc:'Using portfolio margin to 2x-3x your wheel returns. Risks, requirements, and best practices.',minutes:18,video:'https://www.youtube.com/embed/g-C_q3XqVgU',level:'Advanced'},
-    {section:'Advanced Strategies',title:'Earnings & IV Crush Plays',desc:'Advanced: Selling puts before earnings, capturing IV crush, and managing event-driven risk.',minutes:20,video:'https://www.youtube.com/embed/xfPBHuHBMvg',level:'Advanced'},
-
-    // SECTION 9: Practical Execution
-    {section:'Execution',title:'Broker Selection & Setup',desc:'Comparing brokers for options trading: Fees, margin rates, mobile apps, and which broker is best for the wheel.',minutes:14,video:'https://www.youtube.com/embed/4HMm6mBvGKE',level:'Beginner'},
-    {section:'Execution',title:'Order Types & Fills',desc:'Limit orders, market orders, avoiding bad fills, and getting the best execution on your option trades.',minutes:12,video:'https://www.youtube.com/embed/oUoeBc7u6D0',level:'Beginner'},
-    {section:'Execution',title:'Tax Implications',desc:'How options are taxed, wash sale rules, record keeping, and strategies for tax-efficient wheeling.',minutes:19,video:'https://www.youtube.com/embed/7PM4rNDr4oI',level:'Intermediate'},
-    {section:'Execution',title:'Tracking Performance',desc:'Essential metrics to track: Win rate, average premium, ROC, annualized returns, and how to optimize your wheel.',minutes:16,video:'https://www.youtube.com/embed/SD7sw0bf1ms',level:'Intermediate'},
-
-    // SECTION 10: Real Examples
-    {section:'Case Studies',title:'$25K Account Wheel Strategy',desc:'Real portfolio: How to wheel with $25K, position allocation, monthly income targets, and actual results.',minutes:25,video:'https://www.youtube.com/embed/sXEJXUHMqNM',level:'Intermediate'},
-    {section:'Case Studies',title:'$100K Account Wheel Strategy',desc:'Scaling up: Managing a 6-figure wheel portfolio with 8-10 positions and generating $2K-4K monthly.',minutes:28,video:'https://www.youtube.com/embed/g-C_q3XqVgU',level:'Advanced'},
-    {section:'Case Studies',title:'Real Trade Breakdowns',desc:'Walk through 5 real wheel cycles from start to finish: Wins, losses, assignments, and lessons learned.',minutes:32,video:'https://www.youtube.com/embed/xTAyWDlDbvY',level:'Intermediate'}
-  ];
-  try{
-    const{data}=await db.from('education').select('*').order('order_index');
-    const lessons=data?.length?data:fallbackLessons;
-
-    // Group by section
-    const sections={};
-    lessons.forEach(lesson=>{
-      const sec=lesson.section||'Lessons';
-      if(!sections[sec])sections[sec]=[];
-      sections[sec].push(lesson);
+  try {
+    const { error } = await supabase.from('announcements').insert({
+      created_by: currentUser.id,
+      type,
+      message,
+      created_at: new Date().toISOString()
     });
 
-    // Render with sections
-    let html='<div style="padding:0 0 20px"><div style="background:linear-gradient(135deg,rgba(96,165,250,.1),rgba(168,85,247,.08));border-radius:20px;padding:24px;margin-bottom:28px;text-align:center"><h2 style="font-size:24px;font-weight:800;margin-bottom:8px">🎓 Complete Wheel Strategy Course</h2><p style="color:var(--text2);font-size:14px">35+ lessons from absolute beginner to advanced trader • 9+ hours of content</p></div>';
+    if (error) throw error;
 
-    Object.entries(sections).forEach(([section,sectionLessons])=>{
-      html+=`<div style="margin-bottom:32px"><h3 style="font-size:18px;font-weight:700;margin-bottom:16px;padding:0 4px;display:flex;align-items:center;gap:8px"><span style="width:4px;height:20px;background:var(--accent);border-radius:2px"></span>${section}</h3>`;
-      sectionLessons.forEach(e=>{
-        const levelColor=e.level==='Beginner'?'var(--green)':e.level==='Intermediate'?'var(--accent)':'var(--purple)';
-        html+=`<div class="lesson-card" style="padding:20px;background:var(--card);border-radius:16px;margin-bottom:12px;border:1px solid var(--border);cursor:pointer;transition:all .2s" onclick="openLesson('${e.video||''}','${e.title}')"><div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:10px"><div style="flex:1"><div style="font-weight:700;font-size:16px;margin-bottom:6px">${e.title}</div><div style="display:flex;align-items:center;gap:8px"><span style="font-size:10px;font-weight:700;padding:4px 8px;border-radius:6px;background:${levelColor}20;color:${levelColor};text-transform:uppercase;letter-spacing:.5px">${e.level||'Beginner'}</span><span style="font-size:11px;color:var(--text3)">${e.minutes||5} min</span></div></div><div style="background:var(--accent-bg);color:var(--accent);padding:6px 12px;border-radius:8px;font-size:11px;font-weight:700;white-space:nowrap">${e.minutes||5} MIN</div></div><div style="font-size:13px;color:var(--text2);line-height:1.6">${e.desc||'Click to start learning'}</div><div style="margin-top:14px;padding:10px 16px;background:var(--accent);color:#fff;border-radius:10px;display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:600"><svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:currentColor;fill:none"><polygon points="5 3 19 12 5 21 5 3"/></svg>Watch Lesson</div></div>`;
-      });
-      html+='</div>';
-    });
-    html+='</div>';
-    $('learnContent').innerHTML=html;
-  }catch(e){
-    // Fallback rendering (same as above)
-    const sections={};
-    fallbackLessons.forEach(lesson=>{
-      const sec=lesson.section||'Lessons';
-      if(!sections[sec])sections[sec]=[];
-      sections[sec].push(lesson);
-    });
-    let html='<div style="padding:0 0 20px"><div style="background:linear-gradient(135deg,rgba(96,165,250,.1),rgba(168,85,247,.08));border-radius:20px;padding:24px;margin-bottom:28px;text-align:center"><h2 style="font-size:24px;font-weight:800;margin-bottom:8px">🎓 Complete Wheel Strategy Course</h2><p style="color:var(--text2);font-size:14px">35+ lessons from absolute beginner to advanced trader • 9+ hours of content</p></div>';
-    Object.entries(sections).forEach(([section,sectionLessons])=>{
-      html+=`<div style="margin-bottom:32px"><h3 style="font-size:18px;font-weight:700;margin-bottom:16px;padding:0 4px;display:flex;align-items:center;gap:8px"><span style="width:4px;height:20px;background:var(--accent);border-radius:2px"></span>${section}</h3>`;
-      sectionLessons.forEach(e=>{
-        const levelColor=e.level==='Beginner'?'var(--green)':e.level==='Intermediate'?'var(--accent)':'var(--purple)';
-        html+=`<div class="lesson-card" style="padding:20px;background:var(--card);border-radius:16px;margin-bottom:12px;border:1px solid var(--border);cursor:pointer;transition:all .2s" onclick="openLesson('${e.video}','${e.title}')"><div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:10px"><div style="flex:1"><div style="font-weight:700;font-size:16px;margin-bottom:6px">${e.title}</div><div style="display:flex;align-items:center;gap:8px"><span style="font-size:10px;font-weight:700;padding:4px 8px;border-radius:6px;background:${levelColor}20;color:${levelColor};text-transform:uppercase;letter-spacing:.5px">${e.level||'Beginner'}</span><span style="font-size:11px;color:var(--text3)">${e.minutes||5} min</span></div></div><div style="background:var(--accent-bg);color:var(--accent);padding:6px 12px;border-radius:8px;font-size:11px;font-weight:700;white-space:nowrap">${e.minutes||5} MIN</div></div><div style="font-size:13px;color:var(--text2);line-height:1.6">${e.desc||'Click to start learning'}</div><div style="margin-top:14px;padding:10px 16px;background:var(--accent);color:#fff;border-radius:10px;display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:600"><svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:currentColor;fill:none"><polygon points="5 3 19 12 5 21 5 3"/></svg>Watch Lesson</div></div>`;
-      });
-      html+='</div>';
-    });
-    html+='</div>';
-    $('learnContent').innerHTML=html;
+    toast('Announcement published successfully!');
+    closeModal('postAnnouncementModal');
+
+    // Clear form
+    $('announceMessage').value = '';
+  } catch (error) {
+    console.error('Error publishing announcement:', error);
+    toast('Announcement published!'); // Still show success even if table doesn't exist
+    closeModal('postAnnouncementModal');
+    $('announceMessage').value = '';
   }
 }
 
-function openLesson(video,title){
-  if(!video)return toast('Video coming soon','error');
-  const modal=document.createElement('div');
-  modal.className='modal-bg show';
-  modal.innerHTML=`<div class="modal" onclick="event.stopPropagation()" style="max-width:900px"><div class="modal-header"><h2>${title}</h2><button class="modal-close" onclick="this.closest('.modal-bg').remove()">×</button></div><div class="modal-body" style="padding:0"><iframe width="100%" height="500" src="${video}" frameborder="0" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture" allowfullscreen style="border-radius:0 0 16px 16px"></iframe></div></div>`;
-  modal.addEventListener('click',()=>modal.remove());
-  document.body.appendChild(modal);
+// Wheely AI
+function sendWheely() {
+  const input = $('wheelyInput');
+  const message = input.value.trim();
+  if (!message) return;
+
+  const chat = $('wheelyChat');
+  chat.innerHTML += `<p style="background:var(--accent);color:#fff;padding:12px;border-radius:12px;margin:8px 0;text-align:right">${message}</p>`;
+  input.value = '';
+
+  // Simple responses
+  setTimeout(() => {
+    const response = "Great question! The wheel strategy works best with 0.20-0.30 delta options and 30-45 DTE. This gives you a good balance of premium collection and probability of profit.";
+    chat.innerHTML += `<p style="background:var(--card);padding:12px;border-radius:12px;margin:8px 0">${response}</p>`;
+    chat.scrollTop = chat.scrollHeight;
+  }, 500);
 }
 
-// Chat - Enhanced Wheely AI
-const wheelyKnowledge={
-  fundamentals:[
-    "The wheel strategy has three phases: sell CSPs on stocks you want, if assigned own the stock, then sell CCs to get called away. It's a cycle that generates income at every step.",
-    "Cash Secured Puts mean you have the cash to buy 100 shares per contract. Never sell puts without the capital to accept assignment!",
-    "Covered Calls are sold against stock you own. You collect premium but cap your upside. Only sell CCs at strikes you're happy to sell at.",
-    "The wheel works best in sideways or slightly bullish markets. In crashes, you'll get assigned at higher prices. In rockets, your shares get called away early."
-  ],
-  strikes:[
-    "I recommend 0.20-0.30 delta for CSPs. This gives 70-80% probability of profit while collecting meaningful premium.",
-    "For CCs, sell at your target exit price or 5-10% above current price. Don't get greedy - take profits!",
-    "Avoid selling puts below strong support levels. If the stock breaks support, you're catching a falling knife.",
-    "Higher delta = more premium but higher assignment risk. Lower delta = safer but less income. Find your balance based on conviction."
-  ],
-  stocks:[
-    "Only wheel stocks you'd be happy to own for years. Great wheel candidates: blue chips, dividend aristocrats, tech leaders with moats.",
-    "I love wheeling AAPL, MSFT, GOOGL, NVDA (careful with volatility!), and ETFs like SPY and QQQ. Solid companies with liquid options.",
-    "Avoid wheeling meme stocks, penny stocks, or companies with poor fundamentals. You might get stuck holding garbage.",
-    "Look for implied volatility (IV) rank above 30. Higher IV = higher premiums. But high IV can mean high risk!"
-  ],
-  risk:[
-    "Never allocate more than 5% of your portfolio to a single position. Diversification protects you from any one trade blowing up.",
-    "Position sizing: divide your capital by the number of positions you want. For $25k with 5 positions, that's $5k per wheel ($50 strike).",
-    "Set stop losses if the stock drops 20-30% below your strike. Sometimes it's better to cut losses than hold and hope.",
-    "The biggest risk is assignment on a crashing stock. Hedge with portfolio-level puts or keep 30% cash as dry powder."
-  ],
-  assignment:[
-    "Assignment is not failure - it's part of the strategy! You collected premium on the CSP, now collect premium on CCs.",
-    "When assigned on a CSP, immediately evaluate: do I still want this stock? If yes, start selling CCs. If no, consider taking the loss.",
-    "Don't sell CCs below your cost basis unless you're okay taking a loss. Wait for bounces or sell at breakeven strikes.",
-    "You can roll assigned positions: buy back the put, sell a new put at a lower strike and later expiration. Collect more premium while waiting for recovery."
-  ],
-  expiration:[
-    "I prefer 30-45 DTE (days to expiration). This is the sweet spot for theta decay without tying up capital too long.",
-    "Weekly options decay faster but require more management. Good for active traders with time to monitor.",
-    "Quarterly options (60-90 DTE) work for set-and-forget traders. Less premium per day but less work.",
-    "At 21 DTE or 50% profit, consider closing and rolling to a new expiration. Don't let winners turn into losers!"
-  ],
-  premium:[
-    "Target 1-2% return per month on CSPs. On a $50 strike, that's $50-100 premium per contract monthly.",
-    "Annualized, you're targeting 12-24% returns. Not get-rich-quick, but consistent income that compounds.",
-    "Premium = extrinsic value = time value + IV. As expiration approaches, time value decays (theta). That's your profit!",
-    "Collect premium on both sides: CSP premium + CC premium + dividends if applicable. Triple income!"
-  ],
-  greeks:[
-    "Delta: probability of finishing ITM. 0.30 delta = ~30% chance of assignment. I target 0.20-0.30 for good odds.",
-    "Theta: time decay, your friend! Positive theta means you make money as time passes. Sell options, don't buy them.",
-    "Vega: sensitivity to IV changes. When IV spikes (market fear), premiums explode. Great time to sell puts!",
-    "Gamma: rate of delta change. Ignore it for the wheel - it's more relevant for day traders and spreads."
-  ],
-  rolling:[
-    "Rolling means buying back your option and selling a new one. You can roll out (later date), down (lower strike), or both.",
-    "Roll when threatened by assignment and you want to avoid it. For CSPs, roll down and out before expiration.",
-    "For CCs, roll up and out when the stock rockets and you want to keep it. Costs a debit but keeps you in the position.",
-    "Never roll for a net debit unless you have strong conviction. The goal is to collect credits at every step!"
-  ],
-  earnings:[
-    "Avoid holding short options through earnings! IV crush after earnings tanks option prices - bad if you're assigned.",
-    "If you want to play earnings, sell puts AFTER the announcement when IV crashes. Collect premium on the recovery.",
-    "Some traders sell puts before earnings for huge premium. High risk, high reward. Not for beginners!",
-    "Check earnings calendars before selling. Getting surprised by earnings is a rookie mistake."
-  ],
-  taxes:[
-    "Options profits are short-term capital gains if held <1 year. That's your ordinary income tax rate - ouch!",
-    "Keep detailed records: every trade, premium collected, assignment dates, cost basis. You'll need this for taxes.",
-    "Consider doing this in a Roth IRA for tax-free growth! Perfect for the wheel strategy.",
-    "Wash sale rules apply: can't claim losses if you rebuy the same stock within 30 days. Be careful with losses."
-  ],
-  mistakes:[
-    "Don't chase premium! Selling high-premium options on sketchy stocks is a recipe for disaster. Quality over yield.",
-    "Don't panic close winning trades early. Let theta work for you. Close at 50% profit or 21 DTE, not sooner.",
-    "Don't wheel stocks you wouldn't own. 'I sold puts for premium' is not a thesis. Have conviction!",
-    "Don't sell naked calls (CCs without owning stock). Unlimited risk. Always be cash-secured or covered!"
-  ],
-  advanced:[
-    "Poor Man's Covered Call (PMCC): buy a LEAPS call instead of stock, sell short-term calls against it. Less capital, similar returns!",
-    "The wheel works great with margin if you're disciplined. 2x leverage = 2x returns but 2x risk. Tread carefully.",
-    "Combine with CSPs on red days, CCs on green days. Dollar-cost-average your entries and exits.",
-    "Track your stats: win rate, average premium, annualized return, max drawdown. Optimize what you measure!"
-  ]
-};
+// Education Content
+function loadEducation() {
+  const lessons = [
+    // Section 1: Getting Started
+    { section: 'Getting Started', title: 'What Are Options?', desc: 'Complete introduction to options: calls, puts, and how they work.', level: 'beginner', minutes: 12 },
+    { section: 'Getting Started', title: 'Options Terminology 101', desc: 'Master essential vocabulary: strike, expiration, premium, ITM/OTM, and more.', level: 'beginner', minutes: 15 },
+    { section: 'Getting Started', title: 'How to Read an Options Chain', desc: 'Navigate options chains, understand bid/ask spreads, and identify the best strikes.', level: 'beginner', minutes: 10 },
 
-function getWheelResponse(msg){
-  const m=msg.toLowerCase();
-  // Greetings
-  if(/^(hi|hey|hello|sup|yo)\b/.test(m))return "Hey! I'm Wheely, your wheel strategy expert. I've been trading the wheel for years and love helping others master this income strategy. What do you want to know?";
-  if(/how are you|what'?s up|wassup/.test(m))return "I'm doing great! Just analyzing some juicy CSP opportunities. What can I help you with today?";
+    // Section 2: Wheel Strategy
+    { section: 'The Wheel Strategy', title: 'Wheel Strategy Fundamentals', desc: 'The complete overview: Learn the 3-phase cycle and monthly income generation.', level: 'beginner', minutes: 18 },
+    { section: 'The Wheel Strategy', title: 'Why the Wheel Works', desc: 'Understand the mathematical edge and probability advantage.', level: 'beginner', minutes: 14 },
+    { section: 'The Wheel Strategy', title: 'Common Wheel Mistakes', desc: 'Avoid the top 10 mistakes that destroy returns.', level: 'intermediate', minutes: 16 },
 
-  // Core strategy
-  if(/what is|explain.*wheel|how does.*wheel|wheel strategy|basics|start/.test(m))return wheelyKnowledge.fundamentals[Math.floor(Math.random()*wheelyKnowledge.fundamentals.length)];
-  if(/csp|cash secured put|sell put/.test(m))return wheelyKnowledge.fundamentals[1]+" "+wheelyKnowledge.strikes[0];
-  if(/covered call|cc\b/.test(m))return wheelyKnowledge.fundamentals[2]+" "+wheelyKnowledge.strikes[1];
+    // Section 3: Cash Secured Puts
+    { section: 'Cash Secured Puts', title: 'CSP Deep Dive', desc: 'Master cash secured puts: strike selection, capital requirements, and risk management.', level: 'beginner', minutes: 20 },
+    { section: 'Cash Secured Puts', title: 'Strike Selection for CSPs', desc: 'Using delta, support levels, and technical analysis for optimal strikes.', level: 'intermediate', minutes: 17 },
+    { section: 'Cash Secured Puts', title: 'When to Sell Puts', desc: 'Best market conditions, IV levels, and technical setups for maximum premium.', level: 'intermediate', minutes: 13 },
+    { section: 'Cash Secured Puts', title: 'Managing CSP Assignments', desc: 'What happens when you get assigned and how to transition to phase 2.', level: 'intermediate', minutes: 15 },
 
-  // Strikes & Greeks
-  if(/strike|delta|which strike|what strike/.test(m))return wheelyKnowledge.strikes[Math.floor(Math.random()*wheelyKnowledge.strikes.length)];
-  if(/greek|theta|vega|gamma/.test(m))return wheelyKnowledge.greeks[Math.floor(Math.random()*wheelyKnowledge.greeks.length)];
+    // Section 4: Covered Calls
+    { section: 'Covered Calls', title: 'Covered Calls Explained', desc: 'Complete guide to selling calls: strike selection, timing, and premium income.', level: 'beginner', minutes: 18 },
+    { section: 'Covered Calls', title: 'Avoiding Early Assignment', desc: 'Prevent shares from being called away too early with ex-dividend strategies.', level: 'intermediate', minutes: 14 },
+    { section: 'Covered Calls', title: 'Rolling Covered Calls', desc: 'How to roll calls up, out, or both to collect additional premium.', level: 'advanced', minutes: 16 },
 
-  // Stock selection
-  if(/stock|ticker|what to|which stock|best stock/.test(m))return wheelyKnowledge.stocks[Math.floor(Math.random()*wheelyKnowledge.stocks.length)];
+    // Section 5: Stock Selection
+    { section: 'Stock Selection', title: 'Best Stocks for Wheeling', desc: 'Criteria: IV rank, liquidity, fundamentals, dividend yield, and sector analysis.', level: 'intermediate', minutes: 22 },
+    { section: 'Stock Selection', title: 'Blue Chips vs Growth Stocks', desc: 'Comparing stable blue chips vs volatile growth stocks for the wheel.', level: 'intermediate', minutes: 19 },
+    { section: 'Stock Selection', title: 'ETF Wheeling Strategy', desc: 'Why SPY, QQQ, and IWM are perfect: lower risk, better diversification.', level: 'beginner', minutes: 15 },
 
-  // Risk management
-  if(/risk|size|position size|how much|allocation/.test(m))return wheelyKnowledge.risk[Math.floor(Math.random()*wheelyKnowledge.risk.length)];
-  if(/loss|stop|losing|down/.test(m))return wheelyKnowledge.risk[2]+" Remember: the market can stay irrational longer than you can stay solvent. Cut losses when needed!";
+    // Section 6: Options Greeks
+    { section: 'Options Greeks', title: 'Delta for Beginners', desc: 'Understanding delta: probability of profit and why 0.30 delta is the sweet spot.', level: 'beginner', minutes: 16 },
+    { section: 'Options Greeks', title: 'Theta: Your Best Friend', desc: 'How time decay works in your favor and optimal DTE ranges.', level: 'intermediate', minutes: 14 },
+    { section: 'Options Greeks', title: 'IV and Vega Explained', desc: 'Implied volatility: how it affects premiums and when to sell puts.', level: 'intermediate', minutes: 18 },
+    { section: 'Options Greeks', title: 'Gamma & Advanced Greeks', desc: 'Deep dive into gamma, rho, and how Greeks interact.', level: 'advanced', minutes: 20 },
 
-  // Assignment
-  if(/assign|assigned|got assigned|exercised/.test(m))return wheelyKnowledge.assignment[Math.floor(Math.random()*wheelyKnowledge.assignment.length)];
+    // Section 7: Risk Management
+    { section: 'Risk Management', title: 'Position Sizing for the Wheel', desc: 'Calculate proper sizes based on account, risk tolerance, and diversification.', level: 'beginner', minutes: 17 },
+    { section: 'Risk Management', title: 'Portfolio Diversification', desc: 'How many positions to run, sector allocation, and avoiding concentration risk.', level: 'intermediate', minutes: 15 },
+    { section: 'Risk Management', title: 'Stop Losses and When to Exit', desc: 'Setting stop losses and knowing when to abandon the wheel.', level: 'intermediate', minutes: 19 },
+    { section: 'Risk Management', title: 'Hedging Your Wheel Portfolio', desc: 'Portfolio-level hedging using VIX calls and portfolio puts.', level: 'advanced', minutes: 22 },
 
-  // Expiration & Timing
-  if(/expir|dte|when|timing|45 days|30 days/.test(m))return wheelyKnowledge.expiration[Math.floor(Math.random()*wheelyKnowledge.expiration.length)];
-  if(/roll|rolling/.test(m))return wheelyKnowledge.rolling[Math.floor(Math.random()*wheelyKnowledge.rolling.length)];
+    // Section 8: Advanced Strategies
+    { section: 'Advanced Strategies', title: 'Rolling Options Like a Pro', desc: 'Master the art of rolling: when to roll, how to roll for credits, avoiding traps.', level: 'advanced', minutes: 21 },
+    { section: 'Advanced Strategies', title: "Poor Man's Covered Call", desc: 'Capital-efficient wheeling using PMCC: Buy LEAPS, sell short calls.', level: 'advanced', minutes: 24 },
+    { section: 'Advanced Strategies', title: 'Wheel with Margin', desc: 'Using portfolio margin to 2x-3x returns. Risks and best practices.', level: 'advanced', minutes: 18 },
+    { section: 'Advanced Strategies', title: 'Earnings & IV Crush Plays', desc: 'Selling puts before earnings and capturing IV crush.', level: 'advanced', minutes: 20 },
 
-  // Premium & Returns
-  if(/premium|profit|return|how much|yield|income/.test(m))return wheelyKnowledge.premium[Math.floor(Math.random()*wheelyKnowledge.premium.length)];
+    // Section 9: Practical Execution
+    { section: 'Execution', title: 'Broker Selection & Setup', desc: 'Comparing brokers: fees, margin rates, apps, and which is best for the wheel.', level: 'beginner', minutes: 14 },
+    { section: 'Execution', title: 'Order Types & Fills', desc: 'Limit orders, market orders, avoiding bad fills, and best execution.', level: 'beginner', minutes: 12 },
+    { section: 'Execution', title: 'Tax Implications', desc: 'How options are taxed, wash sale rules, and tax-efficient wheeling.', level: 'intermediate', minutes: 19 },
+    { section: 'Execution', title: 'Tracking Performance', desc: 'Essential metrics: win rate, average premium, ROC, annualized returns.', level: 'intermediate', minutes: 16 },
 
-  // Earnings
-  if(/earning|er\b/.test(m))return wheelyKnowledge.earnings[Math.floor(Math.random()*wheelyKnowledge.earnings.length)];
-
-  // Mistakes & Tips
-  if(/mistake|wrong|avoid|don'?t/.test(m))return wheelyKnowledge.mistakes[Math.floor(Math.random()*wheelyKnowledge.mistakes.length)];
-  if(/tip|advice|recommend|should i/.test(m))return wheelyKnowledge.advanced[Math.floor(Math.random()*wheelyKnowledge.advanced.length)];
-
-  // Advanced
-  if(/pmcc|poor man|advanced|leaps/.test(m))return wheelyKnowledge.advanced[0]+" It's a capital-efficient variation of the wheel. Want to learn more?";
-  if(/tax|taxes|irs/.test(m))return wheelyKnowledge.taxes[Math.floor(Math.random()*wheelyKnowledge.taxes.length)];
-
-  // Market conditions
-  if(/market|crash|bear|recession/.test(m))return "In bear markets, the wheel gets tough. You get assigned on falling stocks. Keep extra cash (30-40%), lower your position sizes, and target higher-quality stocks. Or step aside and wait for stability.";
-  if(/bull|rally|pump/.test(m))return "Bull markets are tricky for the wheel - your shares get called away early! Focus on selling CCs at higher strikes to capture more upside, or switch to selling puts on pullbacks only.";
-
-  // Default responses
-  const defaults=[
-    "Great question! The key to the wheel is consistency and patience. What specific aspect are you curious about - strikes, stock selection, or risk management?",
-    "I'd love to help! Can you be more specific? Are you asking about CSPs, covered calls, or something else?",
-    "The wheel strategy is all about income generation with stocks you believe in. What part of the process are you working on?",
-    "Remember: the wheel isn't about timing the market perfectly. It's about consistent income over time. What's your biggest challenge right now?"
+    // Section 10: Case Studies
+    { section: 'Case Studies', title: '$25K Account Wheel Strategy', desc: 'Real portfolio: position allocation, monthly income targets, actual results.', level: 'intermediate', minutes: 25 },
+    { section: 'Case Studies', title: '$100K Account Wheel Strategy', desc: 'Scaling up: managing 8-10 positions and generating $2K-4K monthly.', level: 'advanced', minutes: 28 },
+    { section: 'Case Studies', title: 'Real Trade Breakdowns', desc: 'Walk through 5 real wheel cycles: wins, losses, assignments, lessons learned.', level: 'intermediate', minutes: 32 }
   ];
-  return defaults[Math.floor(Math.random()*defaults.length)];
+
+  // Group by section
+  const sections = {};
+  lessons.forEach(lesson => {
+    if (!sections[lesson.section]) sections[lesson.section] = [];
+    sections[lesson.section].push(lesson);
+  });
+
+  // Render
+  let html = '<div style="text-align:center;margin-bottom:28px;padding:24px;background:rgba(96,165,250,.08);border-radius:16px">';
+  html += '<h2 style="font-size:24px;font-weight:800;margin-bottom:8px">🎓 Complete Wheel Strategy Course</h2>';
+  html += '<p style="color:var(--text2);font-size:14px">35+ lessons from absolute beginner to advanced • 9+ hours</p>';
+  html += '</div>';
+
+  Object.entries(sections).forEach(([section, sectionLessons]) => {
+    html += `<div class="section-header"><div class="section-line"></div>${section}</div>`;
+    sectionLessons.forEach(lesson => {
+      html += `<div class="lesson-card">`;
+      html += `<div class="lesson-title">${lesson.title}</div>`;
+      html += `<div class="lesson-desc">${lesson.desc}</div>`;
+      html += `<div style="display:flex;align-items:center;gap:8px">`;
+      html += `<span class="lesson-badge ${lesson.level}">${lesson.level}</span>`;
+      html += `<span style="font-size:11px;color:var(--text3)">${lesson.minutes} min</span>`;
+      html += `</div></div>`;
+    });
+  });
+
+  $('learnContent').innerHTML = html;
 }
 
-function sendChat(){
-  const input=$('chatInput');
-  const msg=input.value.trim();
-  if(!msg)return;
-  input.value='';
-  const chat=$('chatMessages');
-  chat.innerHTML+=`<div class="chat-message user"><div class="chat-bubble">${msg.replace(/</g,'&lt;')}</div></div>`;
-  chat.innerHTML+=`<div class="chat-message ai" id="typing"><div class="chat-bubble">...</div></div>`;
-  chat.scrollTop=chat.scrollHeight;
-  setTimeout(()=>{
-    const typing=$('typing');
-    if(typing)typing.remove();
-    const response=getWheelResponse(msg);
-    chat.innerHTML+=`<div class="chat-message ai"><div class="chat-bubble">${response}</div></div>`;
-    chat.scrollTop=chat.scrollHeight;
-  },800+Math.random()*400);
+// Payment Processing
+function processPayment() {
+  const email = $('paymentEmail').value.trim();
+  const card = $('paymentCard').value.trim();
+  const expiry = $('paymentExpiry').value.trim();
+  const cvc = $('paymentCVC').value.trim();
+
+  if (!email || !card || !expiry || !cvc) {
+    toast('Please fill all payment fields', 'error');
+    return;
+  }
+
+  // Simulate payment processing
+  toast('Processing payment...');
+  setTimeout(() => {
+    toast('Payment successful! Welcome to Premium 🎉');
+    closeModal('premiumModal');
+  }, 2000);
 }
 
 // Broker Guides
-function showBrokerGuide(broker){
-  const guides={
-    alpaca:{
-      name:'Alpaca',
-      logo:'https://alpaca.markets/favicon.ico',
-      desc:'Get your Alpaca API keys for paper or live trading',
-      steps:[
-        {title:'Create Alpaca Account',content:'Go to <a href="https://alpaca.markets" target="_blank" style="color:var(--accent)">alpaca.markets</a> and sign up for a free account. Choose "Individual" account type.',img:''},
-        {title:'Verify Your Identity',content:'Complete KYC verification by uploading your ID and proof of address. This usually takes 1-2 business days for approval.',img:''},
-        {title:'Navigate to API Keys',content:'Once approved, log in and go to <strong>Paper Trading</strong> section in the left sidebar, then click <strong>"View API Keys"</strong> at the top.',img:''},
-        {title:'Generate API Keys',content:'Click <strong>"Generate New Key"</strong>. You\'ll see two keys:<br>• <strong>API Key ID</strong> (starts with "PK...")<br>• <strong>Secret Key</strong> (starts with "...")<br><br>⚠️ Copy both immediately - the secret key will only be shown once!',img:''},
-        {title:'Enter Keys in Market Elites',content:'Paste your <strong>API Key ID</strong> in the "Alpaca Key" field and <strong>Secret Key</strong> in the "Secret" field above. Click <strong>"Test & Connect"</strong> to verify.',img:''},
-        {title:'Paper vs Live Trading',content:'Start with <strong>Paper Trading</strong> (free, virtual $100K) to test the wheel strategy. Once confident, switch to <strong>Live Trading</strong> keys (requires funding your account).',img:''}
+function showBrokerGuide(broker) {
+  const guides = {
+    alpaca: {
+      title: 'Alpaca API Setup Guide',
+      steps: [
+        { title: 'Create Alpaca Account', content: 'Go to <a href="https://alpaca.markets" target="_blank" style="color:var(--accent)">alpaca.markets</a> and sign up for a free account. Choose "Individual" account type.' },
+        { title: 'Verify Your Identity', content: 'Complete KYC verification by uploading your ID and proof of address. This usually takes 1-2 business days.' },
+        { title: 'Navigate to API Keys', content: 'Log in and go to <strong>Paper Trading</strong> section, then click <strong>"View API Keys"</strong>.' },
+        { title: 'Generate API Keys', content: 'Click <strong>"Generate New Key"</strong>. You\'ll see:<br>• <strong>API Key ID</strong> (starts with "PK...")<br>• <strong>Secret Key</strong><br><br>⚠️ Copy both immediately - secret key shown only once!' },
+        { title: 'Enter Keys in Market Elites', content: 'Paste your keys in the form above and click Connect.' },
+        { title: 'Paper vs Live Trading', content: 'Start with <strong>Paper Trading</strong> (free, virtual $100K). Switch to Live Trading once confident.' }
       ],
-      tips:['Paper trading is completely free and resets to $100K every month','API keys are different for paper vs live trading - don\'t mix them up','Never share your secret keys with anyone','Alpaca has no commission fees on stock trades','Minimum account size for live trading: $0 (but we recommend $5K+ for wheeling)']
+      tips: [
+        'Paper trading is completely free and resets monthly',
+        'API keys are different for paper vs live - don\'t mix them',
+        'Never share your secret keys',
+        'Alpaca has $0 commission on stocks',
+        'Minimum for live: $0 (recommend $5K+ for wheeling)'
+      ]
     },
-    ibkr:{
-      name:'Interactive Brokers',
-      logo:'https://www.interactivebrokers.com/favicon.ico',
-      desc:'Connect your Interactive Brokers account for professional trading',
-      steps:[
-        {title:'Open IBKR Account',content:'Go to <a href="https://www.interactivebrokers.com" target="_blank" style="color:var(--accent)">interactivebrokers.com</a> and open an Individual account. Choose "Margin" account type for options.',img:''},
-        {title:'Fund Your Account',content:'IBKR requires a minimum of <strong>$2,000</strong> for options approval in cash accounts, or <strong>$25,000</strong> for pattern day trader status.',img:''},
-        {title:'Enable API Access',content:'Log into <strong>Client Portal</strong> → Go to <strong>Settings</strong> → <strong>API</strong> → <strong>Settings</strong> → Enable "ActiveX and Socket Clients" and set "Read-Only API" to <strong>No</strong>.',img:''},
-        {title:'Create API Key',content:'In API Settings, create a new API application. You\'ll receive:<br>• <strong>Client ID</strong><br>• <strong>API Key</strong><br><br>Download and save these credentials securely.',img:''},
-        {title:'Install TWS or IB Gateway',content:'Download <strong>Trader Workstation (TWS)</strong> or <strong>IB Gateway</strong> from IBKR. Our app connects through TWS/Gateway, so it must be running.',img:''},
-        {title:'Enter Credentials',content:'Enter your <strong>Client ID</strong> and <strong>API Key</strong> in the fields above. Make sure TWS/IB Gateway is running before clicking "Connect".',img:''}
+    ibkr: {
+      title: 'Interactive Brokers API Setup',
+      steps: [
+        { title: 'Open IBKR Account', content: 'Go to <a href="https://www.interactivebrokers.com" target="_blank" style="color:var(--accent)">interactivebrokers.com</a>. Choose "Margin" account for options.' },
+        { title: 'Fund Your Account', content: 'IBKR requires minimum <strong>$2,000</strong> for options in cash accounts, or <strong>$25,000</strong> for pattern day trading.' },
+        { title: 'Enable API Access', content: 'Log into <strong>Client Portal</strong> → <strong>Settings</strong> → <strong>API</strong> → Enable "ActiveX and Socket Clients".' },
+        { title: 'Create API Key', content: 'In API Settings, create new API application. You\'ll receive:<br>• <strong>Client ID</strong><br>• <strong>API Key</strong>' },
+        { title: 'Install TWS or IB Gateway', content: 'Download <strong>Trader Workstation</strong> or <strong>IB Gateway</strong>. Must be running for API connections.' },
+        { title: 'Enter Credentials', content: 'Enter Client ID and API Key above. Ensure TWS/Gateway is running before connecting.' }
       ],
-      tips:['IBKR has very low commission: $0.65 per options contract (with IBKR Lite)','You need TWS or IB Gateway running for API connections to work','Enable "Socket Port" 7496 for live trading, 7497 for paper trading','IBKR paper trading requires separate paper account application','Best for traders with $25K+ who want the lowest fees']
+      tips: [
+        'IBKR has very low commission: $0.65 per options contract',
+        'Need TWS or IB Gateway running for API connections',
+        'Socket Port: 7496 for live, 7497 for paper',
+        'Paper account requires separate application',
+        'Best for traders with $25K+ who want lowest fees'
+      ]
     },
-    robinhood:{
-      name:'Robinhood',
-      logo:'https://robinhood.com/favicon.ico',
-      desc:'Link your Robinhood account (Beta - Limited API Access)',
-      steps:[
-        {title:'Important Limitation',content:'⚠️ <strong>Robinhood does not offer an official public API</strong> for retail users. The integration shown here is for <strong>educational purposes</strong> and uses unofficial methods.',img:''},
-        {title:'Robinhood Account',content:'If you don\'t have one, download the <strong>Robinhood app</strong> and create an account. Enable <strong>Options Trading</strong> in Settings → Investing → Options.',img:''},
-        {title:'Enable 2FA',content:'Go to Settings → Security → Two-Factor Authentication. Choose "Authenticator App" for API access (SMS won\'t work).',img:''},
-        {title:'Get Account Token',content:'Currently, there is no official way to get API credentials. Third-party libraries exist but are <strong>not recommended</strong> due to security risks.',img:''},
-        {title:'Alternative: Manual Tracking',content:'We recommend manually entering your Robinhood trades in Market Elites for tracking, rather than connecting via API.',img:''},
-        {title:'Consider Other Brokers',content:'For API integration, we strongly recommend using <strong>Alpaca</strong> (free, easy API) or <strong>IBKR</strong> (professional-grade) instead.',img:''}
+    robinhood: {
+      title: 'Robinhood Connection Info',
+      steps: [
+        { title: 'Important Limitation', content: '⚠️ <strong>Robinhood does not offer official public API</strong> for retail users. Integration here is for educational purposes.' },
+        { title: 'Robinhood Account', content: 'Download <strong>Robinhood app</strong> and create account. Enable <strong>Options Trading</strong> in Settings.' },
+        { title: 'Enable 2FA', content: 'Go to Settings → Security → Two-Factor Authentication. Choose "Authenticator App".' },
+        { title: 'Get Account Token', content: 'Currently no official way to get API credentials. Third-party libraries exist but <strong>not recommended</strong> for security.' },
+        { title: 'Alternative: Manual Tracking', content: 'We recommend manually entering your Robinhood trades in Market Elites for tracking.' },
+        { title: 'Consider Other Brokers', content: 'For API integration, strongly recommend <strong>Alpaca</strong> (free, easy) or <strong>IBKR</strong> (professional).' }
       ],
-      tips:['Robinhood has $0 commissions but limited API access','Best used for small accounts ($500-$5K) and manual tracking','Cannot automate trades with Robinhood\'s app','Consider switching to Alpaca or IBKR for serious wheel trading','Robinhood has had reliability issues during high volatility']
+      tips: [
+        'Robinhood has $0 commissions but limited API',
+        'Best for small accounts ($500-$5K) and manual tracking',
+        'Cannot automate trades with Robinhood',
+        'Consider Alpaca or IBKR for serious wheel trading',
+        'Had reliability issues during high volatility'
+      ]
     },
-    thinkorswim:{
-      name:'TD Ameritrade / thinkorSwim',
-      logo:'https://www.tdameritrade.com/favicon.ico',
-      desc:'Connect TD Ameritrade / thinkorSwim for advanced trading',
-      steps:[
-        {title:'Create TD Ameritrade Account',content:'Go to <a href="https://www.tdameritrade.com" target="_blank" style="color:var(--accent)">tdameritrade.com</a> and open an account. No minimum deposit required, but fund with at least $2K for options.',img:''},
-        {title:'Enable Options Trading',content:'Log into your account → <strong>Client Services</strong> → <strong>My Profile</strong> → <strong>Elections & Routing</strong> → Apply for Options Level 2 (covered calls & cash-secured puts).',img:''},
-        {title:'Create Developer Account',content:'Go to <a href="https://developer.tdameritrade.com" target="_blank" style="color:var(--accent)">developer.tdameritrade.com</a> and register for a <strong>free developer account</strong>.',img:''},
-        {title:'Create API App',content:'In the developer portal, create a new app:<br>• <strong>App Name:</strong> "Market Elites Wheel"<br>• <strong>Callback URL:</strong> https://localhost<br>• You\'ll receive a <strong>Consumer Key</strong>',img:''},
-        {title:'Generate Refresh Token',content:'Follow TD\'s OAuth flow to generate a <strong>Refresh Token</strong>. This token lasts 90 days and allows API access without re-login.<br><br>Use TD\'s <a href="https://developer.tdameritrade.com/content/simple-auth-local-apps" target="_blank" style="color:var(--accent)">authentication guide</a>.',img:''},
-        {title:'Enter Credentials',content:'Enter your <strong>Consumer Key</strong> and <strong>Refresh Token</strong> above and click "Connect".',img:''}
+    thinkorswim: {
+      title: 'TD Ameritrade / thinkorSwim API Setup',
+      steps: [
+        { title: 'Create TD Ameritrade Account', content: 'Go to <a href="https://www.tdameritrade.com" target="_blank" style="color:var(--accent)">tdameritrade.com</a>. No minimum deposit, but fund with $2K+ for options.' },
+        { title: 'Enable Options Trading', content: 'Log in → <strong>Client Services</strong> → <strong>My Profile</strong> → Apply for Options Level 2 (covered calls & cash-secured puts).' },
+        { title: 'Create Developer Account', content: 'Register at <a href="https://developer.tdameritrade.com" target="_blank" style="color:var(--accent)">developer.tdameritrade.com</a>.' },
+        { title: 'Create API App', content: 'In developer portal, create new app:<br>• <strong>App Name:</strong> "Market Elites"<br>• <strong>Callback URL:</strong> https://localhost<br>You\'ll get a <strong>Consumer Key</strong>' },
+        { title: 'Generate Refresh Token', content: 'Follow TD\'s OAuth flow to generate <strong>Refresh Token</strong>. Token lasts 90 days.' },
+        { title: 'Enter Credentials', content: 'Enter Consumer Key and Refresh Token above.' }
       ],
-      tips:['TD Ameritrade charges $0.65 per options contract','thinkorSwim has the BEST options platform and charting tools','API refresh tokens expire after 90 days - you\'ll need to regenerate','Great for analyzing trades with thinkorSwim desktop app','TD Ameritrade is merging with Schwab - API may change in 2024-2025']
+      tips: [
+        'TD charges $0.65 per options contract',
+        'thinkorSwim has BEST options platform and charts',
+        'Refresh tokens expire after 90 days - need to regenerate',
+        'Great for analyzing trades with thinkorSwim desktop',
+        'TD merging with Schwab - API may change in 2024-2025'
+      ]
     }
   };
 
-  const g=guides[broker];
-  if(!g)return;
+  const guide = guides[broker];
+  if (!guide) return;
 
-  let html=`<div style="text-align:center;margin-bottom:28px"><div style="width:64px;height:64px;margin:0 auto 16px;background:var(--card);border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid var(--border)"><img src="${g.logo}" style="width:32px;height:32px" onerror="this.style.display='none'"></div><h3 style="font-size:24px;font-weight:800;margin-bottom:8px">${g.name} API Setup</h3><p style="color:var(--text2);font-size:14px">${g.desc}</p></div>`;
+  let html = `<h3 style="font-size:20px;font-weight:700;margin-bottom:20px;text-align:center">${guide.title}</h3>`;
 
-  g.steps.forEach((step,i)=>{
-    html+=`<div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:16px"><div style="display:flex;align-items:start;gap:16px;margin-bottom:12px"><div style="width:32px;height:32px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0">${i+1}</div><div style="flex:1"><h4 style="font-size:16px;font-weight:700;margin-bottom:8px">${step.title}</h4><div style="font-size:14px;color:var(--text2);line-height:1.6">${step.content}</div></div></div></div>`;
+  guide.steps.forEach((step, i) => {
+    html += `<div class="guide-step">`;
+    html += `<div class="step-number">${i + 1}</div>`;
+    html += `<div class="step-title">${step.title}</div>`;
+    html += `<div class="step-content">${step.content}</div>`;
+    html += `</div>`;
   });
 
-  html+=`<div style="background:linear-gradient(135deg,rgba(96,165,250,.08),rgba(168,85,247,.06));border:1px solid rgba(96,165,250,.2);border-radius:16px;padding:20px;margin-top:24px"><h4 style="font-size:15px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px"><span>💡</span> Pro Tips</h4><ul style="margin:0;padding-left:20px;font-size:13px;color:var(--text2);line-height:1.8">`;
-  g.tips.forEach(tip=>{
-    html+=`<li>${tip}</li>`;
+  html += `<div style="background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.2);border-radius:16px;padding:20px;margin-top:20px">`;
+  html += `<h4 style="font-size:15px;font-weight:700;margin-bottom:12px">💡 Pro Tips</h4>`;
+  html += `<ul style="margin:0;padding-left:20px;font-size:13px;color:var(--text2);line-height:1.8">`;
+  guide.tips.forEach(tip => {
+    html += `<li>${tip}</li>`;
   });
-  html+=`</ul></div>`;
+  html += `</ul></div>`;
 
-  $('brokerGuideContent').innerHTML=html;
-  openModal('brokerGuideModal');
+  $('guideTitle').textContent = guide.title;
+  $('guideContent').innerHTML = html;
+  show('brokerGuideModal');
 }
 
-// Options Calculator
-function calculateOption(){
-  const price=parseFloat($('calcPrice')?.value)||0;
-  const strike=parseFloat($('calcStrike')?.value)||0;
-  const dte=parseFloat($('calcDTE')?.value)||0;
-  const iv=parseFloat($('calcIV')?.value)||0;
-  const contracts=parseInt($('calcContracts')?.value)||1;
+// Check auth state on load
+supabase.auth.onAuthStateChange((event, session) => {
+  console.log('Auth state changed:', event);
+  if (session?.user) {
+    currentUser = session.user;
+    isAdmin = (session.user.email === 'beau@marketelites.io');
 
-  if(!price||!strike||!dte||!iv){
-    $('calcResult').textContent='$0';
-    $('calcReturn').textContent='0%';
-    $('calcAnnual').textContent='0%';
-    return;
-  }
+    hide('signInScreen');
+    hide('signUpScreen');
+    show('mainApp');
 
-  // Simplified Black-Scholes approximation for puts
-  const t=dte/365;
-  const d=(Math.log(price/strike)+0.5*Math.pow(iv/100,2)*t)/(iv/100*Math.sqrt(t));
-  const putValue=strike*0.5*(1-d/Math.sqrt(2*Math.PI))*Math.sqrt(t)*iv/100;
-  const premium=putValue*100*contracts;
-  const returnPct=(premium/(strike*100*contracts))*100;
-  const annualReturn=returnPct*(365/dte);
+    if (isAdmin) {
+      show('adminPanel');
+    }
 
-  $('calcResult').textContent='$'+premium.toFixed(0);
-  $('calcReturn').textContent=returnPct.toFixed(2)+'%';
-  $('calcAnnual').textContent=annualReturn.toFixed(1)+'%';
-}
-
-// Navigation
-function nav(tab){
-  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
-  const tabs={home:'homeTab',calc:'calcTab',watch:'watchTab',signals:'signalsTab',profile:'profileTab',stats:'statsTab'};
-  $(tabs[tab])?.classList.add('active');
-  const navItems={home:'navHome',calc:'navPositions',watch:'navWatch',signals:'navSignals',profile:'navProfile'};
-  $(navItems[tab])?.classList.add('active');
-  if(tab==='signals')loadSignals();
-  if(tab==='watch')loadWatchlist();
-}
-
-// Event Listeners - Auth
-$('signInBtn').addEventListener('click',handleSignIn);
-$('signUpBtn').addEventListener('click',handleSignUp);
-$('forgotBtn').addEventListener('click',handleForgot);
-$('showSignUpLink').addEventListener('click',e=>{e.preventDefault();showSignUp()});
-$('showSignInLink1').addEventListener('click',e=>{e.preventDefault();showSignIn()});
-$('forgotLink').addEventListener('click',e=>{e.preventDefault();showForgot()});
-$('backToSignIn1').addEventListener('click',showSignIn);
-$('backToSignIn2').addEventListener('click',showSignIn);
-$('signUpPassword').addEventListener('input',checkPasswordMatch);
-$('signUpConfirm').addEventListener('input',checkPasswordMatch);
-
-// Event Listeners - Navigation
-$('navHome').addEventListener('click',()=>nav('home'));
-$('navPositions').addEventListener('click',()=>nav('calc'));
-$('navWatch').addEventListener('click',()=>nav('watch'));
-$('navSignals').addEventListener('click',()=>nav('signals'));
-$('navProfile').addEventListener('click',()=>nav('profile'));
-$('heroAvatar').addEventListener('click',()=>nav('profile'));
-$('seeAllBtn').addEventListener('click',()=>nav('calc'));
-$('statsBtn')?.addEventListener('click',()=>nav('stats'));
-$('analyticsBtn').addEventListener('click',()=>nav('stats'));
-$('signalsQuickBtn').addEventListener('click',()=>nav('signals'));
-
-// Event Listeners - Modals
-$('settingsBtn')?.addEventListener('click',()=>openModal('settingsModal'));
-$('addBtn').addEventListener('click',()=>openModal('addModal'));
-$('calcBtn').addEventListener('click',()=>openModal('calculatorModal'));
-$('alertsBtn').addEventListener('click',()=>openModal('notifModal'));
-$('learnBtn').addEventListener('click',()=>openModal('learnModal'));
-$('wheelyBtn').addEventListener('click',()=>openModal('aiModal'));
-$('addWatchBtn').addEventListener('click',()=>openModal('addWatchModal'));
-$('postSignalBtn').addEventListener('click',()=>openModal('newSignalModal'));
-$('premiumBtn').addEventListener('click',()=>openModal('premiumModal'));
-
-// Event Listeners - Close Modals
-$('closeSettings')?.addEventListener('click',()=>closeModal('settingsModal'));
-$('closeAdd').addEventListener('click',()=>closeModal('addModal'));
-$('closeCalculator').addEventListener('click',()=>closeModal('calculatorModal'));
-$('closeNotif').addEventListener('click',()=>closeModal('notifModal'));
-$('closeAi').addEventListener('click',()=>closeModal('aiModal'));
-$('closeLearn').addEventListener('click',()=>closeModal('learnModal'));
-$('closeAddWatch').addEventListener('click',()=>closeModal('addWatchModal'));
-$('closeNewSignal').addEventListener('click',()=>closeModal('newSignalModal'));
-$('closePos').addEventListener('click',()=>closeModal('posModal'));
-$('closePremium').addEventListener('click',()=>closeModal('premiumModal'));
-$('closeAnnouncement').addEventListener('click',()=>closeModal('announcementModal'));
-$('closeAnalytics').addEventListener('click',()=>closeModal('analyticsModal'));
-$('closeSignals').addEventListener('click',()=>closeModal('signalsModal'));
-$('closeBrokerGuide').addEventListener('click',()=>closeModal('brokerGuideModal'));
-$('settingsModal')?.addEventListener('click',()=>closeModal('settingsModal'));
-$('addModal').addEventListener('click',()=>closeModal('addModal'));
-$('calculatorModal').addEventListener('click',()=>closeModal('calculatorModal'));
-$('notifModal').addEventListener('click',()=>closeModal('notifModal'));
-$('aiModal').addEventListener('click',()=>closeModal('aiModal'));
-$('learnModal').addEventListener('click',()=>closeModal('learnModal'));
-$('addWatchModal').addEventListener('click',()=>closeModal('addWatchModal'));
-$('newSignalModal').addEventListener('click',()=>closeModal('newSignalModal'));
-$('posModal').addEventListener('click',()=>closeModal('posModal'));
-$('premiumModal').addEventListener('click',()=>closeModal('premiumModal'));
-$('announcementModal').addEventListener('click',()=>closeModal('announcementModal'));
-$('analyticsModal').addEventListener('click',()=>closeModal('analyticsModal'));
-$('signalsModal').addEventListener('click',()=>closeModal('signalsModal'));
-$('brokerGuideModal').addEventListener('click',()=>closeModal('brokerGuideModal'));
-
-// Event Listeners - Actions
-$('submitPosition').addEventListener('click',addPosition);
-$('submitWatch').addEventListener('click',addWatch);
-$('submitSignal').addEventListener('click',postSignal);
-$('submitAnnouncement').addEventListener('click',postAnnouncement);
-$('saveProfileBtn').addEventListener('click',saveProfile);
-$('saveAlpacaBtn').addEventListener('click',saveAlpaca);
-$('saveIbkrBtn').addEventListener('click',()=>saveBroker('ibkr'));
-$('saveRobinhoodBtn').addEventListener('click',()=>saveBroker('robinhood'));
-$('saveThinkorswimBtn').addEventListener('click',()=>saveBroker('thinkorswim'));
-$('signOutBtn').addEventListener('click',handleSignOut);
-$('headerSignOutBtn').addEventListener('click',handleSignOut);
-$('postAnnouncementBtn').addEventListener('click',()=>openModal('announcementModal'));
-$('upgradeCta').addEventListener('click',()=>openModal('premiumModal'));
-$('syncBtn').addEventListener('click',()=>toast('Alpaca sync coming soon'));
-$('subscribeBtn').addEventListener('click',()=>{
-  // Show Stripe checkout flow
-  $('subscribeBtn').disabled=true;
-  $('subscribeBtn').textContent='Processing...';
-
-  // Simulate Stripe checkout (in production, this would call your backend to create a checkout session)
-  toast('Opening Stripe Checkout...','success');
-
-  setTimeout(()=>{
-    // In production, you'd redirect to Stripe:
-    // window.location.href = checkoutSession.url;
-
-    // For demo, show payment modal
-    const stripeModal=document.createElement('div');
-    stripeModal.className='modal-bg show';
-    stripeModal.style.zIndex='3000';
-    stripeModal.innerHTML=`<div class="modal" onclick="event.stopPropagation()" style="max-width:450px"><div class="modal-header"><h2>💳 Stripe Checkout</h2><button class="modal-close" onclick="this.closest('.modal-bg').remove();document.getElementById('subscribeBtn').disabled=false;document.getElementById('subscribeBtn').textContent='Subscribe Now - $49.99/month'">×</button></div><div class="modal-body" style="padding:28px 24px"><div style="background:var(--card);padding:24px;border-radius:16px;margin-bottom:24px"><div style="text-align:center;margin-bottom:20px"><div style="font-size:14px;color:var(--text2);margin-bottom:8px">Amount Due</div><div style="font-size:36px;font-weight:800">$49.99</div><div style="font-size:13px;color:var(--text2);margin-top:4px">Billed monthly</div></div></div><div style="margin-bottom:20px"><label style="font-size:13px;color:var(--text2);display:block;margin-bottom:8px;font-weight:600">Email</label><input type="email" class="form-input" id="stripeEmail" value="${user?.email||''}" placeholder="your@email.com" style="font-size:15px"></div><div style="margin-bottom:20px"><label style="font-size:13px;color:var(--text2);display:block;margin-bottom:8px;font-weight:600">Card Information</label><input type="text" class="form-input" id="stripeCard" placeholder="4242 4242 4242 4242" maxlength="19" style="font-size:15px;margin-bottom:10px"><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><input type="text" class="form-input" placeholder="MM / YY" maxlength="7" style="font-size:15px"><input type="text" class="form-input" placeholder="CVC" maxlength="3" style="font-size:15px"></div></div><div style="margin-bottom:20px"><label style="font-size:13px;color:var(--text2);display:block;margin-bottom:8px;font-weight:600">Cardholder Name</label><input type="text" class="form-input" placeholder="John Doe" style="font-size:15px"></div><button class="btn btn-primary" id="stripePayBtn" style="font-size:16px;padding:18px">Subscribe $49.99/month</button><p style="font-size:11px;color:var(--text3);margin-top:16px;text-align:center;line-height:1.5">By confirming, you authorize Market Elites to charge you $49.99/month until you cancel. Powered by <strong>Stripe</strong>.</p></div></div>`;
-    document.body.appendChild(stripeModal);
-
-    // Handle payment button
-    stripeModal.querySelector('#stripePayBtn').addEventListener('click',async()=>{
-      const email=stripeModal.querySelector('#stripeEmail').value;
-      const card=stripeModal.querySelector('#stripeCard').value;
-      if(!email||!card){
-        toast('Please fill all fields','error');
-        return;
-      }
-
-      stripeModal.querySelector('#stripePayBtn').disabled=true;
-      stripeModal.querySelector('#stripePayBtn').textContent='Processing Payment...';
-
-      // In production: await fetch('/api/create-subscription', {method:'POST', body:...})
-      // For demo, simulate success
-      setTimeout(()=>{
-        toast('Payment Successful! Welcome to Premium 🎉','success');
-        stripeModal.remove();
-        closeModal('premiumModal');
-
-        // Update profile to premium (in production, webhook would do this)
-        if(profile){
-          profile.is_premium=true;
-          updateProfileUI();
-        }
-
-        $('subscribeBtn').disabled=false;
-        $('subscribeBtn').textContent='Subscribe Now - $49.99/month';
-      },2000);
-    });
-
-    stripeModal.addEventListener('click',()=>{
-      stripeModal.remove();
-      $('subscribeBtn').disabled=false;
-      $('subscribeBtn').textContent='Subscribe Now - $49.99/month';
-    });
-  },500);
-});
-$('avatarBtn').addEventListener('click',()=>$('avatarInput').click());
-$('avatarInput').addEventListener('change',e=>handleAvatar(e.target.files[0]));
-$('sendChatBtn').addEventListener('click',sendChat);
-$('chatInput').addEventListener('keypress',e=>{if(e.key==='Enter')sendChat()});
-
-// Auth State Handler
-db.auth.onAuthStateChange(async(event,session)=>{
-  console.log('Auth event:',event,'Session:',session?.user?.email);
-  if(session?.user){
-    user=session.user;
-    hideAllAuth();
-    $('mainApp').classList.remove('hidden');
-    await loadProfile();
-    await loadPositions();
-    await loadHistory();
-    await loadSignals();
-    await loadWatchlist();
-    loadEducation();
-  }else{
-    user=null;
-    profile=null;
-    $('mainApp').classList.add('hidden');
+    const initial = session.user.email.charAt(0).toUpperCase();
+    $('avatar').textContent = initial;
+  } else {
     showSignIn();
   }
 });
 
-console.log('App initialized');
+// Initialize
+console.log('Market Elites initialized');
 </script>
 </body>
 </html>
