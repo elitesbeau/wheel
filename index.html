@@ -553,18 +553,24 @@ async function signUp() {
 
 async function signOut() {
   console.log('Sign out clicked');
+
+  // Try to sign out from Supabase server
   try {
-    await supabase.auth.signOut();
-    currentUser = null;
-    isAdmin = false;
-    hide('mainApp');
-    hide('adminPanel');
-    showSignIn();
-    toast('Signed out successfully');
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      console.error('Supabase signOut error:', error);
+    }
   } catch (error) {
-    console.error('Sign out error:', error);
-    toast('Error signing out', 'error');
+    console.error('Sign out exception:', error);
   }
+
+  // ALWAYS clear local state, even if server signout fails
+  currentUser = null;
+  isAdmin = false;
+  hide('mainApp');
+  hide('adminPanel');
+  showSignIn();
+  toast('Signed out successfully');
 }
 
 // Modal Functions
