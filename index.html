@@ -99,6 +99,57 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .section-header{font-size:18px;font-weight:700;margin:24px 0 16px;padding-left:20px;display:flex;align-items:center;gap:8px}
 .section-line{width:4px;height:20px;background:var(--accent);border-radius:2px}
 
+/* Page System */
+.page{display:none;opacity:0;transition:opacity .3s ease}
+.page.active{display:block;opacity:1}
+.nav-badge{position:absolute;top:6px;right:12px;background:var(--red);color:#fff;font-size:10px;font-weight:700;padding:2px 6px;border-radius:10px;min-width:18px;text-align:center}
+
+/* Signals Page */
+.signals-feed{padding:0 20px}
+.signal-card,.announcement-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:18px;margin-bottom:12px}
+.signal-header{display:flex;justify-content:space-between;align-items:start;margin-bottom:12px}
+.signal-ticker{font-size:20px;font-weight:800}
+.signal-type-badge{display:inline-block;padding:4px 10px;border-radius:8px;font-size:11px;font-weight:700;text-transform:uppercase}
+.signal-type-badge.csp{background:rgba(34,197,94,.1);color:var(--green)}
+.signal-type-badge.cc{background:rgba(96,165,250,.1);color:var(--accent)}
+.signal-details{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:12px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+.signal-detail{text-align:center}
+.signal-detail-label{font-size:11px;color:var(--text3);margin-bottom:4px}
+.signal-detail-value{font-size:15px;font-weight:700}
+.signal-notes{margin-top:12px;font-size:13px;color:var(--text2);line-height:1.5}
+.signal-timestamp{font-size:11px;color:var(--text3);margin-top:12px}
+.admin-quick-post{background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);border-radius:16px;padding:16px;margin:0 20px 20px;display:grid;grid-template-columns:1fr 1fr 80px 80px 110px auto;gap:8px;align-items:center}
+.admin-quick-post input,.admin-quick-post select{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 8px;color:var(--text);font-size:13px}
+.admin-quick-post button{padding:10px 16px;border-radius:8px;font-size:13px}
+.announcement-card{border-left:4px solid var(--orange)}
+.announcement-type{font-size:11px;font-weight:700;text-transform:uppercase;margin-bottom:8px}
+.announcement-type.alert{color:var(--orange)}
+.announcement-type.info{color:var(--accent)}
+.announcement-type.update{color:var(--purple)}
+.announcement-message{font-size:14px;line-height:1.6;margin-bottom:10px}
+
+/* Learn Page */
+.learn-header{background:linear-gradient(180deg,#0a1628,var(--bg));padding:32px 20px;text-align:center;margin-bottom:24px}
+.learn-title{font-size:28px;font-weight:800;margin-bottom:8px}
+.learn-subtitle{font-size:14px;color:var(--text2)}
+.lessons-container{padding:0 20px}
+.lesson-section{margin-bottom:32px}
+
+/* Portfolio Page */
+.portfolio-header{padding:24px 20px;background:linear-gradient(180deg,#0a1628,var(--bg));margin-bottom:24px}
+.portfolio-stats{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-bottom:20px}
+.positions-list{padding:0 20px}
+.position-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:18px;margin-bottom:12px}
+.position-header{display:flex;justify-content:space-between;align-items:start;margin-bottom:12px}
+
+/* Profile Page */
+.profile-container{padding:24px 20px}
+.profile-section{margin-bottom:32px}
+.profile-item{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;cursor:pointer}
+.profile-item:hover{border-color:var(--accent)}
+.profile-item-label{font-weight:600}
+.profile-item-value{color:var(--text2);font-size:14px}
+
 /* Stats */
 .stats-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-bottom:20px}
 .stat-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px;text-align:center}
@@ -168,97 +219,215 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 
 <!-- Main App -->
 <div id="mainApp" class="app hidden">
-  <!-- Header -->
-  <div class="header">
-    <div class="header-top">
-      <div class="avatar" onclick="navTo('profile')" id="avatar">?</div>
-      <button class="icon-btn" onclick="signOut()" title="Sign Out">
-        <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+
+  <!-- HOME PAGE -->
+  <div id="homePage" class="page active">
+    <div class="header">
+      <div class="header-top">
+        <div class="avatar" onclick="navTo('profile')" id="avatar">?</div>
+        <button class="icon-btn" onclick="signOut()" title="Sign Out">
+          <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        </button>
+      </div>
+      <div class="balance">
+        <div class="balance-label">Portfolio Value</div>
+        <div class="balance-value">$<span id="portfolioValue">25,000</span></div>
+        <div class="balance-change">↑ +$0 (0%)</div>
+      </div>
+    </div>
+
+    <div class="quick-actions">
+      <button class="quick-btn" onclick="navTo('learn')">
+        <div class="quick-icon blue">
+          <svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+        </div>
+        <div class="quick-label">Learn</div>
+      </button>
+      <button class="quick-btn" onclick="openAnalytics()">
+        <div class="quick-icon green">
+          <svg viewBox="0 0 24 24"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+        </div>
+        <div class="quick-label">Analytics</div>
+      </button>
+      <button class="quick-btn" onclick="openWheely()">
+        <div class="quick-icon purple">
+          <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><circle cx="15.5" cy="8.5" r="1.5"/><path d="M9 14h6"/></svg>
+        </div>
+        <div class="quick-label">Wheely</div>
+      </button>
+      <button class="quick-btn" onclick="navTo('signals')">
+        <div class="quick-icon orange">
+          <svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+        </div>
+        <div class="quick-label">Signals</div>
       </button>
     </div>
-    <div class="balance">
-      <div class="balance-label">Portfolio Value</div>
-      <div class="balance-value">$<span id="portfolioValue">25,000</span></div>
-      <div class="balance-change">↑ +$0 (0%)</div>
+
+    <div class="section">
+      <div class="section-title">Active Positions</div>
+      <div class="card">
+        <div class="empty-state">
+          <p>No positions yet</p>
+          <button class="btn btn-primary" onclick="openAddPosition()" style="margin-top:16px;max-width:200px">Add Position</button>
+        </div>
+      </div>
     </div>
   </div>
 
-  <!-- Quick Actions -->
-  <div class="quick-actions">
-    <button class="quick-btn" onclick="openLearn()">
-      <div class="quick-icon blue">
-        <svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+  <!-- SIGNALS PAGE -->
+  <div id="signalsPage" class="page">
+    <div class="header">
+      <div class="header-top">
+        <h1 style="font-size:24px;font-weight:800">Live Signals</h1>
+        <button class="icon-btn" onclick="navTo('home')">
+          <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        </button>
       </div>
-      <div class="quick-label">Learn</div>
-    </button>
-    <button class="quick-btn" onclick="openAnalytics()">
-      <div class="quick-icon green">
-        <svg viewBox="0 0 24 24"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
-      </div>
-      <div class="quick-label">Analytics</div>
-    </button>
-    <button class="quick-btn" onclick="openWheely()">
-      <div class="quick-icon purple">
-        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><circle cx="15.5" cy="8.5" r="1.5"/><path d="M9 14h6"/></svg>
-      </div>
-      <div class="quick-label">Wheely</div>
-    </button>
-    <button class="quick-btn" onclick="openSignals()">
-      <div class="quick-icon orange">
-        <svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-      </div>
-      <div class="quick-label">Signals</div>
-    </button>
-  </div>
-
-  <!-- Admin Panel (only visible for admin) -->
-  <div id="adminPanel" class="admin-panel hidden">
-    <div class="admin-title">🔑 Admin Controls</div>
-    <div style="margin-bottom:16px">
-      <input type="text" class="form-input" id="quickAnnouncementInput" placeholder="Quick announcement..." style="margin-bottom:8px">
-      <button class="btn btn-primary" onclick="postQuickAnnouncement()">Post Alert</button>
     </div>
-    <button class="btn btn-secondary" onclick="openPostSignal()">Post New Signal</button>
-  </div>
 
-  <!-- Announcements Section -->
-  <div id="announcementsSection" class="section hidden">
-    <div class="section-title">📢 Latest Announcements</div>
-    <div id="announcementsList"></div>
-  </div>
+    <!-- Admin Quick Post (only visible for admin) -->
+    <div id="adminQuickPost" class="admin-quick-post hidden">
+      <input type="text" id="quickTicker" placeholder="Ticker" style="text-transform:uppercase">
+      <select id="quickType">
+        <option value="csp">CSP</option>
+        <option value="cc">CC</option>
+      </select>
+      <input type="number" id="quickStrike" placeholder="Strike" step="0.5">
+      <input type="number" id="quickPremium" placeholder="Premium" step="0.01">
+      <input type="date" id="quickExpiration">
+      <button class="btn btn-primary" onclick="quickPostSignal()">Post</button>
+    </div>
 
-  <!-- Positions -->
-  <div class="section">
-    <div class="section-title">Active Positions</div>
-    <div class="card">
-      <div class="empty-state">
-        <p>No positions yet</p>
-        <button class="btn btn-primary" onclick="openAddPosition()" style="margin-top:16px;max-width:200px">Add Position</button>
+    <div class="signals-feed" id="signalsFeed">
+      <div class="empty-state" style="padding:60px 20px">
+        <p>No signals yet</p>
       </div>
     </div>
   </div>
+
+  <!-- LEARN PAGE -->
+  <div id="learnPage" class="page">
+    <div class="learn-header">
+      <div class="header-top" style="margin-bottom:20px">
+        <h1 class="learn-title">Complete Wheel Course</h1>
+        <button class="icon-btn" onclick="navTo('home')">
+          <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        </button>
+      </div>
+      <p class="learn-subtitle">35+ lessons from beginner to advanced • 9+ hours</p>
+    </div>
+    <div class="lessons-container" id="lessonsContainer"></div>
+  </div>
+
+  <!-- PORTFOLIO PAGE -->
+  <div id="portfolioPage" class="page">
+    <div class="portfolio-header">
+      <div class="header-top" style="margin-bottom:20px">
+        <h1 style="font-size:24px;font-weight:800">Portfolio</h1>
+        <button class="icon-btn" onclick="navTo('home')">
+          <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        </button>
+      </div>
+      <div class="portfolio-stats">
+        <div class="stat-card">
+          <div class="stat-value" style="color:var(--green)">$0</div>
+          <div class="stat-label">Total P&L</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">0%</div>
+          <div class="stat-label">Win Rate</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">0</div>
+          <div class="stat-label">Active Positions</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" style="color:var(--green)">$0</div>
+          <div class="stat-label">Premium Collected</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="positions-list">
+      <div class="section-title">Active Positions</div>
+      <div class="card">
+        <div class="empty-state">
+          <p>No positions yet</p>
+          <button class="btn btn-primary" onclick="openAddPosition()" style="margin-top:16px;max-width:200px">Add Position</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROFILE PAGE -->
+  <div id="profilePage" class="page">
+    <div class="header">
+      <div class="header-top">
+        <h1 style="font-size:24px;font-weight:800">Profile</h1>
+        <button class="icon-btn" onclick="navTo('home')">
+          <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="profile-container">
+      <div class="profile-section">
+        <div class="section-title">Account</div>
+        <div class="profile-item" onclick="toast('Feature coming soon')">
+          <div>
+            <div class="profile-item-label">Email</div>
+            <div class="profile-item-value" id="profileEmail">-</div>
+          </div>
+          <svg viewBox="0 0 24 24" style="width:20px;height:20px;stroke:var(--text3)"><path d="M9 18l6-6-6-6"/></svg>
+        </div>
+        <div class="profile-item" onclick="toast('Feature coming soon')">
+          <div class="profile-item-label">Subscription</div>
+          <div class="profile-item-value">Free</div>
+          <svg viewBox="0 0 24 24" style="width:20px;height:20px;stroke:var(--text3)"><path d="M9 18l6-6-6-6"/></svg>
+        </div>
+      </div>
+
+      <div class="profile-section">
+        <div class="section-title">Settings</div>
+        <div class="profile-item" onclick="toast('Feature coming soon')">
+          <div class="profile-item-label">Notifications</div>
+          <svg viewBox="0 0 24 24" style="width:20px;height:20px;stroke:var(--text3)"><path d="M9 18l6-6-6-6"/></svg>
+        </div>
+        <div class="profile-item" onclick="toast('Feature coming soon')">
+          <div class="profile-item-label">Broker Connection</div>
+          <svg viewBox="0 0 24 24" style="width:20px;height:20px;stroke:var(--text3)"><path d="M9 18l6-6-6-6"/></svg>
+        </div>
+      </div>
+
+      <div class="profile-section">
+        <button class="btn btn-danger" onclick="signOut()">Sign Out</button>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <!-- Bottom Navigation -->
 <nav class="nav">
   <div class="nav-inner">
-    <button class="nav-item active" onclick="navTo('home')">
+    <button class="nav-item active" onclick="navTo('home')" data-page="home">
       <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
       Home
     </button>
-    <button class="nav-item" onclick="navTo('portfolio')">
-      <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
-      Portfolio
+    <button class="nav-item" onclick="navTo('signals')" data-page="signals" style="position:relative">
+      <svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+      Signals
+      <span class="nav-badge hidden" id="signalsBadge">0</span>
     </button>
-    <button class="nav-item" onclick="openLearn()">
+    <button class="nav-item" onclick="navTo('learn')" data-page="learn">
       <svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
       Learn
     </button>
-    <button class="nav-item" onclick="openSignals()">
-      <svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-      Signals
+    <button class="nav-item" onclick="navTo('portfolio')" data-page="portfolio">
+      <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+      Portfolio
     </button>
-    <button class="nav-item" onclick="navTo('profile')">
+    <button class="nav-item" onclick="navTo('profile')" data-page="profile">
       <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
       Profile
     </button>
@@ -508,6 +677,8 @@ try {
 let currentUser = null;
 let isAdmin = false;
 let announcements = [];
+let signals = [];
+let unreadSignalsCount = 0;
 
 // Utility functions
 function $(id) { return document.getElementById(id); }
@@ -583,10 +754,10 @@ async function signIn() {
     hide('signUpScreen');
     show('mainApp');
 
-    // Show admin panel if admin
+    // Show admin quick post if admin
     if (isAdmin) {
       console.log('Admin user detected');
-      show('adminPanel');
+      show('adminQuickPost');
     }
 
     // Set avatar initial
@@ -674,14 +845,51 @@ async function signOut() {
 function navTo(page) {
   console.log('Navigating to:', page);
 
+  // Hide all pages
+  document.querySelectorAll('.page').forEach(p => {
+    p.classList.remove('active');
+  });
+
+  // Show target page
+  const targetPage = $(`${page}Page`);
+  if (targetPage) {
+    targetPage.classList.add('active');
+  }
+
   // Update active nav item
   document.querySelectorAll('.nav-item').forEach(item => {
     item.classList.remove('active');
+    if (item.dataset.page === page) {
+      item.classList.add('active');
+    }
   });
-  event.target.closest('.nav-item').classList.add('active');
 
-  // Handle navigation - pages will be added later
-  console.log(`Navigated to ${page}`);
+  // Clear notification badge when visiting signals
+  if (page === 'signals') {
+    unreadSignalsCount = 0;
+    updateSignalsBadge();
+  }
+
+  // Load page-specific data
+  if (page === 'signals') {
+    renderSignals();
+  } else if (page === 'learn') {
+    loadEducation();
+  } else if (page === 'profile') {
+    loadProfile();
+  }
+}
+
+function updateSignalsBadge() {
+  const badge = $('signalsBadge');
+  if (badge) {
+    if (unreadSignalsCount > 0) {
+      badge.textContent = unreadSignalsCount;
+      badge.classList.remove('hidden');
+    } else {
+      badge.classList.add('hidden');
+    }
+  }
 }
 
 // Modal Functions
@@ -690,8 +898,7 @@ function closeModal(id) {
 }
 
 function openLearn() {
-  loadEducation();
-  show('learnModal');
+  navTo('learn');
 }
 
 function openAnalytics() {
@@ -699,7 +906,7 @@ function openAnalytics() {
 }
 
 function openSignals() {
-  show('signalsModal');
+  navTo('signals');
 }
 
 function openWheely() {
@@ -745,6 +952,53 @@ function savePosition() {
 }
 
 // Admin Functions
+function quickPostSignal() {
+  if (!isAdmin) {
+    toast('Admin access required', 'error');
+    return;
+  }
+
+  const ticker = $('quickTicker').value.trim().toUpperCase();
+  const type = $('quickType').value;
+  const strike = $('quickStrike').value;
+  const premium = $('quickPremium').value;
+  const expiration = $('quickExpiration').value;
+
+  if (!ticker || !strike || !premium || !expiration) {
+    toast('Please fill all fields', 'error');
+    return;
+  }
+
+  // Add to signals array
+  signals.unshift({
+    id: Date.now(),
+    type: 'signal',
+    ticker: ticker,
+    signal_type: type,
+    strike: parseFloat(strike),
+    premium: parseFloat(premium),
+    expiration: expiration,
+    notes: '',
+    created_at: new Date().toISOString(),
+    created_by: currentUser.email
+  });
+
+  // Clear inputs
+  $('quickTicker').value = '';
+  $('quickStrike').value = '';
+  $('quickPremium').value = '';
+  $('quickExpiration').value = '';
+
+  // Increment unread count for users on other pages
+  unreadSignalsCount++;
+  updateSignalsBadge();
+
+  // Render signals
+  renderSignals();
+
+  toast('Signal posted successfully!');
+}
+
 function postQuickAnnouncement() {
   if (!isAdmin) {
     toast('Admin access required', 'error');
@@ -759,10 +1013,11 @@ function postQuickAnnouncement() {
     return;
   }
 
-  // Add to announcements array
-  announcements.unshift({
+  // Add to signals array as announcement
+  signals.unshift({
     id: Date.now(),
-    type: 'alert',
+    type: 'announcement',
+    announcement_type: 'alert',
     message: message,
     created_at: new Date().toISOString(),
     created_by: currentUser.email
@@ -771,36 +1026,75 @@ function postQuickAnnouncement() {
   // Clear input
   input.value = '';
 
-  // Render announcements
-  renderAnnouncements();
+  // Increment unread count
+  unreadSignalsCount++;
+  updateSignalsBadge();
+
+  // Render if on signals page
+  renderSignals();
 
   toast('Alert posted successfully!');
 }
 
-function renderAnnouncements() {
-  const section = $('announcementsSection');
-  const list = $('announcementsList');
+function renderSignals() {
+  const feed = $('signalsFeed');
 
-  if (announcements.length === 0) {
-    hide('announcementsSection');
+  if (!feed) return;
+
+  if (signals.length === 0) {
+    feed.innerHTML = '<div class="empty-state" style="padding:60px 20px"><p>No signals yet</p></div>';
     return;
   }
 
-  show('announcementsSection');
-
   let html = '';
-  announcements.forEach(announcement => {
-    const date = new Date(announcement.created_at).toLocaleString();
-    const typeColor = announcement.type === 'alert' ? 'var(--orange)' : 'var(--accent)';
+  signals.forEach(item => {
+    if (item.type === 'signal') {
+      // Render signal card
+      const date = new Date(item.created_at).toLocaleString('en-US', {
+        month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit'
+      });
+      const expirationDate = new Date(item.expiration).toLocaleDateString('en-US', {
+        month: 'short', day: 'numeric', year: 'numeric'
+      });
+      const badgeClass = item.signal_type === 'csp' ? 'csp' : 'cc';
+      const badgeText = item.signal_type === 'csp' ? 'CSP' : 'CC';
 
-    html += `<div class="card" style="margin-bottom:12px;border-left:4px solid ${typeColor}">`;
-    html += `<div style="font-weight:700;margin-bottom:8px;color:${typeColor};text-transform:uppercase;font-size:12px">${announcement.type}</div>`;
-    html += `<div style="margin-bottom:8px">${announcement.message}</div>`;
-    html += `<div style="font-size:11px;color:var(--text3)">${date}</div>`;
-    html += `</div>`;
+      html += `<div class="signal-card">`;
+      html += `<div class="signal-header">`;
+      html += `<div class="signal-ticker">${item.ticker}</div>`;
+      html += `<span class="signal-type-badge ${badgeClass}">${badgeText}</span>`;
+      html += `</div>`;
+      html += `<div class="signal-details">`;
+      html += `<div class="signal-detail"><div class="signal-detail-label">Strike</div><div class="signal-detail-value">$${item.strike}</div></div>`;
+      html += `<div class="signal-detail"><div class="signal-detail-label">Premium</div><div class="signal-detail-value">$${item.premium}</div></div>`;
+      html += `<div class="signal-detail"><div class="signal-detail-label">Expiration</div><div class="signal-detail-value">${expirationDate}</div></div>`;
+      html += `</div>`;
+      if (item.notes) {
+        html += `<div class="signal-notes">${item.notes}</div>`;
+      }
+      html += `<div class="signal-timestamp">${date}</div>`;
+      html += `</div>`;
+    } else if (item.type === 'announcement') {
+      // Render announcement card
+      const date = new Date(item.created_at).toLocaleString('en-US', {
+        month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit'
+      });
+      const typeClass = item.announcement_type || 'alert';
+
+      html += `<div class="announcement-card">`;
+      html += `<div class="announcement-type ${typeClass}">${typeClass}</div>`;
+      html += `<div class="announcement-message">${item.message}</div>`;
+      html += `<div class="signal-timestamp">${date}</div>`;
+      html += `</div>`;
+    }
   });
 
-  list.innerHTML = html;
+  feed.innerHTML = html;
+}
+
+function renderAnnouncements() {
+  // Legacy function - now handled by renderSignals
+  renderSignals();
 }
 
 async function publishSignal() {
@@ -820,6 +1114,27 @@ async function publishSignal() {
     toast('Please fill all required fields', 'error');
     return;
   }
+
+  // Add to signals array
+  signals.unshift({
+    id: Date.now(),
+    type: 'signal',
+    ticker: symbol,
+    signal_type: type,
+    strike: parseFloat(strike),
+    premium: parseFloat(premium),
+    expiration: expiration,
+    notes: notes,
+    created_at: new Date().toISOString(),
+    created_by: currentUser.email
+  });
+
+  // Increment unread count
+  unreadSignalsCount++;
+  updateSignalsBadge();
+
+  // Render signals if on signals page
+  renderSignals();
 
   try {
     const { error } = await supabaseClient.from('signals').insert({
@@ -847,7 +1162,8 @@ async function publishSignal() {
     $('signalNotes').value = '';
   } catch (error) {
     console.error('Error publishing signal:', error);
-    toast('Error publishing signal', 'error');
+    toast('Signal published locally (DB error)', 'error');
+    closeModal('postSignalModal');
   }
 }
 
@@ -865,17 +1181,22 @@ async function publishAnnouncement() {
     return;
   }
 
-  // Add to announcements array
-  announcements.unshift({
+  // Add to signals array as announcement
+  signals.unshift({
     id: Date.now(),
-    type: type,
+    type: 'announcement',
+    announcement_type: type,
     message: message,
     created_at: new Date().toISOString(),
     created_by: currentUser.email
   });
 
-  // Render announcements
-  renderAnnouncements();
+  // Increment unread count
+  unreadSignalsCount++;
+  updateSignalsBadge();
+
+  // Render signals
+  renderSignals();
 
   toast('Announcement published!');
   closeModal('postAnnouncementModal');
@@ -913,6 +1234,14 @@ function sendWheely() {
     chat.innerHTML += `<p style="background:var(--card);padding:12px;border-radius:12px;margin:8px 0">${response}</p>`;
     chat.scrollTop = chat.scrollHeight;
   }, 500);
+}
+
+// Profile Functions
+function loadProfile() {
+  const emailEl = $('profileEmail');
+  if (emailEl && currentUser) {
+    emailEl.textContent = currentUser.email;
+  }
 }
 
 // Education Content
@@ -982,12 +1311,10 @@ function loadEducation() {
   });
 
   // Render
-  let html = '<div style="text-align:center;margin-bottom:28px;padding:24px;background:rgba(96,165,250,.08);border-radius:16px">';
-  html += '<h2 style="font-size:24px;font-weight:800;margin-bottom:8px">🎓 Complete Wheel Strategy Course</h2>';
-  html += '<p style="color:var(--text2);font-size:14px">35+ lessons from absolute beginner to advanced • 9+ hours</p>';
-  html += '</div>';
+  let html = '';
 
   Object.entries(sections).forEach(([section, sectionLessons]) => {
+    html += `<div class="lesson-section">`;
     html += `<div class="section-header"><div class="section-line"></div>${section}</div>`;
     sectionLessons.forEach(lesson => {
       html += `<div class="lesson-card" onclick='openLesson(${JSON.stringify(lesson)})'>`;
@@ -998,9 +1325,13 @@ function loadEducation() {
       html += `<span style="font-size:11px;color:var(--text3)">${lesson.minutes} min</span>`;
       html += `</div></div>`;
     });
+    html += `</div>`;
   });
 
-  $('learnContent').innerHTML = html;
+  const container = $('lessonsContainer') || $('learnContent');
+  if (container) {
+    container.innerHTML = html;
+  }
 }
 
 function openLesson(lesson) {
@@ -1146,8 +1477,8 @@ if (supabaseClient) {
         show('mainApp');
 
         if (isAdmin) {
-          console.log('Showing admin panel');
-          show('adminPanel');
+          console.log('Admin user detected');
+          show('adminQuickPost');
         }
 
         const initial = session.user.email.charAt(0).toUpperCase();
