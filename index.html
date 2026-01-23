@@ -99,6 +99,38 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .section-header{font-size:18px;font-weight:700;margin:24px 0 16px;padding-left:20px;display:flex;align-items:center;gap:8px}
 .section-line{width:4px;height:20px;background:var(--accent);border-radius:2px}
 
+/* Lesson Viewer */
+.lesson-viewer{position:fixed;inset:0;background:var(--bg);z-index:2000;overflow-y:auto;display:none}
+.lesson-viewer.active{display:block}
+.lesson-viewer-header{position:sticky;top:0;background:rgba(0,0,0,.95);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:16px 20px;display:flex;align-items:center;gap:16px;z-index:100}
+.lesson-back-btn{width:40px;height:40px;border-radius:50%;background:var(--card);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text)}
+.lesson-back-btn:hover{background:var(--border)}
+.lesson-viewer-title{flex:1;font-size:18px;font-weight:700}
+.lesson-content-wrap{max-width:800px;margin:0 auto;padding:24px 20px 100px}
+.lesson-video{width:100%;aspect-ratio:16/9;border-radius:16px;overflow:hidden;margin-bottom:32px;background:var(--card)}
+.lesson-video iframe{width:100%;height:100%;border:none}
+.lesson-section{margin-bottom:40px}
+.lesson-heading{font-size:22px;font-weight:700;margin-bottom:16px;color:var(--text)}
+.lesson-text{font-size:15px;line-height:1.8;color:var(--text2);margin-bottom:16px}
+.lesson-image{width:100%;border-radius:12px;margin:20px 0;border:1px solid var(--border)}
+.lesson-key-points{background:rgba(96,165,250,.08);border-left:4px solid var(--accent);border-radius:8px;padding:16px 20px;margin:20px 0}
+.lesson-key-points h4{font-size:16px;font-weight:700;margin-bottom:12px;color:var(--accent)}
+.lesson-key-points ul{margin:0;padding-left:20px;font-size:14px;line-height:1.8}
+.lesson-example{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;margin:20px 0}
+.lesson-example-title{font-size:16px;font-weight:700;margin-bottom:12px;color:var(--green)}
+.code-block{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:16px;margin:16px 0;font-family:monospace;font-size:13px;overflow-x:auto;color:var(--text2)}
+.lesson-quiz{margin-top:40px;padding-top:40px;border-top:2px solid var(--border)}
+.quiz-question{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:20px}
+.quiz-question-text{font-size:16px;font-weight:600;margin-bottom:16px}
+.quiz-option{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px 16px;margin-bottom:8px;cursor:pointer;transition:all .2s}
+.quiz-option:hover{border-color:var(--accent);background:rgba(96,165,250,.05)}
+.quiz-option.correct{border-color:var(--green);background:rgba(34,197,94,.1)}
+.quiz-option.incorrect{border-color:var(--red);background:rgba(239,68,68,.1)}
+.quiz-explanation{background:rgba(96,165,250,.08);border-radius:8px;padding:12px 16px;margin-top:12px;font-size:14px;color:var(--text2);display:none}
+.quiz-explanation.show{display:block}
+.lesson-nav-buttons{position:fixed;bottom:0;left:0;right:0;background:rgba(0,0,0,.95);backdrop-filter:blur(20px);border-top:1px solid var(--border);padding:16px 20px;display:flex;gap:12px;z-index:100}
+.lesson-nav-buttons .btn{flex:1;max-width:400px;margin:0 auto}
+
 /* Page System */
 .page{display:none;opacity:0;transition:opacity .3s ease}
 .page.active{display:block;opacity:1}
@@ -643,6 +675,20 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
       <button class="modal-close" onclick="closeModal('brokerGuideModal')">×</button>
     </div>
     <div id="guideContent"></div>
+  </div>
+</div>
+
+<!-- Lesson Viewer -->
+<div id="lessonViewer" class="lesson-viewer">
+  <div class="lesson-viewer-header">
+    <button class="lesson-back-btn" onclick="closeLessonViewer()">
+      <svg viewBox="0 0 24 24" style="width:20px;height:20px;stroke:currentColor;fill:none"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+    </button>
+    <div class="lesson-viewer-title" id="lessonViewerTitle">Lesson Title</div>
+  </div>
+  <div class="lesson-content-wrap" id="lessonContentWrap"></div>
+  <div class="lesson-nav-buttons">
+    <button class="btn btn-primary" id="nextLessonBtn" onclick="goToNextLesson()">Next Lesson</button>
   </div>
 </div>
 
@@ -1334,10 +1380,203 @@ function loadEducation() {
   }
 }
 
+// Comprehensive Lesson Content Database
+const lessonContentDatabase = {
+  'what-are-options': {
+    title: 'What Are Options?',
+    video: 'https://www.youtube.com/embed/7PM4rNDr4oI',
+    sections: [
+      {
+        heading: 'Understanding Options',
+        text: 'Options are contracts that give you the right (but not the obligation) to buy or sell a stock at a specific price (called the "strike price") before a certain date (the "expiration date"). Think of them like insurance policies for stocks - you pay a premium upfront for the right to do something later.',
+        keyPoints: [
+          'Options are contracts, not stocks themselves',
+          'You pay a premium to buy an option',
+          'The strike price is the price at which you can buy/sell',
+          'Options expire - they have limited time value'
+        ]
+      },
+      {
+        heading: 'Calls vs Puts',
+        text: 'There are two types of options: calls and puts. A CALL option gives you the right to BUY a stock at the strike price. A PUT option gives you the right to SELL a stock at the strike price.',
+        example: {
+          title: 'Real Example: Apple (AAPL)',
+          content: 'AAPL is trading at $150. You buy a $160 call option for $2 per share ($200 total for 100 shares). If AAPL rises to $170, you can exercise your option to buy at $160, immediately gaining $10/share profit. Your total profit: ($170 - $160) × 100 - $200 premium = $800.'
+        }
+      },
+      {
+        heading: 'Why We SELL Options in the Wheel Strategy',
+        text: 'Instead of buying options, the Wheel Strategy focuses on SELLING options to collect premium income. When you sell an option, you receive money upfront and take on an obligation.',
+        keyPoints: [
+          'Selling puts = Agreeing to buy stock at strike price',
+          'Selling calls = Agreeing to sell stock at strike price',
+          'You keep the premium no matter what happens',
+          'Time decay works in YOUR favor as a seller'
+        ]
+      }
+    ],
+    quiz: [
+      {
+        question: 'What does a put option give you the right to do?',
+        options: ['Buy a stock', 'Sell a stock', 'Hold a stock', 'Short a stock'],
+        correct: 1,
+        explanation: 'A put option gives you the right to SELL a stock at the strike price. Think of "put" as "putting the stock to someone else".'
+      },
+      {
+        question: 'In the Wheel Strategy, do we primarily buy or sell options?',
+        options: ['Buy options', 'Sell options', 'Both equally', 'Neither'],
+        correct: 1,
+        explanation: 'We SELL options to collect premium income. This is the core of the Wheel Strategy - being the "insurance company" instead of buying insurance.'
+      }
+    ]
+  },
+  'wheel-strategy-overview': {
+    title: 'The Wheel Strategy Overview',
+    video: 'https://www.youtube.com/embed/sbt8UPZbBMc',
+    sections: [
+      {
+        heading: 'What is the Wheel Strategy?',
+        text: 'The Wheel Strategy is a systematic options trading approach that generates income by "wheeling" between selling cash-secured puts and covered calls. It\'s designed to be safe, repeatable, and profitable in most market conditions.',
+        keyPoints: [
+          'Step 1: Sell cash-secured puts to earn premium',
+          'Step 2: If assigned, you now own the stock',
+          'Step 3: Sell covered calls on the stock you own',
+          'Step 4: If called away, start over with puts',
+          'Repeat this "wheel" continuously for income'
+        ]
+      },
+      {
+        heading: 'The Three Phases',
+        text: 'Phase 1: CASH-SECURED PUTS - You sell puts while holding cash, earning premium. If the stock drops below your strike, you buy it at a discount. Phase 2: STOCK OWNERSHIP - You own the stock and can sell covered calls against it. Phase 3: COVERED CALLS - You sell calls on your stock, earning more premium. If called away, you sell at a profit and return to Phase 1.',
+        example: {
+          title: 'Complete Wheel Cycle Example',
+          content: 'You have $5,000 cash. Sell a $50 put on XYZ for $1.50 premium ($150). XYZ drops to $48, you get assigned and buy 100 shares at $50 ($5,000). Your cost basis is actually $48.50 ($50 strike - $1.50 premium collected). Now sell a $52 covered call for $1.00 ($100). XYZ rises to $53, shares called away at $52. Total profit: ($52 - $48.50) × 100 + $100 call premium = $450 on $5,000 = 9% return in one cycle!'
+        }
+      },
+      {
+        heading: 'Why It Works',
+        text: 'The Wheel Strategy works because it combines multiple income streams (put premiums + call premiums) with statistical advantages (time decay, probability). Most options expire worthless, so by being the seller, you win more often than you lose.',
+        keyPoints: [
+          'Time decay works FOR you as a seller',
+          '70-80% of options expire worthless',
+          'You profit in sideways, up, and slightly down markets',
+          'Your only risk is owning good stocks at fair prices'
+        ]
+      }
+    ],
+    quiz: [
+      {
+        question: 'What is the first step of the Wheel Strategy?',
+        options: ['Buy stocks', 'Sell covered calls', 'Sell cash-secured puts', 'Buy puts'],
+        correct: 2,
+        explanation: 'The Wheel always starts with selling cash-secured puts. This earns you premium while potentially buying stocks at a discount.'
+      }
+    ]
+  }
+};
+
+let currentLessonIndex = 0;
+let allLessons = [];
+
 function openLesson(lesson) {
-  toast(`Opening: ${lesson.title}`);
-  // In a real app, this would load the actual lesson content
-  // For now, show a preview
+  // Find lesson content
+  const lessonKey = lesson.title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+  const content = lessonContentDatabase[lessonKey];
+
+  if (!content) {
+    toast('Lesson content coming soon!', 'error');
+    return;
+  }
+
+  // Show lesson viewer
+  const viewer = $('lessonViewer');
+  viewer.classList.add('active');
+
+  // Set title
+  $('currentLessonTitle').textContent = content.title;
+
+  // Render content
+  let html = '';
+
+  // Video
+  if (content.video) {
+    html += `<div class="lesson-video"><iframe src="${content.video}" allowfullscreen></iframe></div>`;
+  }
+
+  // Sections
+  content.sections.forEach(section => {
+    html += `<div class="lesson-section">`;
+    html += `<h2 class="lesson-heading">${section.heading}</h2>`;
+    html += `<p class="lesson-text">${section.text}</p>`;
+
+    if (section.keyPoints) {
+      html += `<div class="lesson-key-points">`;
+      html += `<h4>Key Points:</h4><ul>`;
+      section.keyPoints.forEach(point => {
+        html += `<li>${point}</li>`;
+      });
+      html += `</ul></div>`;
+    }
+
+    if (section.example) {
+      html += `<div class="lesson-example">`;
+      html += `<div class="lesson-example-title">${section.example.title}</div>`;
+      html += `<p class="lesson-text">${section.example.content}</p>`;
+      html += `</div>`;
+    }
+
+    html += `</div>`;
+  });
+
+  // Quiz
+  if (content.quiz) {
+    html += `<div class="lesson-quiz"><h2 class="lesson-heading">Test Your Knowledge</h2>`;
+    content.quiz.forEach((q, idx) => {
+      html += `<div class="quiz-question">`;
+      html += `<div class="quiz-question-text">${q.question}</div>`;
+      q.options.forEach((option, optIdx) => {
+        html += `<div class="quiz-option" onclick="checkQuizAnswer(${idx}, ${optIdx}, ${q.correct})">${option}</div>`;
+      });
+      html += `<div class="quiz-explanation" id="quiz-explanation-${idx}">${q.explanation}</div>`;
+      html += `</div>`;
+    });
+    html += `</div>`;
+  }
+
+  $('lessonContentWrap').innerHTML = html;
+  $('lessonContentWrap').scrollTop = 0;
+}
+
+function closeLesson() {
+  $('lessonViewer').classList.remove('active');
+}
+
+function checkQuizAnswer(questionIdx, selectedIdx, correctIdx) {
+  const options = document.querySelectorAll(`.quiz-question:nth-child(${questionIdx + 1}) .quiz-option`);
+  const explanation = $(`quiz-explanation-${questionIdx}`);
+
+  options.forEach((opt, idx) => {
+    opt.style.pointerEvents = 'none';
+    if (idx === correctIdx) {
+      opt.classList.add('correct');
+    } else if (idx === selectedIdx) {
+      opt.classList.add('incorrect');
+    }
+  });
+
+  explanation.classList.add('show');
+
+  if (selectedIdx === correctIdx) {
+    toast('Correct! 🎉');
+  } else {
+    toast('Not quite - check the explanation', 'error');
+  }
+}
+
+function nextLesson() {
+  // Logic to load next lesson
+  toast('Next lesson coming soon!');
+  closeLesson();
 }
 
 // Payment Processing
@@ -1503,5 +1742,22 @@ if (supabaseClient) {
 console.log('Market Elites initialized');
 console.log('All functions loaded:', typeof signIn, typeof signOut, typeof signUp);
 </script>
+
+<!-- Lesson Viewer -->
+<div id="lessonViewer" class="lesson-viewer">
+  <div class="lesson-viewer-header">
+    <button class="lesson-back-btn" onclick="closeLesson()">
+      <svg viewBox="0 0 24 24" style="width:20px;height:20px;stroke:currentColor;fill:none">
+        <path d="M19 12H5M12 19l-7-7 7-7"/>
+      </svg>
+    </button>
+    <div class="lesson-viewer-title" id="currentLessonTitle"></div>
+  </div>
+  <div class="lesson-content-wrap" id="lessonContentWrap"></div>
+  <div class="lesson-nav-buttons">
+    <button class="btn btn-primary" onclick="nextLesson()">Next Lesson →</button>
+  </div>
+</div>
+
 </body>
 </html>
