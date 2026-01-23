@@ -484,7 +484,7 @@ const defaultSignals=[{id:'s1',type:'csp',ticker:'NVDA',strike:130,exp:'Jan 24',
 const $=id=>document.getElementById(id);
 const show=el=>$(el)?.classList.remove('hidden');
 const hide=el=>$(el)?.classList.add('hidden');
-const logo=s=>`https://assets.parqet.com/logos/symbol/${s.toUpperCase()}`;
+const logo=s=>`https://financialmodelingprep.com/image-stock/${s.toUpperCase()}.png`;
 function load(){try{const d=localStorage.getItem('meV6');if(d)Object.assign(S,JSON.parse(d));if(!S.signals.length)S.signals=defaultSignals}catch(e){S.signals=defaultSignals}}
 function save(){try{localStorage.setItem('meV6',JSON.stringify(S))}catch(e){}}
 function checkLegal(){if(!S.legalOk)openModal('legalModal')}
