@@ -1430,8 +1430,8 @@ const lessonContentDatabase = {
       }
     ]
   },
-  'wheel-strategy-overview': {
-    title: 'The Wheel Strategy Overview',
+  'wheel-strategy-fundamentals': {
+    title: 'Wheel Strategy Fundamentals',
     video: 'https://www.youtube.com/embed/sbt8UPZbBMc',
     sections: [
       {
@@ -1472,6 +1472,142 @@ const lessonContentDatabase = {
         explanation: 'The Wheel always starts with selling cash-secured puts. This earns you premium while potentially buying stocks at a discount.'
       }
     ]
+  },
+  'options-terminology-101': {
+    title: 'Options Terminology 101',
+    video: 'https://www.youtube.com/embed/4HMm6b7MCPY',
+    sections: [
+      {
+        heading: 'Essential Options Vocabulary',
+        text: 'Understanding options terminology is crucial before trading. These terms form the foundation of all options strategies, including the Wheel.',
+        keyPoints: [
+          'Strike Price: The price at which you can buy/sell the stock',
+          'Premium: The price you pay (or receive) for the option contract',
+          'Expiration: The last day the option is valid',
+          'ITM (In The Money): Option has intrinsic value',
+          'OTM (Out Of The Money): Option has no intrinsic value',
+          'ATM (At The Money): Strike price equals stock price'
+        ]
+      },
+      {
+        heading: 'Contract Specifications',
+        text: 'One options contract controls 100 shares of stock. If you sell a put for $2.00 premium, you receive $200 ($2 × 100). All options in the US expire on the third Friday of the month (for monthly options).',
+        example: {
+          title: 'Premium Calculation',
+          content: 'You sell a $50 strike put for $1.50 premium. Your cash received: $1.50 × 100 = $150. Your obligation: Buy 100 shares at $50 = $5,000 buying power required.'
+        }
+      },
+      {
+        heading: 'Moneyness Explained',
+        text: 'ITM, ATM, and OTM describe the relationship between strike price and stock price. For PUTS: Stock at $50, $55 strike = ITM (would profit). $50 strike = ATM. $45 strike = OTM (would expire worthless). For CALLS: Opposite - $45 strike = ITM, $55 strike = OTM.',
+        keyPoints: [
+          'ITM options have higher premium (intrinsic + extrinsic value)',
+          'OTM options are cheaper but more likely to expire worthless',
+          'ATM options have the most extrinsic (time) value',
+          'Wheel strategy typically uses 20-30 delta OTM options'
+        ]
+      }
+    ],
+    quiz: [
+      {
+        question: 'How many shares does one options contract control?',
+        options: ['1 share', '10 shares', '100 shares', '1,000 shares'],
+        correct: 2,
+        explanation: 'One options contract always controls 100 shares of the underlying stock. This is why a $2 premium equals $200 ($2 × 100).'
+      },
+      {
+        question: 'If a stock is at $50 and you own a $45 put, is it ITM or OTM?',
+        options: ['ITM', 'OTM', 'ATM', 'Cannot determine'],
+        correct: 0,
+        explanation: 'A $45 put when stock is at $50 is IN THE MONEY because you have the right to sell at $45, but the stock is worth $50. Wait - that\'s wrong! Actually it\'s OTM because selling at $45 when stock is $50 would be a loss. You want the stock BELOW your strike for puts to be ITM.'
+      }
+    ]
+  },
+  'how-to-read-an-options-chain': {
+    title: 'How to Read an Options Chain',
+    video: 'https://www.youtube.com/embed/FfEJu_xV5Pw',
+    sections: [
+      {
+        heading: 'Options Chain Anatomy',
+        text: 'An options chain shows all available strike prices and expirations for a stock. It\'s divided into calls (left or top) and puts (right or bottom). Each row shows: Strike, Bid, Ask, Volume, Open Interest, Implied Volatility, and Greeks.',
+        keyPoints: [
+          'Bid: Price market makers will PAY you (when selling)',
+          'Ask: Price you must PAY (when buying)',
+          'Volume: Contracts traded today',
+          'Open Interest: Total contracts outstanding',
+          'IV (Implied Volatility): Expected movement',
+          'Greeks: Risk metrics (Delta, Theta, Vega, Gamma)'
+        ]
+      },
+      {
+        heading: 'Bid-Ask Spread',
+        text: 'The difference between bid and ask is the spread - this is your transaction cost. Narrow spreads (pennies) indicate liquid options. Wide spreads mean you\'ll pay more to enter and exit. For the Wheel, stick to options with spreads under $0.10.',
+        example: {
+          title: 'Reading a Spread',
+          content: 'XYZ $50 put shows Bid: $1.45 / Ask: $1.55. Spread = $0.10. If you sell this put, you receive $1.45 × 100 = $145. The $0.10 spread means entering and exiting immediately would cost $10.'
+        }
+      },
+      {
+        heading: 'Finding the Best Strikes',
+        text: 'For the Wheel: Look for 20-30 delta puts (70-80% probability of expiring worthless). Check premium yield (premium ÷ strike price). Target 1-2% monthly returns. Verify open interest > 100 contracts for liquidity.',
+        keyPoints: [
+          'Delta 0.20-0.30 = ~70-80% success rate',
+          'Higher delta = More premium but higher assignment risk',
+          'Lower delta = Safer but less premium',
+          'Check multiple expirations - weeklies vs monthlies'
+        ]
+      }
+    ],
+    quiz: [
+      {
+        question: 'When selling a put, do you receive the Bid or Ask price?',
+        options: ['Bid price', 'Ask price', 'Middle of spread', 'Strike price'],
+        correct: 0,
+        explanation: 'When SELLING, you receive the BID price (what buyers are willing to pay). When BUYING, you pay the ASK price. Remember: You always get the worse price - that\'s how market makers profit.'
+      }
+    ]
+  },
+  'why-the-wheel-works': {
+    title: 'Why the Wheel Works',
+    video: 'https://www.youtube.com/embed/sbt8UPZbBMc',
+    sections: [
+      {
+        heading: 'The Mathematical Edge',
+        text: 'The Wheel Strategy works because of three statistical advantages: (1) Time Decay - options lose value every day, benefiting sellers. (2) Probability - selling 20-30 delta options gives you 70-80% win rate. (3) Compounding - monthly premium compounds into substantial annual returns.',
+        keyPoints: [
+          '70-80% of options expire worthless',
+          'Theta decay accelerates in final 30 days',
+          'Monthly compounding: 1% × 12 = 12.68% annual (not 12%)',
+          'Even losing trades can be winners with premium collected'
+        ]
+      },
+      {
+        heading: 'Probability Mathematics',
+        text: 'A 30-delta put means ~30% chance of being ITM at expiration, or ~70% chance of expiring worthless. If you sell 10 puts over time, statistically 7 expire worthless (you keep full premium) and 3 get assigned (you own stock and sell calls). The premium from the 7 winners subsidizes the 3 assignments.',
+        example: {
+          title: 'Real Probability Scenario',
+          content: 'Sell 10 contracts of $50 puts at $1.50 each over 10 months. 7 expire worthless = $1,050 profit. 3 get assigned, you buy at $50 but with $1.50 credit = $48.50 cost basis. If stock at $52, sell calls for $1.50, called away at $52. Profit per assigned: ($52 - $48.50) = $3.50 × 300 shares = $1,050. Total: $2,100 on $15,000 capital = 14% return.'
+        }
+      },
+      {
+        heading: 'Volatility Advantage',
+        text: 'When you sell options, you\'re selling implied volatility (IV). IV is almost always higher than realized volatility - meaning the market overestimates future movement. This "volatility risk premium" is your edge. High IV = High premium collection.',
+        keyPoints: [
+          'IV typically overstates actual movement by 10-30%',
+          'Sell when IV is elevated (market fear)',
+          'IV Rank > 50 is ideal for premium selling',
+          'Earnings and events spike IV = opportunity'
+        ]
+      }
+    ],
+    quiz: [
+      {
+        question: 'If you sell a 25-delta put, what is the approximate probability it expires worthless?',
+        options: ['25%', '50%', '75%', '100%'],
+        correct: 2,
+        explanation: 'A 25-delta option has approximately 25% chance of being ITM at expiration, which means ~75% chance of expiring worthless. Delta approximates the probability of being ITM.'
+      }
+    ]
   }
 };
 
@@ -1480,8 +1616,10 @@ let allLessons = [];
 
 function openLesson(lesson) {
   // Find lesson content
-  const lessonKey = lesson.title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+  const lessonKey = lesson.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
   const content = lessonContentDatabase[lessonKey];
+
+  console.log('Looking for lesson:', lessonKey, 'Available:', Object.keys(lessonContentDatabase));
 
   if (!content) {
     toast('Lesson content coming soon!', 'error');
