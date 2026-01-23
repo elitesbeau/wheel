@@ -7,6 +7,7 @@
   <meta name="theme-color" content="#000">
   <title>Market Elites</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://www.paypal.com/sdk/js?client-id=YOUR_PAYPAL_CLIENT_ID&currency=USD" data-sdk-integration-source="button-factory"></script>
   <style>
     *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
     :root{--bg:#f5f5f7;--card:#fff;--input:#f0f0f2;--text:#1d1d1f;--text2:#86868b;--text3:#aeaeb2;--border:#e5e5e7;--hero:#1d1d1f;--green:#34c759;--green-bg:rgba(52,199,89,.12);--red:#ff3b30;--red-bg:rgba(255,59,48,.12);--blue:#007aff;--blue-bg:rgba(0,122,255,.12);--orange:#ff9500;--orange-bg:rgba(255,149,0,.12);--purple:#af52de;--purple-bg:rgba(175,82,222,.12)}
@@ -459,23 +460,15 @@
       <div style="display:flex;align-items:center;gap:12px;padding:12px 0"><span style="color:var(--green)">✓</span><span>Direct support from the team</span></div>
     </div>
     <div style="background:linear-gradient(135deg,var(--hero),#2d2d2f);border-radius:16px;padding:20px;margin-bottom:20px;text-align:center">
-      <div style="font-size:32px;font-weight:700;color:#fff">$9.99<span style="font-size:16px;font-weight:400;opacity:.7">/month</span></div>
-      <div style="font-size:12px;color:rgba(255,255,255,.6);margin-top:4px">Cancel anytime</div>
+      <div style="font-size:32px;font-weight:700;color:#fff" id="premiumPrice">$9.99<span style="font-size:16px;font-weight:400;opacity:.7">/month</span></div>
+      <div style="font-size:12px;color:rgba(255,255,255,.6);margin-top:4px">One-time payment · Lifetime access</div>
     </div>
-    <div style="background:var(--input);border-radius:12px;padding:16px;margin-bottom:16px">
-      <div style="font-size:13px;font-weight:600;margin-bottom:12px">Get Premium Access</div>
-      <p style="font-size:13px;color:var(--text2);margin-bottom:16px">Contact us to subscribe and receive your personal access code:</p>
-      <div style="display:flex;flex-direction:column;gap:10px">
-        <a href="mailto:beau@marketelites.io?subject=Premium%20Subscription&body=Hi,%20I'd%20like%20to%20subscribe%20to%20Market%20Elites%20Premium." class="btn" style="text-decoration:none"><svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:#fff;fill:none;stroke-width:2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 6-10 7L2 6"/></svg>Email Us</a>
-        <a href="https://instagram.com/marketelites" target="_blank" class="btn btn-outline" style="text-decoration:none"><svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="18" cy="6" r="1.5" fill="currentColor"/></svg>DM on Instagram</a>
-      </div>
+    <div style="display:flex;gap:10px;margin-bottom:16px">
+      <input type="text" class="form-input" id="discountCode" placeholder="Discount code (optional)" style="flex:1;text-transform:uppercase">
+      <button class="btn btn-outline" style="width:auto;padding:0 16px" onclick="applyDiscount()">Apply</button>
     </div>
-    <div style="font-size:13px;font-weight:600;margin-bottom:10px">Already have a code?</div>
-    <div style="display:flex;gap:10px">
-      <input type="text" class="form-input" id="premiumCode" placeholder="Enter your access code" style="flex:1;text-transform:uppercase">
-      <button class="btn" style="width:auto;padding:0 20px" onclick="activatePremium()">Activate</button>
-    </div>
-    <p style="font-size:12px;color:var(--text3);text-align:center;margin-top:16px">We typically respond within a few hours</p>
+    <div id="paypal-button-container" style="min-height:150px"></div>
+    <p style="font-size:12px;color:var(--text3);text-align:center;margin-top:12px">Secure payment powered by PayPal</p>
   </div></div>
 
 <script>
@@ -484,7 +477,8 @@ const names={AAPL:'Apple Inc.',NVDA:'NVIDIA',TSLA:'Tesla',MSFT:'Microsoft',AMD:'
 const domains={AAPL:'apple.com',NVDA:'nvidia.com',TSLA:'tesla.com',MSFT:'microsoft.com',AMD:'amd.com',SPY:'ssga.com',QQQ:'invesco.com',AMZN:'amazon.com',GOOGL:'google.com',META:'meta.com'};
 const ADMIN_CODE='elite2025';
 const EMAIL_WEBHOOK=''; // Add your Google Sheet webhook URL here
-const PREMIUM_CODES=['WHEEL2025','ELITE100','PREMIUM99','VIP2025']; // Add codes for paying customers
+const PREMIUM_PRICE=9.99; // Base price in USD
+const DISCOUNT_CODES={WHEEL50:50,ELITE25:25,VIP100:100,LAUNCH30:30}; // code: percent off
 const defaultSignals=[{id:'s1',type:'csp',ticker:'NVDA',strike:130,exp:'Jan 24',prem:'$3.20',delta:'0.25',time:Date.now()-7200000,notes:'Strong support at $125'},{id:'s2',type:'cc',ticker:'AAPL',strike:260,exp:'Jan 31',prem:'$2.80',delta:'0.30',time:Date.now()-18000000,notes:'Earnings play'},{id:'s3',type:'csp',ticker:'AMD',strike:135,exp:'Feb 7',prem:'$4.50',delta:'0.28',time:Date.now()-86400000,notes:''}];
 const $=id=>document.getElementById(id);
 const show=el=>$(el)?.classList.remove('hidden');
@@ -568,8 +562,10 @@ function openAnalytics(){
   openModal('analyticsModal')}
 function openAI(){if(!$('aiMessages').innerHTML)$('aiMessages').innerHTML='<div class="ai-msg bot">Hey! I\'m <b>Wheely</b> 🤖 Ask me about delta, DTE, rolling, or position sizing!</div>';openModal('aiModal')}
 function sendAI(){const i=$('aiInput'),m=i.value.trim();if(!m)return;$('aiMessages').innerHTML+=`<div class="ai-msg user">${m}</div>`;i.value='';setTimeout(()=>{const l=m.toLowerCase();let r='The wheel: sell CSPs until assigned, then sell CCs. Target 0.20-0.30 delta, 30-45 DTE.';if(l.includes('delta'))r='<b>Delta:</b> Target 0.20-0.30 for CSPs. 70-80% win rate.';else if(l.includes('dte')||l.includes('expir'))r='<b>DTE:</b> 30-45 days optimal for theta decay.';else if(l.includes('roll'))r='<b>Rolling:</b> Always roll for a credit!';$('aiMessages').innerHTML+=`<div class="ai-msg bot">${r}</div>`;$('aiMessages').scrollTop=$('aiMessages').scrollHeight},500)}
-function openPremium(){if(S.isPremium){alert('You already have Premium access!');return}openModal('premiumModal')}
-function activatePremium(){const code=$('premiumCode').value.trim().toUpperCase();if(!code){alert('Please enter your access code');return}if(PREMIUM_CODES.includes(code)||code===ADMIN_CODE){S.isPremium=true;save();closeModal('premiumModal');alert('Welcome to Premium! All features unlocked.');renderSignals();renderProfile()}else{alert('Invalid code. Please check and try again.')}}
+let currentPrice=PREMIUM_PRICE;
+function openPremium(){if(S.isPremium){alert('You already have Premium access!');return}currentPrice=PREMIUM_PRICE;$('premiumPrice').innerHTML='$'+PREMIUM_PRICE.toFixed(2)+'<span style="font-size:16px;font-weight:400;opacity:.7">/lifetime</span>';$('discountCode').value='';openModal('premiumModal');initPayPal()}
+function applyDiscount(){const code=$('discountCode').value.trim().toUpperCase();if(!code){currentPrice=PREMIUM_PRICE;$('premiumPrice').innerHTML='$'+PREMIUM_PRICE.toFixed(2)+'<span style="font-size:16px;font-weight:400;opacity:.7">/lifetime</span>';initPayPal();return}const discount=DISCOUNT_CODES[code];if(discount){if(discount===100){S.isPremium=true;save();closeModal('premiumModal');alert('Welcome to Premium! 100% discount applied.');renderSignals();renderProfile();return}currentPrice=PREMIUM_PRICE*(1-discount/100);$('premiumPrice').innerHTML='<span style="text-decoration:line-through;opacity:.5;font-size:18px">$'+PREMIUM_PRICE.toFixed(2)+'</span> $'+currentPrice.toFixed(2)+'<span style="font-size:16px;font-weight:400;opacity:.7">/lifetime</span>';initPayPal();alert(discount+'% discount applied!')}else{alert('Invalid discount code')}}
+function initPayPal(){const container=$('paypal-button-container');container.innerHTML='';if(typeof paypal==='undefined'){container.innerHTML='<p style="text-align:center;color:var(--text3);font-size:13px;padding:20px">Loading payment options...</p>';return}paypal.Buttons({style:{layout:'vertical',color:'gold',shape:'rect',label:'pay'},createOrder:(data,actions)=>actions.order.create({purchase_units:[{amount:{value:currentPrice.toFixed(2)},description:'Market Elites Premium'}]}),onApprove:(data,actions)=>actions.order.capture().then(details=>{S.isPremium=true;save();closeModal('premiumModal');alert('Payment successful! Welcome to Premium, '+details.payer.name.given_name+'!');renderSignals();renderProfile()}),onError:err=>{console.error(err);alert('Payment error. Please try again.')}}).render('#paypal-button-container')}
 function toggleNotif(){if(!S.notifOn&&'Notification'in window){Notification.requestPermission().then(p=>{if(p==='granted'){S.notifOn=true;['notifSwitch','qNotifSwitch'].forEach(id=>$(id)?.classList.toggle('on',true));save()}else{alert('Please enable notifications in your browser settings')}})}else{S.notifOn=!S.notifOn;['notifSwitch','qNotifSwitch'].forEach(id=>$(id)?.classList.toggle('on',S.notifOn));save()}}
 function updateStatus(){const ok=S.apiKey.length>10&&S.secretKey.length>10;$('statusPill').className='status'+(ok?' ready':'');$('statusText').textContent=ok?'Ready':'Offline'}
 function renderHome(){$('balanceVal').textContent=S.accSize.toLocaleString();const prem=S.positions.reduce((s,p)=>s+(p.premium||0)*(p.contracts||1)*100,0);const pct=S.accSize>0?(prem/S.accSize*100).toFixed(1):0;$('balanceChange').textContent='↑ +$'+prem.toFixed(0)+' ('+pct+'%)';const init=S.user.name?S.user.name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2):'?';$('heroInitials').textContent=init;renderHomeUpdates();renderPositions();renderHistory()}
