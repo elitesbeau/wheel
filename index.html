@@ -294,20 +294,24 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
     </button>
   </div>
 
+  <!-- Premium Upgrade Banner -->
+  <div class="section">
+    <div class="card" style="background:linear-gradient(135deg,rgba(96,165,250,.15),rgba(168,85,247,.15));border-color:var(--accent)">
+      <div style="display:flex;align-items:center;gap:16px">
+        <div style="flex:1">
+          <div style="font-size:16px;font-weight:700;margin-bottom:6px">⚡ Upgrade to Premium</div>
+          <div style="font-size:13px;color:var(--text2)">Unlimited signals, priority support & advanced analytics</div>
+        </div>
+        <button class="btn btn-primary" onclick="show('premiumModal')" style="width:auto;padding:14px 28px">Upgrade</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Admin Panel (only visible for admin) -->
   <div id="adminPanel" class="admin-panel hidden">
     <div class="admin-title">🔑 Admin Controls</div>
-    <div style="margin-bottom:16px">
-      <input type="text" class="form-input" id="quickAnnouncementInput" placeholder="Quick announcement..." style="margin-bottom:8px">
-      <button class="btn btn-primary" onclick="postQuickAnnouncement()">Post Alert</button>
-    </div>
-    <button class="btn btn-secondary" onclick="openPostSignal()">Post New Signal</button>
-  </div>
-
-  <!-- Announcements Section -->
-  <div id="announcementsSection" class="section hidden">
-    <div class="section-title">📢 Latest Announcements</div>
-    <div id="announcementsList"></div>
+    <button class="btn btn-primary" onclick="openPostSignal()">Post New Signal</button>
+    <button class="btn btn-secondary" onclick="openPostAnnouncement()">Post Announcement</button>
   </div>
 
   <!-- Positions -->
