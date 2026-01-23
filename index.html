@@ -412,7 +412,32 @@
 
   <div class="modal-bg" id="learnModal" onclick="closeModal('learnModal')"><div class="modal" onclick="event.stopPropagation()" style="max-height:90vh"><div class="modal-handle"></div><div class="modal-header"><span class="modal-title" id="learnTitle">Courses</span><button class="modal-close" onclick="closeModal('learnModal')"><svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div><div id="learnContent"></div></div></div>
 
-  <div class="modal-bg" id="analyticsModal" onclick="closeModal('analyticsModal')"><div class="modal" onclick="event.stopPropagation()"><div class="modal-handle"></div><div class="modal-header"><span class="modal-title">Analytics</span><button class="modal-close" onclick="closeModal('analyticsModal')"><svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div><div style="background:var(--input);border-radius:16px;padding:20px;text-align:center;margin-bottom:16px"><div style="font-size:13px;color:var(--text2)">Total Premium</div><div style="font-size:32px;font-weight:700;color:var(--green)">$<span id="aPrem">0</span></div></div><div class="stats-grid"><div class="stat-box"><div class="stat-val" id="aWin">0%</div><div class="stat-label">Win Rate</div></div><div class="stat-box"><div class="stat-val" id="aTrades">0</div><div class="stat-label">Trades</div></div></div></div></div>
+  <div class="modal-bg" id="analyticsModal" onclick="closeModal('analyticsModal')"><div class="modal" onclick="event.stopPropagation()" style="max-height:90vh"><div class="modal-handle"></div><div class="modal-header"><span class="modal-title">Analytics</span><button class="modal-close" onclick="closeModal('analyticsModal')"><svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+      <div style="background:var(--green-bg);border-radius:16px;padding:16px;text-align:center"><div style="font-size:12px;color:var(--green);font-weight:600">Total Premium</div><div style="font-size:28px;font-weight:700;color:var(--green)">$<span id="aPrem">0</span></div></div>
+      <div style="background:var(--blue-bg);border-radius:16px;padding:16px;text-align:center"><div style="font-size:12px;color:var(--blue);font-weight:600">Total P&L</div><div style="font-size:28px;font-weight:700;color:var(--blue)">$<span id="aPnl">0</span></div></div>
+    </div>
+    <div style="background:var(--input);border-radius:16px;padding:16px;margin-bottom:16px">
+      <div style="font-size:13px;font-weight:600;margin-bottom:12px">Performance</div>
+      <div class="stats-grid">
+        <div class="stat-box"><div class="stat-val" id="aWin">0%</div><div class="stat-label">Win Rate</div></div>
+        <div class="stat-box"><div class="stat-val" id="aTrades">0</div><div class="stat-label">Closed Trades</div></div>
+        <div class="stat-box"><div class="stat-val" id="aActive">0</div><div class="stat-label">Active</div></div>
+        <div class="stat-box"><div class="stat-val" id="aRoi">0%</div><div class="stat-label">ROI</div></div>
+      </div>
+    </div>
+    <div style="background:var(--input);border-radius:16px;padding:16px;margin-bottom:16px">
+      <div style="font-size:13px;font-weight:600;margin-bottom:12px">Trade Breakdown</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)"><span style="font-size:13px;color:var(--text2)">Cash Secured Puts</span><span style="font-weight:600" id="aCsp">0</span></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)"><span style="font-size:13px;color:var(--text2)">Covered Calls</span><span style="font-weight:600" id="aCc">0</span></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)"><span style="font-size:13px;color:var(--text2)">Avg Premium/Trade</span><span style="font-weight:600;color:var(--green)" id="aAvg">$0</span></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0"><span style="font-size:13px;color:var(--text2)">Best Trade</span><span style="font-weight:600;color:var(--green)" id="aBest">—</span></div>
+    </div>
+    <div style="background:var(--input);border-radius:16px;padding:16px">
+      <div style="font-size:13px;font-weight:600;margin-bottom:12px">Top Tickers</div>
+      <div id="aTopTickers" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+    </div>
+  </div></div>
 
   <div class="modal-bg" id="aiModal" onclick="closeModal('aiModal')"><div class="modal" onclick="event.stopPropagation()"><div class="modal-handle"></div>
     <div class="ai-header">
@@ -496,7 +521,34 @@ function showLessonContent(){const c=courses[S.currentCourse];const lesson=c.les
 function prevLesson(){if(S.currentLesson>0){S.currentLesson--;showLessonContent()}}
 function nextLesson(){const c=courses[S.currentCourse];if(S.currentLesson<c.lessons.length-1){S.currentLesson++;if(S.currentLesson>=(S.courseProgress[S.currentCourse]||0)){S.courseProgress[S.currentCourse]=S.currentLesson}save();showLessonContent()}else{S.courseProgress[S.currentCourse]=c.lessons.length;save();alert('Congratulations! Course completed!');openLearn()}}
 function showLesson(id){openCourse(id)}
-function openAnalytics(){const prem=S.positions.reduce((s,p)=>s+(p.premium||0)*(p.contracts||1)*100,0)+S.history.reduce((s,t)=>s+(t.premium||0)*(t.contracts||1)*100,0);const wins=S.history.filter(t=>(t.pnl||0)>=0).length;const total=S.history.length;$('aPrem').textContent=prem.toFixed(0);$('aWin').textContent=total>0?Math.round(wins/total*100)+'%':'0%';$('aTrades').textContent=total;openModal('analyticsModal')}
+function openAnalytics(){
+  const activePrem=S.positions.reduce((s,p)=>s+(p.premium||0)*(p.contracts||1)*100,0);
+  const histPrem=S.history.reduce((s,t)=>s+(t.premium||0)*(t.contracts||1)*100,0);
+  const totalPrem=activePrem+histPrem;
+  const totalPnl=S.history.reduce((s,t)=>s+(t.pnl||0),0);
+  const wins=S.history.filter(t=>(t.pnl||0)>=0).length;
+  const total=S.history.length;
+  const active=S.positions.length;
+  const roi=S.accSize>0?((totalPnl/S.accSize)*100).toFixed(1):0;
+  const cspCount=[...S.positions,...S.history].filter(t=>t.type==='csp').length;
+  const ccCount=[...S.positions,...S.history].filter(t=>t.type==='cc').length;
+  const allTrades=[...S.positions,...S.history].filter(t=>t.premium);
+  const avgPrem=allTrades.length>0?(totalPrem/allTrades.length).toFixed(0):0;
+  const bestTrade=S.history.length?S.history.reduce((best,t)=>(t.pnl||0)>(best.pnl||0)?t:best,S.history[0]):null;
+  const tickers=[...S.positions,...S.history].reduce((acc,t)=>{acc[t.symbol]=(acc[t.symbol]||0)+1;return acc},{});
+  const topTickers=Object.entries(tickers).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  $('aPrem').textContent=totalPrem.toFixed(0);
+  $('aPnl').textContent=(totalPnl>=0?'':'-')+Math.abs(totalPnl).toFixed(0);
+  $('aWin').textContent=total>0?Math.round(wins/total*100)+'%':'0%';
+  $('aTrades').textContent=total;
+  $('aActive').textContent=active;
+  $('aRoi').textContent=roi+'%';
+  $('aCsp').textContent=cspCount;
+  $('aCc').textContent=ccCount;
+  $('aAvg').textContent='$'+avgPrem;
+  $('aBest').textContent=bestTrade?bestTrade.symbol+' +$'+(bestTrade.pnl||0).toFixed(0):'—';
+  $('aTopTickers').innerHTML=topTickers.length?topTickers.map(([sym,cnt])=>`<span style="padding:6px 12px;background:var(--card);border:1px solid var(--border);border-radius:8px;font-size:12px;font-weight:600">${sym} <span style="color:var(--text3)">${cnt}</span></span>`).join(''):'<span style="color:var(--text3);font-size:13px">No trades yet</span>';
+  openModal('analyticsModal')}
 function openAI(){if(!$('aiMessages').innerHTML)$('aiMessages').innerHTML='<div class="ai-msg bot">Hey! I\'m <b>Wheely</b> 🤖 Ask me about delta, DTE, rolling, or position sizing!</div>';openModal('aiModal')}
 function sendAI(){const i=$('aiInput'),m=i.value.trim();if(!m)return;$('aiMessages').innerHTML+=`<div class="ai-msg user">${m}</div>`;i.value='';setTimeout(()=>{const l=m.toLowerCase();let r='The wheel: sell CSPs until assigned, then sell CCs. Target 0.20-0.30 delta, 30-45 DTE.';if(l.includes('delta'))r='<b>Delta:</b> Target 0.20-0.30 for CSPs. 70-80% win rate.';else if(l.includes('dte')||l.includes('expir'))r='<b>DTE:</b> 30-45 days optimal for theta decay.';else if(l.includes('roll'))r='<b>Rolling:</b> Always roll for a credit!';$('aiMessages').innerHTML+=`<div class="ai-msg bot">${r}</div>`;$('aiMessages').scrollTop=$('aiMessages').scrollHeight},500)}
 function openPremium(){openModal('premiumModal')}
