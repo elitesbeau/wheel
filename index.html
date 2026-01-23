@@ -452,14 +452,27 @@
 
   <div class="modal-bg" id="premiumModal" onclick="closeModal('premiumModal')"><div class="modal" onclick="event.stopPropagation()"><div class="modal-handle"></div>
     <div style="text-align:center;padding:20px 0"><div style="font-size:28px;font-weight:700">Premium</div><div style="font-size:14px;color:var(--text2);margin-top:8px">Unlock the full experience</div></div>
-    <div style="margin:24px 0">
-      <div style="display:flex;align-items:center;gap:12px;padding:14px 0;border-bottom:1px solid var(--border)"><span style="color:var(--green)">✓</span><span>Live trading signals</span></div>
-      <div style="display:flex;align-items:center;gap:12px;padding:14px 0;border-bottom:1px solid var(--border)"><span style="color:var(--green)">✓</span><span>Priority alerts</span></div>
-      <div style="display:flex;align-items:center;gap:12px;padding:14px 0;border-bottom:1px solid var(--border)"><span style="color:var(--green)">✓</span><span>Advanced analytics</span></div>
-      <div style="display:flex;align-items:center;gap:12px;padding:14px 0"><span style="color:var(--green)">✓</span><span>Direct support</span></div>
+    <div style="margin:20px 0">
+      <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)"><span style="color:var(--green)">✓</span><span>All trading signals unlocked</span></div>
+      <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)"><span style="color:var(--green)">✓</span><span>Priority alerts & notifications</span></div>
+      <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)"><span style="color:var(--green)">✓</span><span>Advanced analytics dashboard</span></div>
+      <div style="display:flex;align-items:center;gap:12px;padding:12px 0"><span style="color:var(--green)">✓</span><span>Direct support from the team</span></div>
     </div>
-    <button class="btn" onclick="alert('Coming soon!')">Subscribe · $9.99/month</button>
-    <p style="font-size:12px;color:var(--text3);text-align:center;margin-top:16px">7-day free trial · Cancel anytime</p>
+    <div style="background:var(--input);border-radius:12px;padding:16px;margin-bottom:16px">
+      <div style="font-size:24px;font-weight:700;text-align:center">$9.99<span style="font-size:14px;font-weight:400;color:var(--text2)">/month</span></div>
+    </div>
+    <div style="font-size:13px;font-weight:600;margin-bottom:12px">Step 1: Pay via</div>
+    <div style="display:flex;gap:10px;margin-bottom:20px">
+      <a href="https://paypal.me/YOURPAYPAL/9.99" target="_blank" class="btn btn-outline" style="flex:1;text-decoration:none">PayPal</a>
+      <a href="https://venmo.com/YOURVENMO" target="_blank" class="btn btn-outline" style="flex:1;text-decoration:none">Venmo</a>
+      <a href="https://cash.app/$YOURCASHAPP/9.99" target="_blank" class="btn btn-outline" style="flex:1;text-decoration:none">Cash App</a>
+    </div>
+    <div style="font-size:13px;font-weight:600;margin-bottom:12px">Step 2: Enter your access code</div>
+    <div style="display:flex;gap:10px">
+      <input type="text" class="form-input" id="premiumCode" placeholder="Enter code from confirmation" style="flex:1;text-transform:uppercase">
+      <button class="btn" style="width:auto;padding:0 20px" onclick="activatePremium()">Activate</button>
+    </div>
+    <p style="font-size:12px;color:var(--text3);text-align:center;margin-top:16px">After payment, you'll receive your code via email within minutes</p>
   </div></div>
 
 <script>
@@ -468,6 +481,7 @@ const names={AAPL:'Apple Inc.',NVDA:'NVIDIA',TSLA:'Tesla',MSFT:'Microsoft',AMD:'
 const domains={AAPL:'apple.com',NVDA:'nvidia.com',TSLA:'tesla.com',MSFT:'microsoft.com',AMD:'amd.com',SPY:'ssga.com',QQQ:'invesco.com',AMZN:'amazon.com',GOOGL:'google.com',META:'meta.com'};
 const ADMIN_CODE='elite2025';
 const EMAIL_WEBHOOK=''; // Add your Google Sheet webhook URL here
+const PREMIUM_CODES=['WHEEL2025','ELITE100','PREMIUM99','VIP2025']; // Add codes for paying customers
 const defaultSignals=[{id:'s1',type:'csp',ticker:'NVDA',strike:130,exp:'Jan 24',prem:'$3.20',delta:'0.25',time:Date.now()-7200000,notes:'Strong support at $125'},{id:'s2',type:'cc',ticker:'AAPL',strike:260,exp:'Jan 31',prem:'$2.80',delta:'0.30',time:Date.now()-18000000,notes:'Earnings play'},{id:'s3',type:'csp',ticker:'AMD',strike:135,exp:'Feb 7',prem:'$4.50',delta:'0.28',time:Date.now()-86400000,notes:''}];
 const $=id=>document.getElementById(id);
 const show=el=>$(el)?.classList.remove('hidden');
@@ -551,7 +565,8 @@ function openAnalytics(){
   openModal('analyticsModal')}
 function openAI(){if(!$('aiMessages').innerHTML)$('aiMessages').innerHTML='<div class="ai-msg bot">Hey! I\'m <b>Wheely</b> 🤖 Ask me about delta, DTE, rolling, or position sizing!</div>';openModal('aiModal')}
 function sendAI(){const i=$('aiInput'),m=i.value.trim();if(!m)return;$('aiMessages').innerHTML+=`<div class="ai-msg user">${m}</div>`;i.value='';setTimeout(()=>{const l=m.toLowerCase();let r='The wheel: sell CSPs until assigned, then sell CCs. Target 0.20-0.30 delta, 30-45 DTE.';if(l.includes('delta'))r='<b>Delta:</b> Target 0.20-0.30 for CSPs. 70-80% win rate.';else if(l.includes('dte')||l.includes('expir'))r='<b>DTE:</b> 30-45 days optimal for theta decay.';else if(l.includes('roll'))r='<b>Rolling:</b> Always roll for a credit!';$('aiMessages').innerHTML+=`<div class="ai-msg bot">${r}</div>`;$('aiMessages').scrollTop=$('aiMessages').scrollHeight},500)}
-function openPremium(){openModal('premiumModal')}
+function openPremium(){if(S.isPremium){alert('You already have Premium access!');return}openModal('premiumModal')}
+function activatePremium(){const code=$('premiumCode').value.trim().toUpperCase();if(!code){alert('Please enter your access code');return}if(PREMIUM_CODES.includes(code)||code===ADMIN_CODE){S.isPremium=true;save();closeModal('premiumModal');alert('Welcome to Premium! All features unlocked.');renderSignals();renderProfile()}else{alert('Invalid code. Please check and try again.')}}
 function toggleNotif(){if(!S.notifOn&&'Notification'in window){Notification.requestPermission().then(p=>{if(p==='granted'){S.notifOn=true;['notifSwitch','qNotifSwitch'].forEach(id=>$(id)?.classList.toggle('on',true));save()}else{alert('Please enable notifications in your browser settings')}})}else{S.notifOn=!S.notifOn;['notifSwitch','qNotifSwitch'].forEach(id=>$(id)?.classList.toggle('on',S.notifOn));save()}}
 function updateStatus(){const ok=S.apiKey.length>10&&S.secretKey.length>10;$('statusPill').className='status'+(ok?' ready':'');$('statusText').textContent=ok?'Ready':'Offline'}
 function renderHome(){$('balanceVal').textContent=S.accSize.toLocaleString();const prem=S.positions.reduce((s,p)=>s+(p.premium||0)*(p.contracts||1)*100,0);const pct=S.accSize>0?(prem/S.accSize*100).toFixed(1):0;$('balanceChange').textContent='↑ +$'+prem.toFixed(0)+' ('+pct+'%)';const init=S.user.name?S.user.name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2):'?';$('heroInitials').textContent=init;renderHomeUpdates();renderPositions();renderHistory()}
