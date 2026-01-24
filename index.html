@@ -415,7 +415,7 @@ function calcDTE(ts) {
 const $=id=>document.getElementById(id);
 const show=el=>$(el)?.classList.remove('hidden');
 const hide=el=>$(el)?.classList.add('hidden');
-const logo=s=>'https://logo.clearbit.com/'+(domains[s]||s.toLowerCase()+'.com');
+const logo=s=>{const d=domains[s]||s.toLowerCase()+'.com';return 'https://www.google.com/s2/favicons?domain='+d+'&sz=128';};
 function load(){try{const d=localStorage.getItem('meV6');if(d)Object.assign(S,JSON.parse(d))}catch(e){}}
 function save(){try{localStorage.setItem('meV6',JSON.stringify(S))}catch(e){}}
 function checkLegal(){if(!S.legalOk)openModal('legalModal')}
