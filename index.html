@@ -510,19 +510,143 @@ function closePrompt() {
 $('promptInput')?.addEventListener('keydown', e => { if (e.key === 'Enter') submitPrompt(); });
 
 // Admin Panel Functions
-let adminClicks = 0;
-let adminClickTimer = null;
+const ADMIN_PASS_HASH = '5e884898da28047d9169e1e3c5e5f4c3e8c3e8c3'; // Change this - hash of your password
+const ADMIN_PASS = 'elites2025'; // Simple password - CHANGE THIS to your own password
+
 function initAdminAccess() {
-  // Triple-click on "Market Elites" title or press Ctrl+Shift+A to open admin
   document.addEventListener('keydown', e => {
-    if (e.ctrlKey && e.shiftKey && e.key === 'A') { e.preventDefault(); openAdmin(); }
+    if (e.ctrlKey && e.shiftKey && e.key === 'A') { e.preventDefault(); promptAdminPassword(); }
+  });
+}
+
+function promptAdminPassword() {
+  showPrompt('Admin Access', 'Enter password', (pass) => {
+    if (pass === ADMIN_PASS) {
+      S.adminAuthenticated = true;
+      openAdmin();
+    } else {
+      showToast('Invalid password', 'error');
+    }
   });
 }
 
 function openAdmin() {
+  if (!S.adminAuthenticated) return promptAdminPassword();
   S.adminSigType = 'csp';
   renderAdminPosts();
+  loadPostsFromFirebase();
   openModal('adminModal');
+}
+
+// Firebase Configuration - REPLACE WITH YOUR OWN CONFIG
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  databaseURL: "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
+  projectId: "YOUR_PROJECT",
+  storageBucket: "YOUR_PROJECT.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
+};
+
+let firebaseReady = false;
+
+// Initialize Firebase (lazy load)
+async function initFirebase() {
+  if (firebaseReady) return true;
+  if (firebaseConfig.apiKey === "YOUR_API_KEY") {
+    console.log('Firebase not configured - using localStorage only');
+    return false;
+  }
+  try {
+    if (!window.firebase) {
+      // Load Firebase SDK
+      await loadScript('https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js');
+      await loadScript('https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js');
+    }
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    firebaseReady = true;
+    return true;
+  } catch (e) {
+    console.error('Firebase init error:', e);
+    return false;
+  }
+}
+
+function loadScript(src) {
+  return new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = src;
+    s.onload = resolve;
+    s.onerror = reject;
+    document.head.appendChild(s);
+  });
+}
+
+// Save post to Firebase
+async function savePostToFirebase(post) {
+  if (!await initFirebase()) {
+    // Fallback to localStorage only
+    if (!S.adminPosts) S.adminPosts = [];
+    S.adminPosts.unshift(post);
+    save();
+    return;
+  }
+  try {
+    const db = firebase.database();
+    await db.ref('posts').push(post);
+    showToast('Posted to all users!', 'success');
+  } catch (e) {
+    console.error('Firebase save error:', e);
+    showToast('Saved locally only', '');
+  }
+}
+
+// Load posts from Firebase
+async function loadPostsFromFirebase() {
+  if (!await initFirebase()) return;
+  try {
+    const db = firebase.database();
+    const snapshot = await db.ref('posts').orderByChild('timestamp').limitToLast(50).once('value');
+    const posts = [];
+    snapshot.forEach(child => {
+      posts.unshift({ id: child.key, ...child.val() });
+    });
+    S.adminPosts = posts;
+    renderAdminPosts();
+    renderSignals();
+  } catch (e) {
+    console.error('Firebase load error:', e);
+  }
+}
+
+// Delete post from Firebase
+async function deletePostFromFirebase(postId) {
+  if (!await initFirebase()) return;
+  try {
+    const db = firebase.database();
+    await db.ref('posts/' + postId).remove();
+  } catch (e) {
+    console.error('Firebase delete error:', e);
+  }
+}
+
+// Listen for real-time updates (for all users)
+async function listenToFirebasePosts() {
+  if (!await initFirebase()) return;
+  try {
+    const db = firebase.database();
+    db.ref('posts').orderByChild('timestamp').limitToLast(50).on('value', snapshot => {
+      const posts = [];
+      snapshot.forEach(child => {
+        posts.unshift({ id: child.key, ...child.val() });
+      });
+      S.adminPosts = posts;
+      renderSignals();
+    });
+  } catch (e) {
+    console.error('Firebase listen error:', e);
+  }
 }
 
 function setAdminTab(tab) {
@@ -534,7 +658,7 @@ function setAdminTab(tab) {
   $('adminRollForm').classList.toggle('hidden', tab !== 'roll');
 }
 
-function postSignal() {
+async function postSignal() {
   const sig = {
     type: S.adminSigType || 'csp',
     ticker: $('adminTicker').value.toUpperCase().trim(),
@@ -547,10 +671,7 @@ function postSignal() {
     kind: 'signal'
   };
   if (!sig.ticker || !sig.strike) return showToast('Fill ticker and strike', 'error');
-  if (!S.adminPosts) S.adminPosts = [];
-  S.adminPosts.unshift(sig);
-  save();
-  showToast('Signal posted!', 'success');
+  await savePostToFirebase(sig);
   $('adminTicker').value = '';
   $('adminStrike').value = '';
   $('adminExp').value = '';
@@ -560,7 +681,7 @@ function postSignal() {
   renderSignals();
 }
 
-function postAnnouncement() {
+async function postAnnouncement() {
   const ann = {
     title: $('annTitle').value.trim(),
     message: $('annMsg').value.trim(),
@@ -569,17 +690,14 @@ function postAnnouncement() {
     kind: 'announcement'
   };
   if (!ann.title || !ann.message) return showToast('Fill title and message', 'error');
-  if (!S.adminPosts) S.adminPosts = [];
-  S.adminPosts.unshift(ann);
-  save();
-  showToast('Announcement posted!', 'success');
+  await savePostToFirebase(ann);
   $('annTitle').value = '';
   $('annMsg').value = '';
   renderAdminPosts();
   renderSignals();
 }
 
-function postRoll() {
+async function postRoll() {
   const roll = {
     original: $('rollOrig').value.trim(),
     newPos: $('rollNew').value.trim(),
@@ -590,10 +708,7 @@ function postRoll() {
     kind: 'roll'
   };
   if (!roll.original || !roll.newPos) return showToast('Fill original and new position', 'error');
-  if (!S.adminPosts) S.adminPosts = [];
-  S.adminPosts.unshift(roll);
-  save();
-  showToast('Roll update posted!', 'success');
+  await savePostToFirebase(roll);
   $('rollOrig').value = '';
   $('rollNew').value = '';
   $('rollCredit').value = '';
@@ -602,8 +717,12 @@ function postRoll() {
   renderSignals();
 }
 
-function deletePost(idx) {
-  if (!S.adminPosts) return;
+async function deletePost(idx) {
+  if (!S.adminPosts || !S.adminPosts[idx]) return;
+  const post = S.adminPosts[idx];
+  if (post.id) {
+    await deletePostFromFirebase(post.id);
+  }
   S.adminPosts.splice(idx, 1);
   save();
   renderAdminPosts();
@@ -997,7 +1116,7 @@ function renderSignals(){
 function renderProfile(){$('userName').value=S.user.name||'';$('userEmail').value=S.user.email||'';$('profileName').textContent=S.user.name||'Set up your profile';$('profileEmail').textContent=S.user.email||'Tap to edit';const init=S.user.name?S.user.name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2):'?';$('profileInitials').textContent=init;$('apiKeyInput').value=S.apiKey;$('secretKeyInput').value=S.secretKey;$('accSizeInput').value=S.accSize;const ok=S.apiKey.length>10;$('brokerStatus').innerHTML=ok?'<div style="padding:12px;background:var(--green-bg);border-radius:12px;margin-bottom:16px;font-weight:600;color:var(--green)"><span class="live-dot"></span>Connected</div>':'<div style="padding:12px;background:var(--orange-bg);border-radius:12px;margin-bottom:16px;font-size:13px;color:var(--orange)">Not connected</div>';const wins=S.history.filter(t=>(t.pnl||0)>=0).length;const total=S.history.length;const prem=S.positions.reduce((s,p)=>s+(p.premium||0)*(p.contracts||1)*100,0)+S.history.reduce((s,t)=>s+(t.premium||0)*(t.contracts||1)*100,0);$('pTrades').textContent=total;$('pWinRate').textContent=total?Math.round(wins/total*100)+'%':'0%';$('pPremium').textContent='$'+prem.toFixed(0);if(S.isPremium){show('proBadge');hide('proCard')}}
 function saveProfile(){S.user.name=$('userName').value.trim();S.user.email=$('userEmail').value.trim();save();renderProfile();showToast('Saved!','success')}
 function connectBroker(){S.apiKey=$('apiKeyInput').value.trim();S.secretKey=$('secretKeyInput').value.trim();S.accSize=parseInt($('accSizeInput').value)||25000;save();updateStatus();renderProfile();if(S.apiKey)showToast('Connected!','success')}
-load();applyTheme();updateStatus();checkLegal();renderHome();
+load();applyTheme();updateStatus();checkLegal();renderHome();initAdminAccess();listenToFirebasePosts();
 </script>
 </body>
 </html>
