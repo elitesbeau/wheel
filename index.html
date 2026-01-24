@@ -325,8 +325,8 @@
 
 <script>
 const S={theme:'light',mode:'csp',addMode:'csp',apiKey:'',secretKey:'',accSize:25000,positions:[],history:[],selPosId:null,user:{name:'',email:''},isPremium:false,legalOk:false,notifOn:false,watchlist:['AAPL','NVDA','TSLA','SPY','AMD','MSFT']};
-const names={AAPL:'Apple Inc.',NVDA:'NVIDIA',TSLA:'Tesla',MSFT:'Microsoft',AMD:'AMD',SPY:'S&P 500 ETF',QQQ:'Nasdaq 100 ETF',AMZN:'Amazon',GOOGL:'Alphabet',META:'Meta Platforms'};
-const domains={AAPL:'apple.com',NVDA:'nvidia.com',TSLA:'tesla.com',MSFT:'microsoft.com',AMD:'amd.com',SPY:'ssga.com',QQQ:'invesco.com',AMZN:'amazon.com',GOOGL:'google.com',META:'meta.com'};
+const names={AAPL:'Apple Inc.',NVDA:'NVIDIA',TSLA:'Tesla',MSFT:'Microsoft',AMD:'AMD',SPY:'S&P 500 ETF',QQQ:'Nasdaq 100 ETF',AMZN:'Amazon',GOOGL:'Alphabet',META:'Meta Platforms',RKLB:'Rocket Lab',PLTR:'Palantir',SOFI:'SoFi',COIN:'Coinbase',HOOD:'Robinhood',NET:'Cloudflare',SNOW:'Snowflake',CRWD:'CrowdStrike',DDOG:'Datadog',ZS:'Zscaler'};
+const domains={AAPL:'apple.com',NVDA:'nvidia.com',TSLA:'tesla.com',MSFT:'microsoft.com',AMD:'amd.com',SPY:'ssga.com',QQQ:'invesco.com',AMZN:'amazon.com',GOOGL:'google.com',META:'meta.com',RKLB:'rocketlabusa.com',PLTR:'palantir.com',SOFI:'sofi.com',COIN:'coinbase.com',HOOD:'robinhood.com',NET:'cloudflare.com',SNOW:'snowflake.com',CRWD:'crowdstrike.com',DDOG:'datadoghq.com',ZS:'zscaler.com'};
 const signals=[{type:'csp',ticker:'NVDA',strike:130,exp:'Jan 24',prem:'$3.20',delta:'0.25',time:'2h ago'},{type:'cc',ticker:'AAPL',strike:260,exp:'Jan 31',prem:'$2.80',delta:'0.30',time:'5h ago'},{type:'csp',ticker:'AMD',strike:135,exp:'Feb 7',prem:'$4.50',delta:'0.28',time:'1d ago'}];
 
 // Live pricing cache
@@ -348,12 +348,16 @@ async function fetchLiveQuote(symbol) {
     const result = data.chart?.result?.[0];
     if (!result) throw new Error('No data');
     const meta = result.meta;
+    const price = meta.regularMarketPrice || 0;
+    const prevClose = meta.previousClose || meta.chartPreviousClose || price;
+    const change = price - prevClose;
+    const changePercent = prevClose > 0 ? ((change / prevClose) * 100).toFixed(2) : '0.00';
     const quote = {
       symbol: meta.symbol,
-      price: meta.regularMarketPrice,
-      prevClose: meta.previousClose,
-      change: meta.regularMarketPrice - meta.previousClose,
-      changePercent: ((meta.regularMarketPrice - meta.previousClose) / meta.previousClose * 100).toFixed(2),
+      price: price,
+      prevClose: prevClose,
+      change: change,
+      changePercent: changePercent,
       high: meta.regularMarketDayHigh,
       low: meta.regularMarketDayLow,
       volume: meta.regularMarketVolume
@@ -676,12 +680,16 @@ function onStrikeChange() {
   $('resCon').textContent = contracts;
   show('resultCard');
 }
+function logoEl(sym) {
+  return `<img src="${logo(sym)}" style="width:100%;height:100%;object-fit:contain" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><span style="display:none;width:100%;height:100%;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--text2)">${sym.slice(0,2)}</span>`;
+}
+
 async function renderWatch(){
   const c=$('watchContainer');
   const watchlist = S.watchlist || ['AAPL','NVDA','TSLA','SPY','AMD','MSFT'];
 
-  // Show loading state
-  c.innerHTML='<div class="tx-list">'+watchlist.map(sym=>`<div class="tx-item" id="watch-${sym}"><div class="tx-icon" style="background:var(--input);overflow:hidden"><img src="${logo(sym)}" style="width:100%;height:100%;border-radius:50%" onerror="this.outerHTML='<span style=font-size:12px;font-weight:700>${sym.slice(0,2)}</span>'"></div><div class="tx-info"><div class="tx-title">${sym}</div><div class="tx-sub">${names[sym]||sym}</div></div><div style="text-align:right"><div style="font-size:15px;font-weight:700;color:var(--text3)">Loading...</div><div style="font-size:12px;color:var(--text3)">—</div></div></div>`).join('')+'</div><button class="btn btn-outline mt-4" onclick="openAddWatch()">+ Add to Watchlist</button>';
+  // Show loading state with logos
+  c.innerHTML='<div class="tx-list">'+watchlist.map(sym=>`<div class="tx-item" id="watch-${sym}"><div class="tx-icon" style="background:var(--input);overflow:hidden;border-radius:50%">${logoEl(sym)}</div><div class="tx-info"><div class="tx-title">${sym}</div><div class="tx-sub">${names[sym]||sym}</div></div><div style="text-align:right"><div style="font-size:15px;font-weight:700;color:var(--text3)">Loading...</div><div style="font-size:12px;color:var(--text3)">—</div></div></div>`).join('')+'</div><button class="btn btn-outline mt-4" onclick="openAddWatch()">+ Add to Watchlist</button>';
 
   // Fetch live prices in parallel
   const quotes = await Promise.all(watchlist.map(sym => fetchLiveQuote(sym)));
@@ -691,10 +699,13 @@ async function renderWatch(){
     const sym = watchlist[i];
     const el = $(`watch-${sym}`);
     if (!el) return;
+    const chg = q ? (parseFloat(q.changePercent) || 0) : 0;
+    const chgColor = chg >= 0 ? 'var(--green)' : 'var(--red)';
+    const chgSign = chg >= 0 ? '+' : '';
     if (q) {
-      el.innerHTML = `<div class="tx-icon" style="background:var(--input);overflow:hidden;cursor:pointer" onclick="qSearch('${sym}');nav('calc')"><img src="${logo(sym)}" style="width:100%;height:100%;border-radius:50%" onerror="this.outerHTML='<span style=font-size:12px;font-weight:700>${sym.slice(0,2)}</span>'"></div><div class="tx-info" style="cursor:pointer" onclick="qSearch('${sym}');nav('calc')"><div class="tx-title">${sym} <span class="live-dot" style="width:6px;height:6px"></span></div><div class="tx-sub">${names[sym]||sym}</div></div><div style="text-align:right;cursor:pointer" onclick="qSearch('${sym}');nav('calc')"><div style="font-size:15px;font-weight:700">$${q.price.toFixed(2)}</div><div style="font-size:12px;color:${q.change>=0?'var(--green)':'var(--red)'}">${q.change>=0?'+':''}${q.changePercent}%</div></div><button style="background:none;border:none;padding:8px;cursor:pointer;color:var(--text3)" onclick="event.stopPropagation();removeFromWatch('${sym}')">×</button>`;
+      el.innerHTML = `<div class="tx-icon" style="background:var(--input);overflow:hidden;border-radius:50%;cursor:pointer" onclick="qSearch('${sym}');nav('calc')">${logoEl(sym)}</div><div class="tx-info" style="cursor:pointer" onclick="qSearch('${sym}');nav('calc')"><div class="tx-title">${sym} <span class="live-dot" style="width:6px;height:6px"></span></div><div class="tx-sub">${names[sym]||sym}</div></div><div style="text-align:right;cursor:pointer" onclick="qSearch('${sym}');nav('calc')"><div style="font-size:15px;font-weight:700">$${q.price.toFixed(2)}</div><div style="font-size:12px;color:${chgColor}">${chgSign}${chg.toFixed(2)}%</div></div><button style="background:none;border:none;padding:8px;cursor:pointer;color:var(--text3)" onclick="event.stopPropagation();removeFromWatch('${sym}')">×</button>`;
     } else {
-      el.innerHTML = `<div class="tx-icon" style="background:var(--input);overflow:hidden"><img src="${logo(sym)}" style="width:100%;height:100%;border-radius:50%" onerror="this.outerHTML='<span style=font-size:12px;font-weight:700>${sym.slice(0,2)}</span>'"></div><div class="tx-info"><div class="tx-title">${sym}</div><div class="tx-sub">${names[sym]||sym}</div></div><div style="text-align:right"><div style="font-size:13px;color:var(--text3)">Unavailable</div></div><button style="background:none;border:none;padding:8px;cursor:pointer;color:var(--text3)" onclick="removeFromWatch('${sym}')">×</button>`;
+      el.innerHTML = `<div class="tx-icon" style="background:var(--input);overflow:hidden;border-radius:50%">${logoEl(sym)}</div><div class="tx-info"><div class="tx-title">${sym}</div><div class="tx-sub">${names[sym]||sym}</div></div><div style="text-align:right"><div style="font-size:13px;color:var(--text3)">Unavailable</div></div><button style="background:none;border:none;padding:8px;cursor:pointer;color:var(--text3)" onclick="removeFromWatch('${sym}')">×</button>`;
     }
   });
 
