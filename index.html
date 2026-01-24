@@ -7,6 +7,7 @@
   <meta name="theme-color" content="#000">
   <title>Market Elites</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
   <style>
     *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
     :root{--bg:#f5f5f7;--card:#fff;--input:#f0f0f2;--text:#1d1d1f;--text2:#86868b;--text3:#aeaeb2;--border:#e5e5e7;--hero:#1d1d1f;--green:#34c759;--green-bg:rgba(52,199,89,.12);--red:#ff3b30;--red-bg:rgba(255,59,48,.12);--blue:#007aff;--blue-bg:rgba(0,122,255,.12);--orange:#ff9500;--orange-bg:rgba(255,149,0,.12);--purple:#af52de;--purple-bg:rgba(175,82,222,.12)}
@@ -296,6 +297,11 @@
   <div class="modal-bg" id="settingsModal" onclick="closeModal('settingsModal')"><div class="modal" onclick="event.stopPropagation()"><div class="modal-handle"></div><div class="modal-header"><span class="modal-title">Quick Settings</span><button class="modal-close" onclick="closeModal('settingsModal')"><svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
     <div class="setting-row"><span>Dark Mode</span><button class="switch" id="qThemeSwitch" onclick="toggleTheme()"><div class="switch-knob"></div></button></div>
     <div class="setting-row"><span>Notifications</span><button class="switch" id="qNotifSwitch" onclick="toggleNotif()"><div class="switch-knob"></div></button></div>
+    <div style="padding:12px 0;border-bottom:1px solid var(--border)">
+      <div class="form-group" style="margin-bottom:8px"><label class="form-label">Email for Alerts</label><input type="email" class="form-input" id="userAlertEmail" placeholder="your@email.com"></div>
+      <div class="setting-row" style="padding:8px 0"><span>Receive Email Alerts</span><button class="switch" id="emailAlertSwitch" onclick="toggleEmailAlerts()"><div class="switch-knob"></div></button></div>
+      <button class="btn btn-outline" onclick="saveEmailSubscription()" style="width:100%">Save Email Preferences</button>
+    </div>
     <div style="padding:16px 0;border-bottom:1px solid var(--border)"><div class="form-group" style="margin-bottom:12px"><label class="form-label">Alpaca API Key</label><input type="text" class="form-input" id="qApiKey" placeholder="PK..."></div><div class="form-group" style="margin-bottom:12px"><label class="form-label">Secret Key</label><input type="password" class="form-input" id="qSecretKey" placeholder="••••••••"></div><button class="btn btn-outline" onclick="quickSaveApi()">Save API Keys</button></div>
     <button class="btn btn-red mt-4" onclick="signOut()"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Sign Out</button>
   </div></div>
@@ -373,8 +379,17 @@
     <div style="margin-top:24px;padding-top:16px;border-top:1px solid var(--border)">
       <div class="card-title">Notification Settings</div>
       <div class="form-group" style="margin-top:12px"><label class="form-label">Discord Webhook URL</label><input type="text" class="form-input" id="discordWebhook" placeholder="https://discord.com/api/webhooks/..."></div>
-      <button class="btn btn-outline" onclick="saveAdminSettings()" style="margin-top:8px">Save Settings</button>
-      <p style="font-size:11px;color:var(--text3);margin-top:8px">Posts will be sent to your Discord server</p>
+      <p style="font-size:11px;color:var(--text3);margin-top:4px">Posts sent to your Discord server</p>
+
+      <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
+        <div class="form-label" style="font-weight:600;margin-bottom:8px">📧 EmailJS (Free Email Alerts)</div>
+        <div class="form-group"><label class="form-label">Public Key</label><input type="text" class="form-input" id="emailjsPublicKey" placeholder="Your EmailJS public key"></div>
+        <div class="form-group"><label class="form-label">Service ID</label><input type="text" class="form-input" id="emailjsServiceId" placeholder="service_xxxxxxx"></div>
+        <div class="form-group"><label class="form-label">Template ID</label><input type="text" class="form-input" id="emailjsTemplateId" placeholder="template_xxxxxxx"></div>
+        <p style="font-size:11px;color:var(--text3);margin-top:4px">Free at <a href="https://emailjs.com" target="_blank" style="color:var(--blue)">emailjs.com</a> - 200 emails/month</p>
+      </div>
+
+      <button class="btn btn-outline" onclick="saveAdminSettings()" style="margin-top:12px">Save Settings</button>
     </div>
   </div></div>
 
@@ -520,7 +535,7 @@ $('promptInput')?.addEventListener('keydown', e => { if (e.key === 'Enter') subm
 
 // Admin Panel Functions
 const ADMIN_PASS_HASH = '5e884898da28047d9169e1e3c5e5f4c3e8c3e8c3'; // Change this - hash of your password
-const ADMIN_PASS = 'elites2025'; // Simple password - CHANGE THIS to your own password
+const ADMIN_PASS = 'elitesbeau777'; // Admin password
 
 function initAdminAccess() {
   document.addEventListener('keydown', e => {
@@ -612,6 +627,8 @@ async function savePostToFirebase(post) {
   }
   // Send Discord notification
   await sendDiscordNotification(post);
+  // Send email notifications
+  await sendEmailNotifications(post);
 }
 
 // Send notification to Discord webhook
@@ -657,6 +674,20 @@ async function sendDiscordNotification(post) {
 function saveAdminSettings() {
   const webhook = $('discordWebhook')?.value.trim();
   if (webhook) localStorage.setItem('discordWebhook', webhook);
+
+  // Save EmailJS settings
+  const publicKey = $('emailjsPublicKey')?.value.trim();
+  const serviceId = $('emailjsServiceId')?.value.trim();
+  const templateId = $('emailjsTemplateId')?.value.trim();
+  if (publicKey) localStorage.setItem('emailjsPublicKey', publicKey);
+  if (serviceId) localStorage.setItem('emailjsServiceId', serviceId);
+  if (templateId) localStorage.setItem('emailjsTemplateId', templateId);
+
+  // Initialize EmailJS if configured
+  if (publicKey && typeof emailjs !== 'undefined') {
+    emailjs.init(publicKey);
+  }
+
   showToast('Settings saved!', 'success');
 }
 
@@ -664,6 +695,116 @@ function saveAdminSettings() {
 function loadAdminSettings() {
   const webhook = localStorage.getItem('discordWebhook');
   if (webhook && $('discordWebhook')) $('discordWebhook').value = webhook;
+
+  // Load EmailJS settings
+  const publicKey = localStorage.getItem('emailjsPublicKey');
+  const serviceId = localStorage.getItem('emailjsServiceId');
+  const templateId = localStorage.getItem('emailjsTemplateId');
+  if (publicKey && $('emailjsPublicKey')) $('emailjsPublicKey').value = publicKey;
+  if (serviceId && $('emailjsServiceId')) $('emailjsServiceId').value = serviceId;
+  if (templateId && $('emailjsTemplateId')) $('emailjsTemplateId').value = templateId;
+
+  // Initialize EmailJS if configured
+  if (publicKey && typeof emailjs !== 'undefined') {
+    emailjs.init(publicKey);
+  }
+}
+
+// Send email notifications to subscribed users
+async function sendEmailNotifications(post) {
+  const publicKey = localStorage.getItem('emailjsPublicKey');
+  const serviceId = localStorage.getItem('emailjsServiceId');
+  const templateId = localStorage.getItem('emailjsTemplateId');
+
+  if (!publicKey || !serviceId || !templateId) return;
+
+  // Get subscribed emails from Firebase
+  if (!await initFirebase()) return;
+
+  try {
+    const db = firebase.database();
+    const snapshot = await db.ref('emailSubscribers').once('value');
+    const subscribers = snapshot.val() || {};
+
+    // Build email content based on post type
+    let subject = '', body = '';
+    if (post.kind === 'signal') {
+      subject = `🚨 New ${post.type.toUpperCase()} Signal - ${post.ticker}`;
+      body = `New ${post.type === 'csp' ? 'Cash Secured Put' : 'Covered Call'} Signal!\n\nTicker: ${post.ticker}\nStrike: $${post.strike}\nExpiration: ${post.exp}\nPremium: ${post.prem}\nDelta: ${post.delta}`;
+    } else if (post.kind === 'announcement') {
+      subject = `📢 ${post.title}`;
+      body = post.message;
+    } else if (post.kind === 'roll') {
+      subject = `🔄 Position Roll Alert`;
+      body = `Rolling position:\n${post.original} → ${post.newPos}\nCredit/Debit: ${post.credit}${post.notes ? '\nNotes: ' + post.notes : ''}`;
+    }
+
+    // Send to each subscriber
+    for (const [key, sub] of Object.entries(subscribers)) {
+      if (sub.active && sub.email) {
+        try {
+          await emailjs.send(serviceId, templateId, {
+            to_email: sub.email,
+            subject: subject,
+            message: body,
+            from_name: 'Market Elites'
+          });
+        } catch (e) {
+          console.error('Email send error:', e);
+        }
+      }
+    }
+  } catch (e) {
+    console.error('Email notification error:', e);
+  }
+}
+
+// Toggle email alerts for user
+function toggleEmailAlerts() {
+  S.emailAlerts = !S.emailAlerts;
+  const sw = $('emailAlertSwitch');
+  if (sw) sw.classList.toggle('active', S.emailAlerts);
+  save();
+}
+
+// Save email subscription to Firebase
+async function saveEmailSubscription() {
+  const email = $('userAlertEmail')?.value.trim();
+  if (!email || !email.includes('@')) {
+    showToast('Please enter a valid email', 'error');
+    return;
+  }
+
+  if (!await initFirebase()) {
+    // Save locally if Firebase not available
+    S.alertEmail = email;
+    save();
+    showToast('Email saved locally', 'success');
+    return;
+  }
+
+  try {
+    const db = firebase.database();
+    const emailKey = email.replace(/[.#$[\]]/g, '_'); // Firebase-safe key
+    await db.ref('emailSubscribers/' + emailKey).set({
+      email: email,
+      active: S.emailAlerts !== false,
+      subscribedAt: Date.now()
+    });
+    S.alertEmail = email;
+    save();
+    showToast('Email alerts enabled!', 'success');
+  } catch (e) {
+    console.error('Subscription error:', e);
+    showToast('Failed to subscribe', 'error');
+  }
+}
+
+// Load user email settings
+function loadEmailSettings() {
+  if (S.alertEmail && $('userAlertEmail')) $('userAlertEmail').value = S.alertEmail;
+  const sw = $('emailAlertSwitch');
+  if (sw) sw.classList.toggle('active', S.emailAlerts !== false);
 }
 
 // Load posts from Firebase
@@ -833,7 +974,7 @@ function nav(t){document.querySelectorAll('.tab').forEach(x=>x.classList.remove(
 function goCalc(m){nav('calc');setMode(m)}
 function openModal(id){$(id)?.classList.add('show')}
 function closeModal(id){$(id)?.classList.remove('show')}
-function openSettings(){$('qApiKey').value=S.apiKey;$('qSecretKey').value=S.secretKey;applyTheme();openModal('settingsModal')}
+function openSettings(){$('qApiKey').value=S.apiKey;$('qSecretKey').value=S.secretKey;loadEmailSettings();applyTheme();openModal('settingsModal')}
 function quickSaveApi(){S.apiKey=$('qApiKey').value.trim();S.secretKey=$('qSecretKey').value.trim();save();updateStatus();closeModal('settingsModal');if(S.apiKey)showToast('API keys saved!','success')}
 function signOut(){if(confirm('Sign out and clear all data?')){localStorage.removeItem('meV6');location.reload()}}
 function openAdd(){setAddMode('csp');openModal('addModal')}
