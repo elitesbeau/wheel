@@ -327,6 +327,48 @@
     <p style="font-size:12px;color:var(--text3);text-align:center;margin-top:16px">7-day free trial · Cancel anytime</p>
   </div></div>
 
+  <div class="modal-bg" id="adminModal" onclick="closeModal('adminModal')"><div class="modal" onclick="event.stopPropagation()" style="max-height:90vh">
+    <div class="modal-handle"></div>
+    <div class="modal-header"><span class="modal-title">Admin Panel</span><button class="modal-close" onclick="closeModal('adminModal')"><svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+
+    <div class="toggle" style="margin-bottom:20px">
+      <button class="toggle-btn active" id="adminSignalBtn" onclick="setAdminTab('signal')">Signal</button>
+      <button class="toggle-btn" id="adminAnnBtn" onclick="setAdminTab('announcement')">Announce</button>
+      <button class="toggle-btn" id="adminRollBtn" onclick="setAdminTab('roll')">Roll</button>
+    </div>
+
+    <div id="adminSignalForm">
+      <div class="form-group"><label class="form-label">Type</label>
+        <div class="toggle"><button class="toggle-btn active" id="sigCspBtn" onclick="S.adminSigType='csp';this.classList.add('active');$('sigCcBtn').classList.remove('active')">CSP</button><button class="toggle-btn" id="sigCcBtn" onclick="S.adminSigType='cc';this.classList.add('active');$('sigCspBtn').classList.remove('active')">CC</button></div>
+      </div>
+      <div class="form-group"><label class="form-label">Ticker</label><input type="text" class="form-input" id="adminTicker" placeholder="NVDA" style="text-transform:uppercase"></div>
+      <div class="form-group"><label class="form-label">Strike</label><input type="number" class="form-input" id="adminStrike" placeholder="130"></div>
+      <div class="form-group"><label class="form-label">Expiration</label><input type="text" class="form-input" id="adminExp" placeholder="Feb 7"></div>
+      <div class="form-group"><label class="form-label">Premium</label><input type="text" class="form-input" id="adminPrem" placeholder="$3.20"></div>
+      <div class="form-group"><label class="form-label">Delta</label><input type="text" class="form-input" id="adminDelta" placeholder="0.25"></div>
+      <button class="btn" onclick="postSignal()">Post Signal</button>
+    </div>
+
+    <div id="adminAnnForm" class="hidden">
+      <div class="form-group"><label class="form-label">Title</label><input type="text" class="form-input" id="annTitle" placeholder="Market Update"></div>
+      <div class="form-group"><label class="form-label">Message</label><textarea class="form-input" id="annMsg" placeholder="Your announcement..." rows="4" style="resize:none"></textarea></div>
+      <button class="btn" onclick="postAnnouncement()">Post Announcement</button>
+    </div>
+
+    <div id="adminRollForm" class="hidden">
+      <div class="form-group"><label class="form-label">Original Position</label><input type="text" class="form-input" id="rollOrig" placeholder="NVDA $130P Feb 7"></div>
+      <div class="form-group"><label class="form-label">New Position</label><input type="text" class="form-input" id="rollNew" placeholder="NVDA $125P Feb 14"></div>
+      <div class="form-group"><label class="form-label">Credit/Debit</label><input type="text" class="form-input" id="rollCredit" placeholder="+$0.50 credit"></div>
+      <div class="form-group"><label class="form-label">Notes</label><textarea class="form-input" id="rollNotes" placeholder="Rolling for credit..." rows="2" style="resize:none"></textarea></div>
+      <button class="btn" onclick="postRoll()">Post Roll Update</button>
+    </div>
+
+    <div style="margin-top:24px;padding-top:16px;border-top:1px solid var(--border)">
+      <div class="card-title">Recent Posts</div>
+      <div id="adminPostsList" style="max-height:200px;overflow-y:auto"></div>
+    </div>
+  </div></div>
+
   <div class="modal-bg center" id="promptModal" onclick="closePrompt()"><div class="modal" onclick="event.stopPropagation()" style="max-width:360px">
     <div class="modal-header"><span class="modal-title" id="promptTitle">Enter Value</span><button class="modal-close" onclick="closePrompt()"><svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
     <div class="form-group"><input type="text" class="form-input" id="promptInput" placeholder="" style="font-size:18px;text-transform:uppercase"></div>
@@ -466,6 +508,137 @@ function closePrompt() {
   promptCallback = null;
 }
 $('promptInput')?.addEventListener('keydown', e => { if (e.key === 'Enter') submitPrompt(); });
+
+// Admin Panel Functions
+let adminClicks = 0;
+let adminClickTimer = null;
+function initAdminAccess() {
+  // Triple-click on "Market Elites" title or press Ctrl+Shift+A to open admin
+  document.addEventListener('keydown', e => {
+    if (e.ctrlKey && e.shiftKey && e.key === 'A') { e.preventDefault(); openAdmin(); }
+  });
+}
+
+function openAdmin() {
+  S.adminSigType = 'csp';
+  renderAdminPosts();
+  openModal('adminModal');
+}
+
+function setAdminTab(tab) {
+  $('adminSignalBtn').classList.toggle('active', tab === 'signal');
+  $('adminAnnBtn').classList.toggle('active', tab === 'announcement');
+  $('adminRollBtn').classList.toggle('active', tab === 'roll');
+  $('adminSignalForm').classList.toggle('hidden', tab !== 'signal');
+  $('adminAnnForm').classList.toggle('hidden', tab !== 'announcement');
+  $('adminRollForm').classList.toggle('hidden', tab !== 'roll');
+}
+
+function postSignal() {
+  const sig = {
+    type: S.adminSigType || 'csp',
+    ticker: $('adminTicker').value.toUpperCase().trim(),
+    strike: parseFloat($('adminStrike').value) || 0,
+    exp: $('adminExp').value.trim(),
+    prem: $('adminPrem').value.trim(),
+    delta: $('adminDelta').value.trim(),
+    time: 'Just now',
+    timestamp: Date.now(),
+    kind: 'signal'
+  };
+  if (!sig.ticker || !sig.strike) return showToast('Fill ticker and strike', 'error');
+  if (!S.adminPosts) S.adminPosts = [];
+  S.adminPosts.unshift(sig);
+  save();
+  showToast('Signal posted!', 'success');
+  $('adminTicker').value = '';
+  $('adminStrike').value = '';
+  $('adminExp').value = '';
+  $('adminPrem').value = '';
+  $('adminDelta').value = '';
+  renderAdminPosts();
+  renderSignals();
+}
+
+function postAnnouncement() {
+  const ann = {
+    title: $('annTitle').value.trim(),
+    message: $('annMsg').value.trim(),
+    time: 'Just now',
+    timestamp: Date.now(),
+    kind: 'announcement'
+  };
+  if (!ann.title || !ann.message) return showToast('Fill title and message', 'error');
+  if (!S.adminPosts) S.adminPosts = [];
+  S.adminPosts.unshift(ann);
+  save();
+  showToast('Announcement posted!', 'success');
+  $('annTitle').value = '';
+  $('annMsg').value = '';
+  renderAdminPosts();
+  renderSignals();
+}
+
+function postRoll() {
+  const roll = {
+    original: $('rollOrig').value.trim(),
+    newPos: $('rollNew').value.trim(),
+    credit: $('rollCredit').value.trim(),
+    notes: $('rollNotes').value.trim(),
+    time: 'Just now',
+    timestamp: Date.now(),
+    kind: 'roll'
+  };
+  if (!roll.original || !roll.newPos) return showToast('Fill original and new position', 'error');
+  if (!S.adminPosts) S.adminPosts = [];
+  S.adminPosts.unshift(roll);
+  save();
+  showToast('Roll update posted!', 'success');
+  $('rollOrig').value = '';
+  $('rollNew').value = '';
+  $('rollCredit').value = '';
+  $('rollNotes').value = '';
+  renderAdminPosts();
+  renderSignals();
+}
+
+function deletePost(idx) {
+  if (!S.adminPosts) return;
+  S.adminPosts.splice(idx, 1);
+  save();
+  renderAdminPosts();
+  renderSignals();
+  showToast('Post deleted', '');
+}
+
+function renderAdminPosts() {
+  const c = $('adminPostsList');
+  if (!c) return;
+  const posts = S.adminPosts || [];
+  if (!posts.length) {
+    c.innerHTML = '<p style="color:var(--text3);font-size:13px;text-align:center;padding:16px">No posts yet</p>';
+    return;
+  }
+  c.innerHTML = posts.slice(0, 10).map((p, i) => {
+    let label = '';
+    if (p.kind === 'signal') label = `<span style="color:var(--${p.type==='csp'?'green':'blue'})">${p.type.toUpperCase()}</span> ${p.ticker} $${p.strike}`;
+    else if (p.kind === 'announcement') label = `<span style="color:var(--orange)">ANN</span> ${p.title}`;
+    else if (p.kind === 'roll') label = `<span style="color:var(--purple)">ROLL</span> ${p.original}`;
+    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)"><span style="font-size:13px">${label}</span><button onclick="deletePost(${i})" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:12px">Delete</button></div>`;
+  }).join('');
+}
+
+function getTimeAgo(ts) {
+  const mins = Math.floor((Date.now() - ts) / 60000);
+  if (mins < 1) return 'Just now';
+  if (mins < 60) return mins + 'm ago';
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return hrs + 'h ago';
+  const days = Math.floor(hrs / 24);
+  return days + 'd ago';
+}
+
+initAdminAccess();
 const logo=s=>'https://financialmodelingprep.com/image-stock/'+s.toUpperCase()+'.png';
 function load(){try{const d=localStorage.getItem('meV6');if(d)Object.assign(S,JSON.parse(d))}catch(e){}}
 function save(){try{localStorage.setItem('meV6',JSON.stringify(S))}catch(e){}}
@@ -789,7 +962,38 @@ async function refreshWatch(){
   renderWatch();
 }
 function renderAlerts(){const c=$('alertsContainer');const alerts=[];S.positions.forEach(p=>{if(!p.expiration)return;const dte=Math.ceil((new Date(p.expiration)-new Date())/864e5);if(dte<=7)alerts.push({...p,dte,urgent:dte<=3})});if(!alerts.length){c.innerHTML='<div class="empty"><div class="empty-icon"><svg viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/></svg></div><div class="empty-title">No Alerts</div><div class="empty-text">Alerts appear when positions expire soon</div></div>';return}c.innerHTML=alerts.map(a=>`<div class="pos-card" style="border-left:3px solid ${a.urgent?'var(--red)':'var(--orange)'}"><div style="font-weight:600">${a.symbol} $${a.strike}${a.type==='csp'?'P':'C'}</div><div style="font-size:13px;color:var(--text2);margin-top:4px">${a.dte} days remaining</div></div>`).join('')}
-function renderSignals(){const c=$('signalsContainer');c.innerHTML=signals.map((s,i)=>{const locked=!S.isPremium&&i>0;return`<div class="signal-card ${locked?'locked':''}"><div class="signal-header"><span class="signal-type ${s.type}">${s.type.toUpperCase()}</span><span class="signal-time">${s.time}</span></div><div class="signal-ticker">${s.ticker}</div><div class="signal-details">$${s.strike} ${s.type==='csp'?'Put':'Call'} · Exp ${s.exp}</div><div style="display:flex;gap:16px;font-size:13px"><span>Premium: <b style="color:var(--green)">${s.prem}</b></span><span>Delta: <b>${s.delta}</b></span></div>${locked?`<div class="signal-lock"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><span>Unlock with Premium</span></div>`:''}</div>`}).join('')+(!S.isPremium?'<button class="btn mt-4" onclick="openPremium()">Unlock All Signals</button>':'')}
+function renderSignals(){
+  const c=$('signalsContainer');
+  const posts = S.adminPosts || [];
+
+  // Separate by type
+  const sigs = posts.filter(p => p.kind === 'signal');
+  const anns = posts.filter(p => p.kind === 'announcement');
+  const rolls = posts.filter(p => p.kind === 'roll');
+
+  let html = '';
+
+  // Announcements at top
+  anns.slice(0, 3).forEach(a => {
+    html += `<div class="signal-card" style="border-left:3px solid var(--orange);background:var(--orange-bg)"><div style="font-weight:600;margin-bottom:4px">${a.title}</div><div style="font-size:13px;color:var(--text2)">${a.message}</div><div style="font-size:11px;color:var(--text3);margin-top:8px">${getTimeAgo(a.timestamp)}</div></div>`;
+  });
+
+  // Roll updates
+  rolls.slice(0, 3).forEach(r => {
+    html += `<div class="signal-card" style="border-left:3px solid var(--purple)"><div class="signal-header"><span class="signal-type" style="background:var(--purple-bg);color:var(--purple)">ROLL</span><span class="signal-time">${getTimeAgo(r.timestamp)}</span></div><div style="font-size:13px;margin:8px 0"><span style="color:var(--red)">${r.original}</span> → <span style="color:var(--green)">${r.newPos}</span></div><div style="font-size:14px;font-weight:600;color:var(--green)">${r.credit}</div>${r.notes?`<div style="font-size:12px;color:var(--text2);margin-top:4px">${r.notes}</div>`:''}</div>`;
+  });
+
+  // Trading signals
+  const allSigs = sigs.length ? sigs : signals; // fallback to default if no admin posts
+  allSigs.slice(0, 10).forEach((s, i) => {
+    const locked = !S.isPremium && i > 0;
+    const time = s.timestamp ? getTimeAgo(s.timestamp) : s.time;
+    html += `<div class="signal-card ${locked?'locked':''}"><div class="signal-header"><span class="signal-type ${s.type}">${s.type.toUpperCase()}</span><span class="signal-time">${time}</span></div><div class="signal-ticker">${s.ticker}</div><div class="signal-details">$${s.strike} ${s.type==='csp'?'Put':'Call'} · Exp ${s.exp}</div><div style="display:flex;gap:16px;font-size:13px"><span>Premium: <b style="color:var(--green)">${s.prem}</b></span><span>Delta: <b>${s.delta}</b></span></div>${locked?`<div class="signal-lock"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><span>Unlock with Premium</span></div>`:''}</div>`;
+  });
+
+  if (!S.isPremium) html += '<button class="btn mt-4" onclick="openPremium()">Unlock All Signals</button>';
+  c.innerHTML = html;
+}
 function renderProfile(){$('userName').value=S.user.name||'';$('userEmail').value=S.user.email||'';$('profileName').textContent=S.user.name||'Set up your profile';$('profileEmail').textContent=S.user.email||'Tap to edit';const init=S.user.name?S.user.name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2):'?';$('profileInitials').textContent=init;$('apiKeyInput').value=S.apiKey;$('secretKeyInput').value=S.secretKey;$('accSizeInput').value=S.accSize;const ok=S.apiKey.length>10;$('brokerStatus').innerHTML=ok?'<div style="padding:12px;background:var(--green-bg);border-radius:12px;margin-bottom:16px;font-weight:600;color:var(--green)"><span class="live-dot"></span>Connected</div>':'<div style="padding:12px;background:var(--orange-bg);border-radius:12px;margin-bottom:16px;font-size:13px;color:var(--orange)">Not connected</div>';const wins=S.history.filter(t=>(t.pnl||0)>=0).length;const total=S.history.length;const prem=S.positions.reduce((s,p)=>s+(p.premium||0)*(p.contracts||1)*100,0)+S.history.reduce((s,t)=>s+(t.premium||0)*(t.contracts||1)*100,0);$('pTrades').textContent=total;$('pWinRate').textContent=total?Math.round(wins/total*100)+'%':'0%';$('pPremium').textContent='$'+prem.toFixed(0);if(S.isPremium){show('proBadge');hide('proCard')}}
 function saveProfile(){S.user.name=$('userName').value.trim();S.user.email=$('userEmail').value.trim();save();renderProfile();showToast('Saved!','success')}
 function connectBroker(){S.apiKey=$('apiKeyInput').value.trim();S.secretKey=$('secretKeyInput').value.trim();S.accSize=parseInt($('accSizeInput').value)||25000;save();updateStatus();renderProfile();if(S.apiKey)showToast('Connected!','success')}
