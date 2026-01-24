@@ -680,16 +680,12 @@ function onStrikeChange() {
   $('resCon').textContent = contracts;
   show('resultCard');
 }
-function logoEl(sym) {
-  return `<img src="${logo(sym)}" style="width:100%;height:100%;object-fit:contain" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><span style="display:none;width:100%;height:100%;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--text2)">${sym.slice(0,2)}</span>`;
-}
-
 async function renderWatch(){
   const c=$('watchContainer');
   const watchlist = S.watchlist || ['AAPL','NVDA','TSLA','SPY','AMD','MSFT'];
 
-  // Show loading state with logos
-  c.innerHTML='<div class="tx-list">'+watchlist.map(sym=>`<div class="tx-item" id="watch-${sym}"><div class="tx-icon" style="background:var(--input);overflow:hidden;border-radius:50%">${logoEl(sym)}</div><div class="tx-info"><div class="tx-title">${sym}</div><div class="tx-sub">${names[sym]||sym}</div></div><div style="text-align:right"><div style="font-size:15px;font-weight:700;color:var(--text3)">Loading...</div><div style="font-size:12px;color:var(--text3)">—</div></div></div>`).join('')+'</div><button class="btn btn-outline mt-4" onclick="openAddWatch()">+ Add to Watchlist</button>';
+  // Show loading state
+  c.innerHTML='<div class="tx-list">'+watchlist.map(sym=>`<div class="tx-item" id="watch-${sym}"><div class="pos-logo"><img src="${logo(sym)}" onerror="this.outerHTML='<span class=pos-logo-text>${sym.slice(0,2)}</span>'"></div><div class="tx-info"><div class="tx-title">${sym}</div><div class="tx-sub">${names[sym]||sym}</div></div><div style="text-align:right"><div style="font-size:15px;font-weight:700;color:var(--text3)">Loading...</div><div style="font-size:12px;color:var(--text3)">—</div></div></div>`).join('')+'</div><button class="btn btn-outline mt-4" onclick="openAddWatch()">+ Add to Watchlist</button>';
 
   // Fetch live prices in parallel
   const quotes = await Promise.all(watchlist.map(sym => fetchLiveQuote(sym)));
@@ -703,9 +699,9 @@ async function renderWatch(){
     const chgColor = chg >= 0 ? 'var(--green)' : 'var(--red)';
     const chgSign = chg >= 0 ? '+' : '';
     if (q) {
-      el.innerHTML = `<div class="tx-icon" style="background:var(--input);overflow:hidden;border-radius:50%;cursor:pointer" onclick="qSearch('${sym}');nav('calc')">${logoEl(sym)}</div><div class="tx-info" style="cursor:pointer" onclick="qSearch('${sym}');nav('calc')"><div class="tx-title">${sym} <span class="live-dot" style="width:6px;height:6px"></span></div><div class="tx-sub">${names[sym]||sym}</div></div><div style="text-align:right;cursor:pointer" onclick="qSearch('${sym}');nav('calc')"><div style="font-size:15px;font-weight:700">$${q.price.toFixed(2)}</div><div style="font-size:12px;color:${chgColor}">${chgSign}${chg.toFixed(2)}%</div></div><button style="background:none;border:none;padding:8px;cursor:pointer;color:var(--text3)" onclick="event.stopPropagation();removeFromWatch('${sym}')">×</button>`;
+      el.innerHTML = `<div class="pos-logo" style="cursor:pointer" onclick="qSearch('${sym}');nav('calc')"><img src="${logo(sym)}" onerror="this.outerHTML='<span class=pos-logo-text>${sym.slice(0,2)}</span>'"></div><div class="tx-info" style="cursor:pointer" onclick="qSearch('${sym}');nav('calc')"><div class="tx-title">${sym} <span class="live-dot" style="width:6px;height:6px"></span></div><div class="tx-sub">${names[sym]||sym}</div></div><div style="text-align:right;cursor:pointer" onclick="qSearch('${sym}');nav('calc')"><div style="font-size:15px;font-weight:700">$${q.price.toFixed(2)}</div><div style="font-size:12px;color:${chgColor}">${chgSign}${chg.toFixed(2)}%</div></div><button style="background:none;border:none;padding:8px;cursor:pointer;color:var(--text3)" onclick="event.stopPropagation();removeFromWatch('${sym}')">×</button>`;
     } else {
-      el.innerHTML = `<div class="tx-icon" style="background:var(--input);overflow:hidden;border-radius:50%">${logoEl(sym)}</div><div class="tx-info"><div class="tx-title">${sym}</div><div class="tx-sub">${names[sym]||sym}</div></div><div style="text-align:right"><div style="font-size:13px;color:var(--text3)">Unavailable</div></div><button style="background:none;border:none;padding:8px;cursor:pointer;color:var(--text3)" onclick="removeFromWatch('${sym}')">×</button>`;
+      el.innerHTML = `<div class="pos-logo"><img src="${logo(sym)}" onerror="this.outerHTML='<span class=pos-logo-text>${sym.slice(0,2)}</span>'"></div><div class="tx-info"><div class="tx-title">${sym}</div><div class="tx-sub">${names[sym]||sym}</div></div><div style="text-align:right"><div style="font-size:13px;color:var(--text3)">Unavailable</div></div><button style="background:none;border:none;padding:8px;cursor:pointer;color:var(--text3)" onclick="removeFromWatch('${sym}')">×</button>`;
     }
   });
 
