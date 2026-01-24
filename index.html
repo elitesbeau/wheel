@@ -249,7 +249,7 @@
       <div class="card hidden" id="stockCard"><div style="font-size:24px;font-weight:700" id="stockSymbol">AAPL</div><div style="font-size:13px;color:var(--text2)" id="stockName">Apple Inc.</div><div style="font-size:36px;font-weight:700;margin:8px 0">$<span id="stockPrice">0.00</span></div></div>
       <div class="card hidden" id="optCard"><div class="card-title">Select Contract</div><div class="form-group"><label class="form-label">Expiration</label><select class="form-select" id="expSelect" onchange="onExpChange()"><option>Select...</option></select></div><div class="form-group"><label class="form-label">Strike</label><select class="form-select" id="strikeSelect" onchange="onStrikeChange()"><option>Select...</option></select></div></div>
       <div class="card hidden" id="resultCard"><div class="card-title">Analysis</div><div class="stats-grid"><div class="stat-box"><div class="stat-val green">$<span id="resPrem">0</span></div><div class="stat-label">Premium</div></div><div class="stat-box"><div class="stat-val blue"><span id="resAnn">0</span>%</div><div class="stat-label">Annualized</div></div><div class="stat-box"><div class="stat-val"><span id="resProb">0</span>%</div><div class="stat-label">Prob. Profit</div></div><div class="stat-box"><div class="stat-val"><span id="resCon">1</span></div><div class="stat-label">Contracts</div></div></div><button class="btn mt-4" onclick="addFromCalc()"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Add to Portfolio</button></div>
-      <div class="card" id="emptyCalc"><div class="empty" style="background:transparent;border:none"><div class="empty-icon"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></div><div class="empty-title">Search a Symbol</div><div class="empty-text">Enter a ticker to calculate</div><button class="btn btn-outline" style="width:auto;margin:0 auto" onclick="openLearn()">New? Learn the basics →</button></div></div>
+      <div class="card" id="emptyCalc"><div class="empty" style="background:transparent;border:none"><div class="empty-icon"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></div><div class="empty-title">Search a Symbol</div><div class="empty-text">Enter a ticker to see live options data</div><div style="display:flex;align-items:center;justify-content:center;gap:6px;margin:12px 0;padding:8px 16px;background:var(--green-bg);border-radius:20px;font-size:12px;color:var(--green);font-weight:600"><span class="live-dot"></span>Live pricing • No login required</div><button class="btn btn-outline" style="width:auto;margin:0 auto" onclick="openLearn()">New? Learn the basics →</button></div></div>
     </div>
 
     <div class="tab" id="watchTab"><div class="section" style="padding-top:16px"><div class="section-header"><span class="section-title">Watchlist</span><button class="section-link" onclick="refreshWatch()">↻ Refresh</button></div><div id="watchContainer"></div></div></div>
@@ -273,7 +273,7 @@
         </div>
       </div>
       <div class="card"><div class="card-title">Account</div><div class="form-group"><label class="form-label">Display Name</label><input type="text" class="form-input" id="userName" placeholder="Your name"></div><div class="form-group"><label class="form-label">Email</label><input type="email" class="form-input" id="userEmail" placeholder="email@example.com"></div><button class="btn btn-outline" onclick="saveProfile()">Save Profile</button></div>
-      <div class="card"><div class="card-title">Brokerage</div><div id="brokerStatus"></div><div class="form-group"><label class="form-label">Alpaca API Key</label><input type="text" class="form-input" id="apiKeyInput" placeholder="PK..."></div><div class="form-group"><label class="form-label">Secret Key</label><input type="password" class="form-input" id="secretKeyInput" placeholder="••••••••"></div><div class="form-group"><label class="form-label">Account Size ($)</label><input type="number" class="form-input" id="accSizeInput" value="25000"></div><button class="btn" onclick="connectBroker()">Connect</button></div>
+      <div class="card"><div class="card-title">Brokerage (Optional)</div><div style="padding:12px;background:var(--green-bg);border-radius:12px;margin-bottom:16px;font-size:13px;color:var(--green)"><span class="live-dot"></span><b>Live pricing works without login!</b><br><span style="opacity:0.8">Connect Alpaca only to sync your actual positions.</span></div><div id="brokerStatus"></div><div class="form-group"><label class="form-label">Alpaca API Key</label><input type="text" class="form-input" id="apiKeyInput" placeholder="PK..."></div><div class="form-group"><label class="form-label">Secret Key</label><input type="password" class="form-input" id="secretKeyInput" placeholder="••••••••"></div><div class="form-group"><label class="form-label">Account Size ($)</label><input type="number" class="form-input" id="accSizeInput" value="25000"></div><button class="btn" onclick="connectBroker()">Connect</button></div>
       <div class="card"><div class="card-title">Preferences</div><div class="setting-row"><span>Dark Mode</span><button class="switch" id="themeSwitch" onclick="toggleTheme()"><div class="switch-knob"></div></button></div><div class="setting-row"><span>Notifications</span><button class="switch" id="notifSwitch" onclick="toggleNotif()"><div class="switch-knob"></div></button></div></div>
       <div class="card" id="proCard"><div style="text-align:center"><div style="font-size:18px;font-weight:700;margin-bottom:8px">Upgrade to Premium</div><div style="font-size:13px;color:var(--text2);margin-bottom:20px">Unlock live signals & more</div><button class="btn" onclick="openPremium()">Get Premium · $9.99/mo</button></div></div>
     </div>
@@ -324,10 +324,90 @@
   </div></div>
 
 <script>
-const S={theme:'light',mode:'csp',addMode:'csp',apiKey:'',secretKey:'',accSize:25000,positions:[],history:[],selPosId:null,user:{name:'',email:''},isPremium:false,legalOk:false,notifOn:false};
-const names={AAPL:'Apple Inc.',NVDA:'NVIDIA',TSLA:'Tesla',MSFT:'Microsoft',AMD:'AMD',SPY:'S&P 500 ETF'};
-const domains={AAPL:'apple.com',NVDA:'nvidia.com',TSLA:'tesla.com',MSFT:'microsoft.com',AMD:'amd.com',SPY:'ssga.com'};
+const S={theme:'light',mode:'csp',addMode:'csp',apiKey:'',secretKey:'',accSize:25000,positions:[],history:[],selPosId:null,user:{name:'',email:''},isPremium:false,legalOk:false,notifOn:false,watchlist:['AAPL','NVDA','TSLA','SPY','AMD','MSFT']};
+const names={AAPL:'Apple Inc.',NVDA:'NVIDIA',TSLA:'Tesla',MSFT:'Microsoft',AMD:'AMD',SPY:'S&P 500 ETF',QQQ:'Nasdaq 100 ETF',AMZN:'Amazon',GOOGL:'Alphabet',META:'Meta Platforms'};
+const domains={AAPL:'apple.com',NVDA:'nvidia.com',TSLA:'tesla.com',MSFT:'microsoft.com',AMD:'amd.com',SPY:'ssga.com',QQQ:'invesco.com',AMZN:'amazon.com',GOOGL:'google.com',META:'meta.com'};
 const signals=[{type:'csp',ticker:'NVDA',strike:130,exp:'Jan 24',prem:'$3.20',delta:'0.25',time:'2h ago'},{type:'cc',ticker:'AAPL',strike:260,exp:'Jan 31',prem:'$2.80',delta:'0.30',time:'5h ago'},{type:'csp',ticker:'AMD',strike:135,exp:'Feb 7',prem:'$4.50',delta:'0.28',time:'1d ago'}];
+
+// Live pricing cache
+const priceCache = {};
+const optionsCache = {};
+
+// Fetch live stock quote from Yahoo Finance (no API key needed!)
+async function fetchLiveQuote(symbol) {
+  const cacheKey = symbol.toUpperCase();
+  const cached = priceCache[cacheKey];
+  if (cached && Date.now() - cached.time < 30000) return cached.data; // 30s cache
+
+  try {
+    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1d&range=1d`;
+    const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(url)}`;
+    const r = await fetch(proxyUrl);
+    if (!r.ok) throw new Error('Quote fetch failed');
+    const data = await r.json();
+    const result = data.chart?.result?.[0];
+    if (!result) throw new Error('No data');
+    const meta = result.meta;
+    const quote = {
+      symbol: meta.symbol,
+      price: meta.regularMarketPrice,
+      prevClose: meta.previousClose,
+      change: meta.regularMarketPrice - meta.previousClose,
+      changePercent: ((meta.regularMarketPrice - meta.previousClose) / meta.previousClose * 100).toFixed(2),
+      high: meta.regularMarketDayHigh,
+      low: meta.regularMarketDayLow,
+      volume: meta.regularMarketVolume
+    };
+    priceCache[cacheKey] = { data: quote, time: Date.now() };
+    return quote;
+  } catch (e) {
+    console.error('Quote error:', e);
+    return null;
+  }
+}
+
+// Fetch options chain from Yahoo Finance
+async function fetchOptionsChain(symbol, expDate = null) {
+  const cacheKey = `${symbol.toUpperCase()}_${expDate || 'default'}`;
+  const cached = optionsCache[cacheKey];
+  if (cached && Date.now() - cached.time < 60000) return cached.data; // 1min cache
+
+  try {
+    let url = `https://query1.finance.yahoo.com/v7/finance/options/${symbol}`;
+    if (expDate) url += `?date=${expDate}`;
+    const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(url)}`;
+    const r = await fetch(proxyUrl);
+    if (!r.ok) throw new Error('Options fetch failed');
+    const data = await r.json();
+    const result = data.optionChain?.result?.[0];
+    if (!result) throw new Error('No options data');
+
+    const chain = {
+      symbol: result.quote?.symbol,
+      price: result.quote?.regularMarketPrice,
+      expirations: result.expirationDates || [],
+      strikes: result.strikes || [],
+      calls: result.options?.[0]?.calls || [],
+      puts: result.options?.[0]?.puts || []
+    };
+    optionsCache[cacheKey] = { data: chain, time: Date.now() };
+    return chain;
+  } catch (e) {
+    console.error('Options error:', e);
+    return null;
+  }
+}
+
+// Format expiration date from Unix timestamp
+function formatExpDate(ts) {
+  const d = new Date(ts * 1000);
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: '2-digit' });
+}
+
+// Calculate days to expiration
+function calcDTE(ts) {
+  return Math.ceil((ts * 1000 - Date.now()) / 86400000);
+}
 const $=id=>document.getElementById(id);
 const show=el=>$(el)?.classList.remove('hidden');
 const hide=el=>$(el)?.classList.add('hidden');
@@ -353,7 +433,12 @@ function openAI(){if(!$('aiMessages').innerHTML)$('aiMessages').innerHTML='<div 
 function sendAI(){const i=$('aiInput'),m=i.value.trim();if(!m)return;$('aiMessages').innerHTML+=`<div class="ai-msg user">${m}</div>`;i.value='';setTimeout(()=>{const l=m.toLowerCase();let r='The wheel: sell CSPs until assigned, then sell CCs. Target 0.20-0.30 delta, 30-45 DTE.';if(l.includes('delta'))r='<b>Delta:</b> Target 0.20-0.30 for CSPs. 70-80% win rate.';else if(l.includes('dte')||l.includes('expir'))r='<b>DTE:</b> 30-45 days optimal for theta decay.';else if(l.includes('roll'))r='<b>Rolling:</b> Always roll for a credit!';$('aiMessages').innerHTML+=`<div class="ai-msg bot">${r}</div>`;$('aiMessages').scrollTop=$('aiMessages').scrollHeight},500)}
 function openPremium(){openModal('premiumModal')}
 function toggleNotif(){S.notifOn=!S.notifOn;['notifSwitch','qNotifSwitch'].forEach(id=>$(id)?.classList.toggle('on',S.notifOn));save()}
-function updateStatus(){const ok=S.apiKey.length>10&&S.secretKey.length>10;$('statusPill').className='status'+(ok?' ready':'');$('statusText').textContent=ok?'Ready':'Offline'}
+function updateStatus(){
+  const hasBroker=S.apiKey.length>10&&S.secretKey.length>10;
+  // Always show live for market data (no API key needed)
+  $('statusPill').className='status live';
+  $('statusText').textContent=hasBroker?'Live + Broker':'Live Data';
+}
 function renderHome(){$('balanceVal').textContent=S.accSize.toLocaleString();const prem=S.positions.reduce((s,p)=>s+(p.premium||0)*(p.contracts||1)*100,0);const pct=S.accSize>0?(prem/S.accSize*100).toFixed(1):0;$('balanceChange').textContent='↑ +$'+prem.toFixed(0)+' ('+pct+'%)';const init=S.user.name?S.user.name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2):'?';$('heroInitials').textContent=init;renderPositions();renderHistory()}
 function renderPositions(){const c=$('positionsContainer');if(!S.positions.length){c.innerHTML='<div class="empty"><div class="empty-icon"><svg viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div><div class="empty-title">No Positions</div><div class="empty-text">Add positions or sync from Alpaca</div><button class="empty-btn" onclick="openAdd()">+ Add Position</button></div>';return}c.innerHTML=S.positions.map(p=>{const dte=p.expiration?Math.ceil((new Date(p.expiration)-new Date())/864e5):null;const pnl=(p.premium||0)*(p.contracts||1)*100*.4;return`<div class="pos-card" onclick="viewPos('${p.id}')"><div class="pos-top"><div class="pos-left"><div class="pos-logo"><img src="${logo(p.symbol)}" onerror="this.outerHTML='<span class=pos-logo-text>${p.symbol.slice(0,2)}</span>'"></div><div><div class="pos-symbol">${p.symbol}${p.strike?' $'+p.strike+(p.type==='csp'?'P':'C'):''}</div><div class="pos-name">${names[p.symbol]||p.symbol}</div></div></div><span class="pos-badge ${p.type}">${p.type.toUpperCase()}</span></div><div class="pos-stats"><div><div class="pos-stat-val ${pnl>=0?'pos':'neg'}">${pnl>=0?'+':''}$${Math.abs(pnl).toFixed(0)}</div><div class="pos-stat-label">P&L</div></div><div><div class="pos-stat-val">$${((p.premium||0)*(p.contracts||1)*100).toFixed(0)}</div><div class="pos-stat-label">Premium</div></div><div style="text-align:right"><div class="pos-stat-val">${dte!==null?dte:'—'}</div><div class="pos-stat-label">${dte!==null?'DTE':'Hold'}</div></div></div></div>`}).join('')}
 function renderHistory(){const c=$('historyContainer');if(!S.history.length){c.innerHTML='<div style="text-align:center;padding:32px;color:var(--text2);font-size:14px;background:var(--card);border:1px solid var(--border);border-radius:16px">Closed trades appear here</div>';return}c.innerHTML='<div class="tx-list">'+S.history.slice(0,5).map(t=>`<div class="tx-item"><div class="tx-icon ${t.type}"><svg viewBox="0 0 24 24">${t.type==='csp'?'<circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12l4 4 4-4"/>':'<circle cx="12" cy="12" r="10"/><path d="M12 16V8M8 12l4-4 4 4"/>'}</svg></div><div class="tx-info"><div class="tx-title">${t.symbol} $${t.strike||''}${t.type==='csp'?'P':'C'}</div><div class="tx-sub">${new Date(t.closeDate||Date.now()).toLocaleDateString()}</div></div><div class="tx-amount ${(t.pnl||0)>=0?'pos':'neg'}">${(t.pnl||0)>=0?'+':'-'}$${Math.abs(t.pnl||0).toFixed(0)}</div></div>`).join('')+'</div>'}
@@ -362,11 +447,285 @@ function closePosition(){if(!S.selPosId)return;const p=S.positions.find(x=>x.id=
 async function syncPositions(){if(!S.apiKey)return alert('Add API keys in settings first');try{$('statusPill').className='status live';$('statusText').textContent='Syncing...';const r=await fetch('https://paper-api.alpaca.markets/v2/positions',{headers:{'APCA-API-KEY-ID':S.apiKey,'APCA-API-SECRET-KEY':S.secretKey}});if(!r.ok)throw new Error('Failed');const pos=await r.json();pos.forEach(p=>{if(!S.positions.find(x=>x.symbol===p.symbol)){S.positions.push({id:Date.now().toString()+Math.random(),symbol:p.symbol,type:'shares',contracts:parseInt(p.qty),costBasis:parseFloat(p.avg_entry_price),synced:true,openDate:new Date().toISOString()})}});const ar=await fetch('https://paper-api.alpaca.markets/v2/account',{headers:{'APCA-API-KEY-ID':S.apiKey,'APCA-API-SECRET-KEY':S.secretKey}});if(ar.ok){const a=await ar.json();S.accSize=parseFloat(a.equity)||S.accSize}save();$('statusPill').className='status live';$('statusText').textContent='Live';renderHome()}catch(e){$('statusPill').className='status';$('statusText').textContent='Error';alert('Sync failed')}}
 function setAddMode(m){S.addMode=m;$('addCspBtn').classList.toggle('active',m==='csp');$('addCcBtn').classList.toggle('active',m==='cc');$('addSharesBtn').classList.toggle('active',m==='shares');if(m==='shares'){hide('optFields');show('shareFields')}else{show('optFields');hide('shareFields')}}
 function savePosition(){const sym=$('addSymbol').value.trim().toUpperCase();if(!sym)return alert('Enter symbol');const p={id:Date.now().toString(),symbol:sym,type:S.addMode,contracts:parseInt($('addContracts').value)||1,openDate:new Date().toISOString()};if(S.addMode==='shares')p.costBasis=parseFloat($('addCost').value)||0;else{p.strike=parseFloat($('addStrike').value)||0;p.expiration=$('addExp').value;p.premium=parseFloat($('addPremium').value)||0;if(!p.strike||!p.expiration)return alert('Fill strike & expiration')}S.positions.push(p);save();closeModal('addModal');renderHome()}
-function setMode(m){S.mode=m;$('cspBtn').classList.toggle('active',m==='csp');$('ccBtn').classList.toggle('active',m==='cc')}
+function setMode(m){S.mode=m;$('cspBtn').classList.toggle('active',m==='csp');$('ccBtn').classList.toggle('active',m==='cc');
+  // Reload options if we have a current ticker
+  if(currentTicker && currentChain) loadOptionsChain(currentTicker);
+}
+
+function addFromCalc() {
+  if (!currentTicker || !selectedOption) return alert('Select an option first');
+
+  const expDate = selectedExp ? new Date(selectedExp * 1000) : new Date(Date.now() + selectedOption.dte * 86400000);
+
+  const p = {
+    id: Date.now().toString(),
+    symbol: currentTicker,
+    type: S.mode,
+    strike: selectedOption.strike,
+    premium: selectedOption.premium,
+    contracts: selectedOption.contracts,
+    expiration: expDate.toISOString().split('T')[0],
+    openDate: new Date().toISOString()
+  };
+
+  S.positions.push(p);
+  save();
+  nav('home');
+  alert(`Added ${currentTicker} $${selectedOption.strike}${S.mode==='csp'?'P':'C'} to portfolio!`);
+}
+
 function qSearch(s){$('tickerInput').value=s;searchTicker()}
-async function searchTicker(){const t=$('tickerInput').value.trim().toUpperCase();if(!t)return;if(!S.apiKey)return alert('Add API keys first');hide('emptyCalc');show('loadingCard');try{const r=await fetch(`https://data.alpaca.markets/v2/stocks/${t}/quotes/latest`,{headers:{'APCA-API-KEY-ID':S.apiKey,'APCA-API-SECRET-KEY':S.secretKey}});if(!r.ok)throw new Error('Not found');const d=await r.json();const q=d.quote||{};const price=((q.bp||0)+(q.ap||0))/2||q.bp||q.ap||0;$('stockSymbol').textContent=t;$('stockName').textContent=names[t]||t;$('stockPrice').textContent=price.toFixed(2);hide('loadingCard');show('stockCard');$('statusPill').className='status live';$('statusText').textContent='Live'}catch(e){hide('loadingCard');show('emptyCalc');alert(e.message)}}
-function renderWatch(){const c=$('watchContainer');const list=[{sym:'AAPL',price:254.50,chg:1.2},{sym:'NVDA',price:137.80,chg:2.5},{sym:'TSLA',price:421.30,chg:-0.8},{sym:'SPY',price:595.20,chg:0.4}];c.innerHTML='<div class="tx-list">'+list.map(w=>`<div class="tx-item" onclick="qSearch('${w.sym}');nav('calc')" style="cursor:pointer"><div class="tx-icon" style="background:var(--input);overflow:hidden"><img src="${logo(w.sym)}" style="width:100%;height:100%;border-radius:50%" onerror="this.outerHTML='<span style=font-size:12px;font-weight:700>${w.sym.slice(0,2)}</span>'"></div><div class="tx-info"><div class="tx-title">${w.sym}</div><div class="tx-sub">${names[w.sym]||w.sym}</div></div><div style="text-align:right"><div style="font-size:15px;font-weight:700">$${w.price.toFixed(2)}</div><div style="font-size:12px;color:${w.chg>=0?'var(--green)':'var(--red)'}">${w.chg>=0?'+':''}${w.chg}%</div></div></div>`).join('')+'</div>'}
-function refreshWatch(){renderWatch()}
+// Current ticker state for options chain
+let currentTicker = null;
+let currentChain = null;
+let selectedExp = null;
+let selectedOption = null;
+
+async function searchTicker(){
+  const t=$('tickerInput').value.trim().toUpperCase();
+  if(!t)return;
+
+  hide('emptyCalc');
+  hide('stockCard');
+  hide('optCard');
+  hide('resultCard');
+  show('loadingCard');
+
+  try {
+    // Fetch live quote (no API key needed!)
+    const quote = await fetchLiveQuote(t);
+    if (!quote) throw new Error('Symbol not found');
+
+    currentTicker = t;
+    $('stockSymbol').textContent = t;
+    $('stockName').textContent = names[t] || t;
+    $('stockPrice').textContent = quote.price.toFixed(2);
+
+    // Add price change display
+    const priceEl = $('stockPrice').parentElement;
+    let changeEl = priceEl.querySelector('.price-change');
+    if (!changeEl) {
+      changeEl = document.createElement('div');
+      changeEl.className = 'price-change';
+      changeEl.style.cssText = 'font-size:14px;margin-top:4px;font-weight:600';
+      priceEl.appendChild(changeEl);
+    }
+    changeEl.style.color = quote.change >= 0 ? 'var(--green)' : 'var(--red)';
+    changeEl.textContent = `${quote.change >= 0 ? '+' : ''}${quote.change.toFixed(2)} (${quote.changePercent}%)`;
+
+    hide('loadingCard');
+    show('stockCard');
+
+    // Fetch options chain
+    await loadOptionsChain(t);
+
+    $('statusPill').className='status live';
+    $('statusText').textContent='Live Data';
+
+  } catch(e) {
+    hide('loadingCard');
+    show('emptyCalc');
+    alert('Could not find: ' + t);
+  }
+}
+
+async function loadOptionsChain(symbol) {
+  show('loadingCard');
+  hide('resultCard');
+
+  // Reset optCard to original structure
+  $('optCard').innerHTML = `<div class="card-title">Select Contract</div>
+    <div class="form-group"><label class="form-label">Expiration</label>
+    <select class="form-select" id="expSelect" onchange="onExpChange()"><option>Loading...</option></select></div>
+    <div class="form-group"><label class="form-label">Strike · Premium · Delta · OTM%</label>
+    <select class="form-select" id="strikeSelect" onchange="onStrikeChange()"><option>Select expiration first...</option></select></div>`;
+
+  try {
+    const chain = await fetchOptionsChain(symbol);
+    if (!chain || !chain.expirations?.length) {
+      hide('loadingCard');
+      // Show manual entry if no options available
+      showManualEntry();
+      return;
+    }
+
+    currentChain = chain;
+
+    // Populate expiration dropdown
+    const expSelect = $('expSelect');
+    expSelect.innerHTML = '<option value="">Select expiration...</option>' +
+      chain.expirations.slice(0, 12).map(exp => {
+        const dte = calcDTE(exp);
+        const label = formatExpDate(exp);
+        const dteLabel = dte === 1 ? '1 day' : `${dte} days`;
+        return `<option value="${exp}">${label} (${dteLabel})</option>`;
+      }).join('');
+
+    hide('loadingCard');
+    show('optCard');
+
+    // Reset strike select
+    $('strikeSelect').innerHTML = '<option value="">Select strike...</option>';
+
+  } catch(e) {
+    hide('loadingCard');
+    showManualEntry();
+  }
+}
+
+function showManualEntry() {
+  // Show manual premium entry for tickers without options data
+  $('optCard').innerHTML = `
+    <div class="card-title">Enter Contract Details</div>
+    <div class="form-group">
+      <label class="form-label">Strike Price</label>
+      <input type="number" class="form-input" id="manualStrike" placeholder="150.00" step="0.5">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Premium (per share)</label>
+      <input type="number" class="form-input" id="manualPremium" placeholder="2.50" step="0.01">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Days to Expiration</label>
+      <input type="number" class="form-input" id="manualDTE" placeholder="30" value="30">
+    </div>
+    <button class="btn btn-outline" onclick="calcManualOption()">Calculate</button>
+  `;
+  show('optCard');
+}
+
+function calcManualOption() {
+  const strike = parseFloat($('manualStrike')?.value) || 0;
+  const premium = parseFloat($('manualPremium')?.value) || 0;
+  const dte = parseInt($('manualDTE')?.value) || 30;
+
+  if (!strike || !premium) return alert('Enter strike and premium');
+
+  const contracts = Math.floor(S.accSize / (strike * 100)) || 1;
+  const totalPrem = premium * contracts * 100;
+  const annualized = ((premium / strike) * (365 / dte) * 100).toFixed(1);
+
+  selectedOption = { strike, premium, dte, contracts };
+
+  $('resPrem').textContent = totalPrem.toFixed(0);
+  $('resAnn').textContent = annualized;
+  $('resProb').textContent = '~75';
+  $('resCon').textContent = contracts;
+  show('resultCard');
+}
+
+async function onExpChange() {
+  const expSelect = $('expSelect');
+  const exp = parseInt(expSelect.value);
+  if (!exp || !currentChain) return;
+
+  selectedExp = exp;
+
+  // Fetch options for this expiration
+  show('loadingCard');
+  const chain = await fetchOptionsChain(currentTicker, exp);
+  hide('loadingCard');
+
+  if (!chain) return;
+  currentChain = chain;
+
+  // Get relevant options based on mode
+  const options = S.mode === 'csp' ? chain.puts : chain.calls;
+  const price = chain.price || parseFloat($('stockPrice').textContent);
+
+  // Find ATM and nearby strikes
+  const strikes = options
+    .filter(o => {
+      const otm = S.mode === 'csp' ? o.strike < price : o.strike > price;
+      return otm && o.bid > 0;
+    })
+    .sort((a, b) => S.mode === 'csp' ? b.strike - a.strike : a.strike - b.strike)
+    .slice(0, 10);
+
+  const strikeSelect = $('strikeSelect');
+  strikeSelect.innerHTML = '<option value="">Select strike...</option>' +
+    strikes.map(o => {
+      const delta = o.delta ? Math.abs(o.delta).toFixed(2) : '—';
+      const prem = ((o.bid + o.ask) / 2).toFixed(2);
+      const otmPct = ((Math.abs(price - o.strike) / price) * 100).toFixed(1);
+      return `<option value="${o.strike}" data-premium="${prem}" data-delta="${delta}" data-dte="${calcDTE(selectedExp)}">$${o.strike} · $${prem} · Δ${delta} · ${otmPct}% OTM</option>`;
+    }).join('');
+}
+
+function onStrikeChange() {
+  const strikeSelect = $('strikeSelect');
+  const opt = strikeSelect.options[strikeSelect.selectedIndex];
+  if (!opt || !opt.value) return;
+
+  const strike = parseFloat(opt.value);
+  const premium = parseFloat(opt.dataset.premium) || 0;
+  const delta = parseFloat(opt.dataset.delta) || 0.25;
+  const dte = parseInt(opt.dataset.dte) || 30;
+
+  // Calculate results
+  const contracts = Math.floor(S.accSize / (strike * 100)) || 1;
+  const totalPrem = premium * contracts * 100;
+  const annualized = ((premium / strike) * (365 / dte) * 100).toFixed(1);
+  const probProfit = delta ? Math.round((1 - Math.abs(delta)) * 100) : 75;
+
+  selectedOption = { strike, premium, dte, contracts, delta };
+
+  $('resPrem').textContent = totalPrem.toFixed(0);
+  $('resAnn').textContent = annualized;
+  $('resProb').textContent = probProfit;
+  $('resCon').textContent = contracts;
+  show('resultCard');
+}
+async function renderWatch(){
+  const c=$('watchContainer');
+  const watchlist = S.watchlist || ['AAPL','NVDA','TSLA','SPY','AMD','MSFT'];
+
+  // Show loading state
+  c.innerHTML='<div class="tx-list">'+watchlist.map(sym=>`<div class="tx-item" id="watch-${sym}"><div class="tx-icon" style="background:var(--input);overflow:hidden"><img src="${logo(sym)}" style="width:100%;height:100%;border-radius:50%" onerror="this.outerHTML='<span style=font-size:12px;font-weight:700>${sym.slice(0,2)}</span>'"></div><div class="tx-info"><div class="tx-title">${sym}</div><div class="tx-sub">${names[sym]||sym}</div></div><div style="text-align:right"><div style="font-size:15px;font-weight:700;color:var(--text3)">Loading...</div><div style="font-size:12px;color:var(--text3)">—</div></div></div>`).join('')+'</div><button class="btn btn-outline mt-4" onclick="openAddWatch()">+ Add to Watchlist</button>';
+
+  // Fetch live prices in parallel
+  const quotes = await Promise.all(watchlist.map(sym => fetchLiveQuote(sym)));
+
+  // Update each item with live data
+  quotes.forEach((q, i) => {
+    const sym = watchlist[i];
+    const el = $(`watch-${sym}`);
+    if (!el) return;
+    if (q) {
+      el.innerHTML = `<div class="tx-icon" style="background:var(--input);overflow:hidden;cursor:pointer" onclick="qSearch('${sym}');nav('calc')"><img src="${logo(sym)}" style="width:100%;height:100%;border-radius:50%" onerror="this.outerHTML='<span style=font-size:12px;font-weight:700>${sym.slice(0,2)}</span>'"></div><div class="tx-info" style="cursor:pointer" onclick="qSearch('${sym}');nav('calc')"><div class="tx-title">${sym} <span class="live-dot" style="width:6px;height:6px"></span></div><div class="tx-sub">${names[sym]||sym}</div></div><div style="text-align:right;cursor:pointer" onclick="qSearch('${sym}');nav('calc')"><div style="font-size:15px;font-weight:700">$${q.price.toFixed(2)}</div><div style="font-size:12px;color:${q.change>=0?'var(--green)':'var(--red)'}">${q.change>=0?'+':''}${q.changePercent}%</div></div><button style="background:none;border:none;padding:8px;cursor:pointer;color:var(--text3)" onclick="event.stopPropagation();removeFromWatch('${sym}')">×</button>`;
+    } else {
+      el.innerHTML = `<div class="tx-icon" style="background:var(--input);overflow:hidden"><img src="${logo(sym)}" style="width:100%;height:100%;border-radius:50%" onerror="this.outerHTML='<span style=font-size:12px;font-weight:700>${sym.slice(0,2)}</span>'"></div><div class="tx-info"><div class="tx-title">${sym}</div><div class="tx-sub">${names[sym]||sym}</div></div><div style="text-align:right"><div style="font-size:13px;color:var(--text3)">Unavailable</div></div><button style="background:none;border:none;padding:8px;cursor:pointer;color:var(--text3)" onclick="removeFromWatch('${sym}')">×</button>`;
+    }
+  });
+
+  // Update status to show live data is working
+  $('statusPill').className='status live';
+  $('statusText').textContent='Live Data';
+}
+
+function removeFromWatch(sym) {
+  S.watchlist = (S.watchlist || []).filter(s => s !== sym);
+  save();
+  renderWatch();
+}
+
+function openAddWatch() {
+  const sym = prompt('Enter ticker symbol (e.g., AAPL):');
+  if (!sym) return;
+  const ticker = sym.toUpperCase().trim();
+  if (!S.watchlist) S.watchlist = ['AAPL','NVDA','TSLA','SPY'];
+  if (!S.watchlist.includes(ticker)) {
+    S.watchlist.push(ticker);
+    save();
+    renderWatch();
+  }
+}
+
+async function refreshWatch(){
+  // Clear cache for fresh data
+  Object.keys(priceCache).forEach(k => delete priceCache[k]);
+  renderWatch();
+}
 function renderAlerts(){const c=$('alertsContainer');const alerts=[];S.positions.forEach(p=>{if(!p.expiration)return;const dte=Math.ceil((new Date(p.expiration)-new Date())/864e5);if(dte<=7)alerts.push({...p,dte,urgent:dte<=3})});if(!alerts.length){c.innerHTML='<div class="empty"><div class="empty-icon"><svg viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/></svg></div><div class="empty-title">No Alerts</div><div class="empty-text">Alerts appear when positions expire soon</div></div>';return}c.innerHTML=alerts.map(a=>`<div class="pos-card" style="border-left:3px solid ${a.urgent?'var(--red)':'var(--orange)'}"><div style="font-weight:600">${a.symbol} $${a.strike}${a.type==='csp'?'P':'C'}</div><div style="font-size:13px;color:var(--text2);margin-top:4px">${a.dte} days remaining</div></div>`).join('')}
 function renderSignals(){const c=$('signalsContainer');c.innerHTML=signals.map((s,i)=>{const locked=!S.isPremium&&i>0;return`<div class="signal-card ${locked?'locked':''}"><div class="signal-header"><span class="signal-type ${s.type}">${s.type.toUpperCase()}</span><span class="signal-time">${s.time}</span></div><div class="signal-ticker">${s.ticker}</div><div class="signal-details">$${s.strike} ${s.type==='csp'?'Put':'Call'} · Exp ${s.exp}</div><div style="display:flex;gap:16px;font-size:13px"><span>Premium: <b style="color:var(--green)">${s.prem}</b></span><span>Delta: <b>${s.delta}</b></span></div>${locked?`<div class="signal-lock"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><span>Unlock with Premium</span></div>`:''}</div>`}).join('')+(!S.isPremium?'<button class="btn mt-4" onclick="openPremium()">Unlock All Signals</button>':'')}
 function renderProfile(){$('userName').value=S.user.name||'';$('userEmail').value=S.user.email||'';$('profileName').textContent=S.user.name||'Set up your profile';$('profileEmail').textContent=S.user.email||'Tap to edit';const init=S.user.name?S.user.name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2):'?';$('profileInitials').textContent=init;$('apiKeyInput').value=S.apiKey;$('secretKeyInput').value=S.secretKey;$('accSizeInput').value=S.accSize;const ok=S.apiKey.length>10;$('brokerStatus').innerHTML=ok?'<div style="padding:12px;background:var(--green-bg);border-radius:12px;margin-bottom:16px;font-weight:600;color:var(--green)"><span class="live-dot"></span>Connected</div>':'<div style="padding:12px;background:var(--orange-bg);border-radius:12px;margin-bottom:16px;font-size:13px;color:var(--orange)">Not connected</div>';const wins=S.history.filter(t=>(t.pnl||0)>=0).length;const total=S.history.length;const prem=S.positions.reduce((s,p)=>s+(p.premium||0)*(p.contracts||1)*100,0)+S.history.reduce((s,t)=>s+(t.premium||0)*(t.contracts||1)*100,0);$('pTrades').textContent=total;$('pWinRate').textContent=total?Math.round(wins/total*100)+'%':'0%';$('pPremium').textContent='$'+prem.toFixed(0);if(S.isPremium){show('proBadge');hide('proCard')}}
