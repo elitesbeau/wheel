@@ -85,9 +85,9 @@
     .empty-title{font-size:16px;font-weight:600;margin-bottom:4px}
     .empty-text{font-size:13px;color:var(--text2);margin-bottom:16px}
     .empty-btn{padding:12px 24px;background:var(--hero);border:none;border-radius:12px;font-size:14px;font-weight:600;color:#fff;cursor:pointer}
-    .nav{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid var(--border);padding:8px 0 max(8px,env(safe-area-inset-bottom));z-index:100}
-    .nav-inner{max-width:430px;margin:0 auto;display:flex;justify-content:space-around}
-    .nav-btn{display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 12px;background:none;border:none;cursor:pointer}
+    .nav{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid var(--border);padding:4px 0 max(4px,env(safe-area-inset-bottom));z-index:100}
+    .nav-inner{max-width:500px;margin:0 auto;display:flex;justify-content:stretch}
+    .nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:12px 8px;background:none;border:none;cursor:pointer;min-height:56px}
     .nav-btn svg{width:24px;height:24px;stroke-width:1.75;fill:none}
     .nav-btn span{font-size:10px;font-weight:500}
     .nav-btn.active svg{stroke:var(--text)}.nav-btn.active span{color:var(--text);font-weight:600}
