@@ -1586,12 +1586,15 @@ async function postRoll() {
   renderSignals();
 }
 
-async function deletePost(idx) {
-  if (!S.adminPosts || !S.adminPosts[idx]) return;
-  const post = S.adminPosts[idx];
-  if (post.id) {
-    await deletePostFromFirebase(post.id);
-  }
+async function deletePost(postId) {
+  if (!S.adminPosts) return;
+  const idx = S.adminPosts.findIndex(p => p.id === postId);
+  if (idx === -1) return;
+
+  // Delete from Firebase first
+  await deletePostFromFirebase(postId);
+
+  // Remove from local array
   S.adminPosts.splice(idx, 1);
   save();
   renderAdminPosts();
@@ -1628,26 +1631,27 @@ function renderAdminPosts() {
 
     // Different actions based on signal type and status
     let actions = '';
+    const pid = p.id ? `'${p.id}'` : i;
     if (showActions && status === 'open') {
       if (p.type === 'csp') {
         // CSP: can win, roll, or get assigned
         actions = `<div class="post-actions">
-          <button class="post-action-btn winner" onclick="markPostWinner(${i})">🎉 Winner</button>
-          <button class="post-action-btn assigned" onclick="markPostAssigned(${i})">📦 Assigned</button>
-          <button class="post-action-btn roll" onclick="markPostRolled(${i})">🔄 Roll</button>
-          <button class="post-action-btn delete" onclick="deletePost(${i})">✕</button>
+          <button class="post-action-btn winner" onclick="markPostWinner(${pid})">🎉 Winner</button>
+          <button class="post-action-btn assigned" onclick="markPostAssigned(${pid})">📦 Assigned</button>
+          <button class="post-action-btn roll" onclick="markPostRolled(${pid})">🔄 Roll</button>
+          <button class="post-action-btn delete" onclick="deletePost(${pid})">✕</button>
         </div>`;
       } else {
         // CC: can win, roll, or get called away
         actions = `<div class="post-actions">
-          <button class="post-action-btn winner" onclick="markPostWinner(${i})">🎉 Winner</button>
-          <button class="post-action-btn called" onclick="markPostCalled(${i})">📤 Called</button>
-          <button class="post-action-btn roll" onclick="markPostRolled(${i})">🔄 Roll</button>
-          <button class="post-action-btn delete" onclick="deletePost(${i})">✕</button>
+          <button class="post-action-btn winner" onclick="markPostWinner(${pid})">🎉 Winner</button>
+          <button class="post-action-btn called" onclick="markPostCalled(${pid})">📤 Called</button>
+          <button class="post-action-btn roll" onclick="markPostRolled(${pid})">🔄 Roll</button>
+          <button class="post-action-btn delete" onclick="deletePost(${pid})">✕</button>
         </div>`;
       }
     } else {
-      actions = `<div class="post-actions"><button class="post-action-btn delete" onclick="deletePost(${i})">Delete</button></div>`;
+      actions = `<div class="post-actions"><button class="post-action-btn delete" onclick="deletePost(${pid})">Delete</button></div>`;
     }
 
     return `<div style="padding:10px 0;border-bottom:1px solid var(--border)">
@@ -1661,17 +1665,18 @@ function renderAdminPosts() {
 }
 
 // Mark post as winner (with celebration!)
-async function markPostWinner(index) {
+async function markPostWinner(postId) {
   const posts = S.adminPosts || [];
-  if (!posts[index]) return;
+  const post = posts.find(p => p.id === postId);
+  if (!post) return;
 
-  posts[index].status = 'winner';
-  posts[index].closedAt = Date.now();
+  post.status = 'winner';
+  post.closedAt = Date.now();
 
   // Save to Firebase
-  if (await initFirebase() && posts[index].id) {
+  if (await initFirebase() && post.id) {
     try {
-      await firebase.database().ref('posts/' + posts[index].id).update({ status: 'winner', closedAt: Date.now() });
+      await firebase.database().ref('posts/' + post.id).update({ status: 'winner', closedAt: Date.now() });
     } catch (e) { console.error('Firebase update error:', e); }
   }
 
@@ -1680,24 +1685,25 @@ async function markPostWinner(index) {
   renderSignals();
 
   // Trigger celebration!
-  showCelebration(posts[index]);
+  showCelebration(post);
 
   // Send winner notification
-  await sendWinnerNotification(posts[index]);
+  await sendWinnerNotification(post);
 }
 
 // Mark post as rolled
-async function markPostRolled(index) {
+async function markPostRolled(postId) {
   const posts = S.adminPosts || [];
-  if (!posts[index]) return;
+  const post = posts.find(p => p.id === postId);
+  if (!post) return;
 
-  posts[index].status = 'rolled';
-  posts[index].closedAt = Date.now();
+  post.status = 'rolled';
+  post.closedAt = Date.now();
 
   // Save to Firebase
-  if (await initFirebase() && posts[index].id) {
+  if (await initFirebase() && post.id) {
     try {
-      await firebase.database().ref('posts/' + posts[index].id).update({ status: 'rolled', closedAt: Date.now() });
+      await firebase.database().ref('posts/' + post.id).update({ status: 'rolled', closedAt: Date.now() });
     } catch (e) { console.error('Firebase update error:', e); }
   }
 
@@ -1708,17 +1714,18 @@ async function markPostRolled(index) {
 }
 
 // Mark CSP as assigned (now holding shares, start selling CCs)
-async function markPostAssigned(index) {
+async function markPostAssigned(postId) {
   const posts = S.adminPosts || [];
-  if (!posts[index]) return;
+  const post = posts.find(p => p.id === postId);
+  if (!post) return;
 
-  posts[index].status = 'assigned';
-  posts[index].assignedAt = Date.now();
+  post.status = 'assigned';
+  post.assignedAt = Date.now();
 
   // Save to Firebase
-  if (await initFirebase() && posts[index].id) {
+  if (await initFirebase() && post.id) {
     try {
-      await firebase.database().ref('posts/' + posts[index].id).update({ status: 'assigned', assignedAt: Date.now() });
+      await firebase.database().ref('posts/' + post.id).update({ status: 'assigned', assignedAt: Date.now() });
     } catch (e) { console.error('Firebase update error:', e); }
   }
 
@@ -1727,22 +1734,23 @@ async function markPostAssigned(index) {
   renderSignals();
 
   // Send notification about assignment
-  await sendAssignmentNotification(posts[index], 'assigned');
-  showToast(`${posts[index].ticker} assigned! Time to sell covered calls 📦`, 'success');
+  await sendAssignmentNotification(post, 'assigned');
+  showToast(`${post.ticker} assigned! Time to sell covered calls 📦`, 'success');
 }
 
 // Mark CC as called away (shares sold, back to selling CSPs)
-async function markPostCalled(index) {
+async function markPostCalled(postId) {
   const posts = S.adminPosts || [];
-  if (!posts[index]) return;
+  const post = posts.find(p => p.id === postId);
+  if (!post) return;
 
-  posts[index].status = 'called';
-  posts[index].calledAt = Date.now();
+  post.status = 'called';
+  post.calledAt = Date.now();
 
   // Save to Firebase
-  if (await initFirebase() && posts[index].id) {
+  if (await initFirebase() && post.id) {
     try {
-      await firebase.database().ref('posts/' + posts[index].id).update({ status: 'called', calledAt: Date.now() });
+      await firebase.database().ref('posts/' + post.id).update({ status: 'called', calledAt: Date.now() });
     } catch (e) { console.error('Firebase update error:', e); }
   }
 
@@ -1751,8 +1759,8 @@ async function markPostCalled(index) {
   renderSignals();
 
   // Send notification about call
-  await sendAssignmentNotification(posts[index], 'called');
-  showToast(`${posts[index].ticker} called away! Back to selling puts 📤`, 'success');
+  await sendAssignmentNotification(post, 'called');
+  showToast(`${post.ticker} called away! Back to selling puts 📤`, 'success');
 }
 
 // Send notification for assigned/called
