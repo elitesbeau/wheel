@@ -422,6 +422,14 @@
         <button class="quick-btn" onclick="nav('signals')"><div class="quick-icon orange"><svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div><span>Signals</span></button>
       </div>
       <div class="section" id="alertsFeedSection" style="display:none"><div class="section-header"><span class="section-title">Latest Alerts</span><button class="section-link" onclick="nav('signals')">See All</button></div><div id="alertsFeedContainer"></div></div>
+      <div class="section" id="guestBanner" style="display:none">
+        <div style="background:linear-gradient(135deg,#1a1a1a,#333);border-radius:16px;padding:20px;text-align:center">
+          <div style="font-size:24px;margin-bottom:8px">👋</div>
+          <div style="font-size:16px;font-weight:600;color:#fff;margin-bottom:4px">You're browsing as a guest</div>
+          <div style="font-size:13px;color:#999;margin-bottom:16px">Create an account to save your portfolio and get alerts</div>
+          <button class="btn" onclick="promptCreateAccount()" style="background:#fff;color:#1a1a1a">Create Free Account</button>
+        </div>
+      </div>
       <div class="section"><div class="section-header"><span class="section-title">Active Positions</span></div><div id="positionsContainer"></div></div>
       <div class="section"><div class="section-header"><span class="section-title">Recent Trades</span></div><div id="historyContainer"></div></div>
       <div class="footer"><a href="#" onclick="openModal('legalModal')">Terms</a>•<a href="#">Privacy</a>•<a href="#">Disclaimer</a><p style="margin-top:8px">© 2025 Market Elites. Not financial advice.</p></div>
@@ -683,12 +691,28 @@ function dismissAlertsPopup() {
 
 // Called when user clicks avatar/profile button
 function goToProfile() {
+  // If guest, prompt to create account
+  if (S.isGuest) {
+    promptCreateAccount();
+    return;
+  }
+
   // Show alerts popup once if not dismissed and not premium
   if (!S.isPremium && !S.alertsPopupDismissed) {
     showAlertsPopupOnce();
     return;
   }
   nav('profile');
+}
+
+// Prompt guest to create an account
+function promptCreateAccount() {
+  // Clear guest state and show signup
+  S.isGuest = false;
+  save();
+  showAuthScreen();
+  showAuthTab('signup');
+  showToast('Create an account to save your progress!', '');
 }
 
 async function handleLogin() {
@@ -1748,7 +1772,30 @@ function updateStatus(){
   $('statusPill').className='status live';
   $('statusText').textContent=hasBroker?'Live + Broker':'Live Data';
 }
-function renderHome(){$('balanceVal').textContent=S.accSize.toLocaleString();const prem=S.positions.reduce((s,p)=>s+(p.premium||0)*(p.contracts||1)*100,0);const pct=S.accSize>0?(prem/S.accSize*100).toFixed(1):0;$('balanceChange').textContent='↑ +$'+prem.toFixed(0)+' ('+pct+'%)';const init=S.user.name?S.user.name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2):'?';$('heroInitials').textContent=init;renderAlertsFeed();renderPositions();renderHistory()}
+function renderHome(){
+  // Ensure DOM elements exist
+  if (!$('balanceVal') || !$('positionsContainer')) {
+    setTimeout(renderHome, 50); // Retry if DOM not ready
+    return;
+  }
+
+  $('balanceVal').textContent=S.accSize.toLocaleString();
+  const prem=S.positions.reduce((s,p)=>s+(p.premium||0)*(p.contracts||1)*100,0);
+  const pct=S.accSize>0?(prem/S.accSize*100).toFixed(1):0;
+  $('balanceChange').textContent='↑ +$'+prem.toFixed(0)+' ('+pct+'%)';
+  const init=S.user.name?S.user.name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2):'?';
+  $('heroInitials').textContent=init;
+
+  // Show guest banner if guest
+  const guestBanner = $('guestBanner');
+  if (guestBanner) {
+    guestBanner.style.display = S.isGuest ? 'block' : 'none';
+  }
+
+  renderAlertsFeed();
+  renderPositions();
+  renderHistory();
+}
 
 function renderAlertsFeed() {
   const section = $('alertsFeedSection');
