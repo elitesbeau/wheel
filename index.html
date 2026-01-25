@@ -1071,8 +1071,9 @@ async function initFirebase() {
   }
   try {
     if (!window.firebase) {
-      // Load Firebase SDK
+      // Load Firebase SDK - app, auth, and database
       await loadScript('https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js');
+      await loadScript('https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js');
       await loadScript('https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js');
     }
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
