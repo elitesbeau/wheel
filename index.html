@@ -211,9 +211,9 @@
       .auth-terms{padding:20px 40px}
       .auth-switch{padding:16px 40px 32px}
     }
-    .auth-header{padding:16px 20px;display:flex;align-items:center}
+    .auth-header{padding:16px 20px;display:flex;align-items:center;gap:12px}
     @media(min-width:600px){.auth-header{padding:24px 40px 0}}
-    .auth-logo{flex-shrink:0}
+    .auth-logo{flex-shrink:0;margin-right:4px}
     .auth-back{width:40px;height:40px;border:none;background:none;cursor:pointer;display:flex;align-items:center;justify-content:center}
     .auth-back svg{width:24px;height:24px;stroke:#1a1a1a;stroke-width:2;fill:none}
     .auth-page-title{font-size:20px;font-weight:600;margin-left:8px;color:#1a1a1a}
@@ -281,8 +281,10 @@
   <div class="auth-container" id="authScreen">
     <div id="authLogin">
       <div class="auth-header">
-        <svg class="auth-logo" viewBox="0 0 40 40" width="36" height="36">
-          <path d="M8 8h24v6H8z M8 17h20v6H8z M8 26h24v6H8z" fill="#1a1a1a"/>
+        <svg class="auth-logo" viewBox="0 0 36 36" width="32" height="32">
+          <polygon points="4,4 28,4 32,10 4,10" fill="#1a1a1a"/>
+          <polygon points="4,15 24,15 28,21 4,21" fill="#1a1a1a"/>
+          <polygon points="4,26 28,26 32,32 4,32" fill="#1a1a1a"/>
         </svg>
         <span class="auth-page-title">Sign In</span>
       </div>
