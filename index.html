@@ -202,18 +202,49 @@
     .status-badge.rolled{background:var(--purple-bg);color:var(--purple)}
     .status-badge.closed{background:var(--text3);color:var(--bg)}
     .position-select{width:100%;background:var(--input);border:1px solid var(--border);border-radius:12px;padding:14px 16px;font-size:15px;color:var(--text);outline:none;cursor:pointer}
-    .auth-container{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;background:var(--bg)}
-    .auth-logo{font-size:48px;margin-bottom:8px}
-    .auth-title{font-size:28px;font-weight:800;margin-bottom:4px}
-    .auth-subtitle{font-size:14px;color:var(--text2);margin-bottom:32px}
-    .auth-card{width:100%;max-width:380px;background:var(--card);border-radius:20px;padding:24px;border:1px solid var(--border)}
-    .auth-tabs{display:flex;background:var(--input);border-radius:10px;padding:4px;margin-bottom:20px}
-    .auth-tab{flex:1;padding:10px;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;background:transparent;color:var(--text2)}
-    .auth-tab.active{background:var(--card);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.1)}
-    .auth-divider{display:flex;align-items:center;gap:12px;margin:20px 0;color:var(--text3);font-size:12px}
-    .auth-divider::before,.auth-divider::after{content:'';flex:1;height:1px;background:var(--border)}
-    .auth-footer{text-align:center;margin-top:20px;font-size:13px;color:var(--text2)}
-    .auth-footer a{color:var(--blue);text-decoration:none}
+    .auth-container{min-height:100vh;display:flex;flex-direction:column;padding:0;background:#faf9f7}
+    .auth-header{padding:16px 20px;display:flex;align-items:center}
+    .auth-back{width:40px;height:40px;border:none;background:none;cursor:pointer;display:flex;align-items:center;justify-content:center}
+    .auth-back svg{width:24px;height:24px;stroke:#1a1a1a;stroke-width:2;fill:none}
+    .auth-page-title{font-size:20px;font-weight:600;margin-left:8px;color:#1a1a1a}
+    .auth-content{flex:1;padding:20px 24px}
+    .auth-welcome{font-size:28px;font-weight:700;color:#1a1a1a;margin-bottom:8px}
+    .auth-subtitle{font-size:15px;color:#666;margin-bottom:32px;line-height:1.5}
+    .float-input{position:relative;margin-bottom:20px}
+    .float-input input{width:100%;padding:20px 16px 8px;font-size:16px;border:2px solid #e5e5e5;border-radius:12px;background:#fff;outline:none;transition:border-color .2s}
+    .float-input input:focus{border-color:#1a1a1a}
+    .float-input label{position:absolute;left:16px;top:50%;transform:translateY(-50%);font-size:16px;color:#999;pointer-events:none;transition:all .2s}
+    .float-input input:focus+label,.float-input input:not(:placeholder-shown)+label{top:12px;transform:translateY(0);font-size:11px;color:#666;font-weight:500}
+    .float-input .toggle-pass{position:absolute;right:16px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;padding:4px}
+    .float-input .toggle-pass svg{width:20px;height:20px;stroke:#999;stroke-width:1.5;fill:none}
+    .pass-requirements{margin-bottom:24px}
+    .pass-requirements p{font-size:13px;color:#666;margin-bottom:12px;font-weight:500}
+    .pass-checks{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    .pass-check{display:flex;align-items:center;gap:8px;font-size:13px;color:#999}
+    .pass-check .check-circle{width:18px;height:18px;border:1.5px solid #ddd;border-radius:50%;display:flex;align-items:center;justify-content:center}
+    .pass-check.valid{color:#1a1a1a}
+    .pass-check.valid .check-circle{background:#1a1a1a;border-color:#1a1a1a}
+    .pass-check.valid .check-circle::after{content:'✓';color:#fff;font-size:10px}
+    .auth-btn{width:100%;padding:16px;font-size:16px;font-weight:600;border:none;border-radius:12px;cursor:pointer;transition:all .2s}
+    .auth-btn.primary{background:#1a1a1a;color:#fff}
+    .auth-btn.primary:hover{background:#333}
+    .auth-btn.primary:disabled{background:#e5e5e5;color:#999;cursor:not-allowed}
+    .auth-btn.secondary{background:#fff;color:#1a1a1a;border:2px solid #e5e5e5}
+    .auth-btn.secondary:hover{border-color:#1a1a1a}
+    .auth-terms{font-size:12px;color:#999;text-align:center;margin-top:auto;padding:24px;line-height:1.6}
+    .auth-terms a{color:#1a1a1a;text-decoration:underline}
+    .auth-switch{text-align:center;padding:20px;font-size:14px;color:#666}
+    .auth-switch a{color:#1a1a1a;font-weight:600;text-decoration:none}
+    .auth-divider{display:flex;align-items:center;gap:12px;margin:24px 0;color:#999;font-size:13px}
+    .auth-divider::before,.auth-divider::after{content:'';flex:1;height:1px;background:#e5e5e5}
+    .premium-modal{background:#fff;border-radius:24px;padding:32px 24px;text-align:center;max-width:340px;margin:20px}
+    .premium-modal-icon{font-size:80px;margin-bottom:16px}
+    .premium-modal h2{font-size:24px;font-weight:700;margin-bottom:12px;color:#1a1a1a}
+    .premium-modal p{font-size:15px;color:#666;line-height:1.5;margin-bottom:24px}
+    .premium-modal .float-input{text-align:left}
+    .premium-features{text-align:left;margin:20px 0}
+    .premium-feature{display:flex;align-items:center;gap:12px;padding:10px 0;font-size:14px;color:#1a1a1a}
+    .premium-feature svg{width:20px;height:20px;stroke:#22c55e;stroke-width:2.5;fill:none}
     .status-badge.assigned{background:var(--orange-bg);color:var(--orange)}
     .status-badge.called{background:var(--blue-bg);color:var(--blue)}
     .post-action-btn.assigned{background:var(--orange-bg);color:var(--orange)}
@@ -229,29 +260,111 @@
 <body>
   <!-- Auth Screen -->
   <div class="auth-container" id="authScreen">
-    <div class="auth-logo">📈</div>
-    <div class="auth-title">Market Elites</div>
-    <div class="auth-subtitle">Master the Wheel Strategy</div>
-    <div class="auth-card">
-      <div class="auth-tabs">
-        <button class="auth-tab active" id="loginTab" onclick="showAuthTab('login')">Sign In</button>
-        <button class="auth-tab" id="signupTab" onclick="showAuthTab('signup')">Sign Up</button>
+    <div id="authLogin">
+      <div class="auth-header">
+        <div style="width:40px"></div>
+        <span class="auth-page-title">Sign In</span>
       </div>
-      <div id="loginForm">
-        <div class="form-group"><label class="form-label">Email</label><input type="email" class="form-input" id="loginEmail" placeholder="you@example.com"></div>
-        <div class="form-group"><label class="form-label">Password</label><input type="password" class="form-input" id="loginPassword" placeholder="••••••••"></div>
-        <button class="btn" onclick="handleLogin()" style="margin-top:8px">Sign In</button>
-        <div class="auth-footer"><a href="#" onclick="showForgotPassword()">Forgot password?</a></div>
+      <div class="auth-content">
+        <div class="auth-welcome">Welcome back</div>
+        <div class="auth-subtitle">Sign in to access your portfolio and live trading signals.</div>
+
+        <div class="float-input">
+          <input type="email" id="loginEmail" placeholder=" " autocomplete="email">
+          <label>Email</label>
+        </div>
+
+        <div class="float-input">
+          <input type="password" id="loginPassword" placeholder=" " autocomplete="current-password">
+          <label>Password</label>
+          <button class="toggle-pass" onclick="togglePasswordVisibility('loginPassword', this)">
+            <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+
+        <div style="text-align:right;margin-bottom:24px">
+          <a href="#" onclick="showForgotPassword();return false" style="font-size:13px;color:#1a1a1a;font-weight:500;text-decoration:none">Forgot password?</a>
+        </div>
+
+        <button class="auth-btn primary" onclick="handleLogin()">Sign In</button>
+
+        <div class="auth-divider">or</div>
+
+        <button class="auth-btn secondary" onclick="handleGuestLogin()">Continue as Guest</button>
       </div>
-      <div id="signupForm" class="hidden">
-        <div class="form-group"><label class="form-label">Full Name</label><input type="text" class="form-input" id="signupName" placeholder="John Doe"></div>
-        <div class="form-group"><label class="form-label">Email</label><input type="email" class="form-input" id="signupEmail" placeholder="you@example.com"></div>
-        <div class="form-group"><label class="form-label">Password</label><input type="password" class="form-input" id="signupPassword" placeholder="Min 6 characters"></div>
-        <div class="form-group"><label class="form-label">Confirm Password</label><input type="password" class="form-input" id="signupConfirm" placeholder="••••••••"></div>
-        <button class="btn" onclick="handleSignup()" style="margin-top:8px">Create Account</button>
+      <div class="auth-terms">
+        By continuing, you agree to Market Elites'<br><a href="#">Terms of Use</a> and <a href="#">Privacy Policy</a>.
       </div>
-      <div class="auth-divider">or continue with</div>
-      <button class="btn btn-outline" onclick="handleGuestLogin()">Continue as Guest</button>
+      <div class="auth-switch">Don't have an account? <a href="#" onclick="showAuthTab('signup');return false">Sign up</a></div>
+    </div>
+
+    <div id="authSignup" class="hidden">
+      <div class="auth-header">
+        <button class="auth-back" onclick="showAuthTab('login')">
+          <svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        </button>
+        <span class="auth-page-title">Create Account</span>
+      </div>
+      <div class="auth-content">
+        <div class="float-input">
+          <input type="text" id="signupName" placeholder=" " autocomplete="name">
+          <label>Full Name</label>
+        </div>
+
+        <div class="float-input">
+          <input type="email" id="signupEmail" placeholder=" " autocomplete="email">
+          <label>Email</label>
+        </div>
+
+        <div class="float-input">
+          <input type="password" id="signupPassword" placeholder=" " autocomplete="new-password" oninput="checkPasswordStrength()">
+          <label>Password</label>
+          <button class="toggle-pass" onclick="togglePasswordVisibility('signupPassword', this)">
+            <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+
+        <div class="pass-requirements">
+          <p>Password must contain:</p>
+          <div class="pass-checks">
+            <div class="pass-check" id="passLength"><span class="check-circle"></span>8+ characters</div>
+            <div class="pass-check" id="passNumber"><span class="check-circle"></span>Number</div>
+            <div class="pass-check" id="passLower"><span class="check-circle"></span>Lowercase letter</div>
+            <div class="pass-check" id="passSpecial"><span class="check-circle"></span>Special character</div>
+            <div class="pass-check" id="passUpper"><span class="check-circle"></span>Uppercase letter</div>
+          </div>
+        </div>
+
+        <button class="auth-btn primary" id="signupBtn" onclick="handleSignup()" disabled>Create Account</button>
+      </div>
+      <div class="auth-terms">
+        By creating an account, you agree to Market Elites'<br><a href="#">Terms of Use</a> and <a href="#">Privacy Policy</a>.
+      </div>
+      <div class="auth-switch">Already have an account? <a href="#" onclick="showAuthTab('login');return false">Sign in</a></div>
+    </div>
+  </div>
+
+  <!-- Premium Popup Modal -->
+  <div class="modal-bg center" id="premiumPopup" onclick="closeModal('premiumPopup')">
+    <div class="premium-modal" onclick="event.stopPropagation()">
+      <div class="premium-modal-icon">🔔📈</div>
+      <h2>Never miss a trade</h2>
+      <p>Get instant alerts the second a new signal drops – no noise, just actionable moves.</p>
+
+      <div class="premium-features">
+        <div class="premium-feature"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Real-time trading signals</div>
+        <div class="premium-feature"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Email & Discord alerts</div>
+        <div class="premium-feature"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Full position history</div>
+        <div class="premium-feature"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Priority support</div>
+      </div>
+
+      <div class="float-input" style="margin-top:20px">
+        <input type="email" id="premiumEmail" placeholder=" ">
+        <label>Your email</label>
+      </div>
+
+      <button class="auth-btn primary" onclick="submitPremiumInterest()" style="margin-bottom:12px">Turn on alerts</button>
+      <button class="auth-btn secondary" onclick="closeModal('premiumPopup')">Not now</button>
     </div>
   </div>
 
@@ -481,10 +594,67 @@ const signals=[{type:'csp',ticker:'NVDA',strike:130,exp:'Jan 24',prem:'$3.20',de
 
 // ========== AUTHENTICATION ==========
 function showAuthTab(tab) {
-  $('loginTab').classList.toggle('active', tab === 'login');
-  $('signupTab').classList.toggle('active', tab === 'signup');
-  $('loginForm').classList.toggle('hidden', tab !== 'login');
-  $('signupForm').classList.toggle('hidden', tab !== 'signup');
+  $('authLogin').classList.toggle('hidden', tab !== 'login');
+  $('authSignup').classList.toggle('hidden', tab !== 'signup');
+}
+
+function togglePasswordVisibility(inputId, btn) {
+  const input = $(inputId);
+  if (input.type === 'password') {
+    input.type = 'text';
+    btn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
+  } else {
+    input.type = 'password';
+    btn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+  }
+}
+
+function checkPasswordStrength() {
+  const pass = $('signupPassword').value;
+  const checks = {
+    passLength: pass.length >= 8,
+    passLower: /[a-z]/.test(pass),
+    passUpper: /[A-Z]/.test(pass),
+    passNumber: /[0-9]/.test(pass),
+    passSpecial: /[!@#$%^&*(),.?":{}|<>]/.test(pass)
+  };
+
+  Object.entries(checks).forEach(([id, valid]) => {
+    $(id).classList.toggle('valid', valid);
+  });
+
+  // Enable signup button if all checks pass
+  const allValid = Object.values(checks).every(v => v);
+  $('signupBtn').disabled = !allValid;
+}
+
+function submitPremiumInterest() {
+  const email = $('premiumEmail').value.trim();
+  if (!email || !email.includes('@')) {
+    showToast('Please enter a valid email', 'error');
+    return;
+  }
+
+  // Save to Firebase
+  initFirebase().then(ok => {
+    if (ok) {
+      const emailKey = email.replace(/[.#$[\]]/g, '_');
+      firebase.database().ref('premiumInterest/' + emailKey).set({
+        email: email,
+        timestamp: Date.now(),
+        source: 'premium_popup'
+      });
+    }
+  });
+
+  closeModal('premiumPopup');
+  showToast('You\'re on the list! We\'ll notify you when premium launches.', 'success');
+}
+
+function openPremiumPopup() {
+  // Pre-fill email if user is logged in
+  if (S.user.email) $('premiumEmail').value = S.user.email;
+  openModal('premiumPopup');
 }
 
 async function handleLogin() {
@@ -507,11 +677,19 @@ async function handleSignup() {
   const name = $('signupName').value.trim();
   const email = $('signupEmail').value.trim();
   const pass = $('signupPassword').value;
-  const confirm = $('signupConfirm').value;
 
   if (!name || !email || !pass) return showToast('Please fill all fields', 'error');
-  if (pass !== confirm) return showToast('Passwords do not match', 'error');
-  if (pass.length < 6) return showToast('Password must be 6+ characters', 'error');
+
+  // Validate password strength
+  const hasLength = pass.length >= 8;
+  const hasLower = /[a-z]/.test(pass);
+  const hasUpper = /[A-Z]/.test(pass);
+  const hasNumber = /[0-9]/.test(pass);
+  const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(pass);
+
+  if (!hasLength || !hasLower || !hasUpper || !hasNumber || !hasSpecial) {
+    return showToast('Password doesn\'t meet requirements', 'error');
+  }
 
   try {
     if (!await initFirebase()) throw new Error('Firebase init failed');
@@ -1492,7 +1670,7 @@ function showLesson(id){const c={basics:'<h3>The Wheel Strategy</h3><p>1. Sell C
 function openAnalytics(){const prem=S.positions.reduce((s,p)=>s+(p.premium||0)*(p.contracts||1)*100,0)+S.history.reduce((s,t)=>s+(t.premium||0)*(t.contracts||1)*100,0);const wins=S.history.filter(t=>(t.pnl||0)>=0).length;const total=S.history.length;$('aPrem').textContent=prem.toFixed(0);$('aWin').textContent=total>0?Math.round(wins/total*100)+'%':'0%';$('aTrades').textContent=total;openModal('analyticsModal')}
 function openAI(){if(!$('aiMessages').innerHTML)$('aiMessages').innerHTML='<div class="ai-msg bot">Hey! I\'m <b>Wheely</b> 🤖 Ask me about delta, DTE, rolling, or position sizing!</div>';openModal('aiModal')}
 function sendAI(){const i=$('aiInput'),m=i.value.trim();if(!m)return;$('aiMessages').innerHTML+=`<div class="ai-msg user">${m}</div>`;i.value='';setTimeout(()=>{const l=m.toLowerCase();let r='The wheel: sell CSPs until assigned, then sell CCs. Target 0.20-0.30 delta, 30-45 DTE.';if(l.includes('delta'))r='<b>Delta:</b> Target 0.20-0.30 for CSPs. 70-80% win rate.';else if(l.includes('dte')||l.includes('expir'))r='<b>DTE:</b> 30-45 days optimal for theta decay.';else if(l.includes('roll'))r='<b>Rolling:</b> Always roll for a credit!';$('aiMessages').innerHTML+=`<div class="ai-msg bot">${r}</div>`;$('aiMessages').scrollTop=$('aiMessages').scrollHeight},500)}
-function openPremium(){openModal('premiumModal')}
+function openPremium(){openPremiumPopup()}
 function toggleNotif(){S.notifOn=!S.notifOn;['notifSwitch','qNotifSwitch'].forEach(id=>$(id)?.classList.toggle('on',S.notifOn));save()}
 function updateStatus(){
   const hasBroker=S.apiKey.length>10&&S.secretKey.length>10;
