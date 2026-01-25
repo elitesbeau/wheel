@@ -213,6 +213,7 @@
     }
     .auth-header{padding:16px 20px;display:flex;align-items:center}
     @media(min-width:600px){.auth-header{padding:24px 40px 0}}
+    .auth-logo{flex-shrink:0}
     .auth-back{width:40px;height:40px;border:none;background:none;cursor:pointer;display:flex;align-items:center;justify-content:center}
     .auth-back svg{width:24px;height:24px;stroke:#1a1a1a;stroke-width:2;fill:none}
     .auth-page-title{font-size:20px;font-weight:600;margin-left:8px;color:#1a1a1a}
@@ -280,7 +281,9 @@
   <div class="auth-container" id="authScreen">
     <div id="authLogin">
       <div class="auth-header">
-        <div style="width:40px"></div>
+        <svg class="auth-logo" viewBox="0 0 40 40" width="36" height="36">
+          <path d="M8 8h24v6H8z M8 17h20v6H8z M8 26h24v6H8z" fill="#1a1a1a"/>
+        </svg>
         <span class="auth-page-title">Sign In</span>
       </div>
       <div class="auth-content">
@@ -1837,7 +1840,17 @@ function openModal(id){$(id)?.classList.add('show')}
 function closeModal(id){$(id)?.classList.remove('show')}
 function openSettings(){$('qApiKey').value=S.apiKey;$('qSecretKey').value=S.secretKey;loadEmailSettings();applyTheme();openModal('settingsModal')}
 function quickSaveApi(){S.apiKey=$('qApiKey').value.trim();S.secretKey=$('qSecretKey').value.trim();save();updateStatus();closeModal('settingsModal');if(S.apiKey)showToast('API keys saved!','success')}
-async function signOut(){if(confirm('Sign out and clear all data?')){try{if(firebase?.auth)await firebase.auth().signOut()}catch(e){}localStorage.removeItem('meV6');location.reload()}}
+async function signOut(){
+  try { if (firebase?.auth) await firebase.auth().signOut(); } catch(e) {}
+  // Clear auth state but keep user data for when they log back in
+  S.firebaseUid = null;
+  S.isGuest = false;
+  S.alertsPopupDismissed = false;
+  localStorage.removeItem('meRemember');
+  save();
+  showAuthScreen();
+  showToast('Signed out', '');
+}
 function openAdd(){setAddMode('csp');openModal('addModal')}
 function openLearn(){$('learnContent').innerHTML=['basics','csp','cc','delta'].map(id=>{const t={basics:['Wheel Basics','Learn fundamentals','Beginner','blue'],csp:['Cash Secured Puts','Master selling puts','Intermediate','green'],cc:['Covered Calls','Income from shares','Intermediate','purple'],delta:['Delta Selection','Choose right strikes','Advanced','orange']}[id];return`<div onclick="showLesson('${id}')" style="background:var(--input);border-radius:16px;padding:16px;margin-bottom:12px;cursor:pointer"><div style="display:flex;align-items:center;gap:12px;margin-bottom:8px"><div style="width:40px;height:40px;border-radius:10px;background:var(--${t[3]}-bg);display:flex;align-items:center;justify-content:center"><span style="font-size:18px">${{basics:'📚',csp:'📉',cc:'📈',delta:'🎯'}[id]}</span></div><span style="font-weight:600">${t[0]}</span></div><p style="font-size:13px;color:var(--text2)">${t[1]}</p><span style="display:inline-block;padding:4px 8px;background:var(--card);border-radius:6px;font-size:11px;color:var(--text2);margin-top:8px">${t[2]}</span></div>`}).join('');openModal('learnModal')}
 function showLesson(id){const c={basics:'<h3>The Wheel Strategy</h3><p>1. Sell Cash-Secured Puts on stocks you want</p><p>2. If assigned, sell Covered Calls</p><p>3. If called away, restart</p><p><b>Key:</b> 0.20-0.30 delta, 30-45 DTE</p>',csp:'<h3>Cash Secured Puts</h3><p>Get paid to buy stocks at lower prices.</p><p><b>Delta guide:</b></p><ul><li>0.30 = 70% win rate</li><li>0.20 = 80% win rate</li></ul>',cc:'<h3>Covered Calls</h3><p>Generate income from shares.</p><ul><li>Sell above cost basis</li><li>Avoid earnings</li></ul>',delta:'<h3>Delta Selection</h3><p>Delta = probability of ITM</p><p><b>Sweet spot:</b> 0.20-0.30 delta with 30-45 DTE</p>'}[id];$('learnContent').innerHTML=`<div style="font-size:14px;line-height:1.7;color:var(--text2)">${c}</div><button class="btn btn-outline mt-4" onclick="openLearn()">← Back</button>`}
