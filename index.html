@@ -282,7 +282,11 @@
           </button>
         </div>
 
-        <div style="text-align:right;margin-bottom:24px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px">
+          <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:#666;cursor:pointer">
+            <input type="checkbox" id="rememberMe" style="width:18px;height:18px;accent-color:#1a1a1a;cursor:pointer">
+            Remember me
+          </label>
           <a href="#" onclick="showForgotPassword();return false" style="font-size:13px;color:#1a1a1a;font-weight:500;text-decoration:none">Forgot password?</a>
         </div>
 
@@ -660,10 +664,19 @@ function openPremiumPopup() {
 async function handleLogin() {
   const email = $('loginEmail').value.trim();
   const pass = $('loginPassword').value;
+  const rememberMe = $('rememberMe')?.checked;
+
   if (!email || !pass) return showToast('Please fill all fields', 'error');
 
   try {
     if (!await initFirebase()) throw new Error('Firebase init failed');
+
+    // Set persistence based on "Remember me" checkbox
+    const persistence = rememberMe
+      ? firebase.auth.Auth.Persistence.LOCAL      // Persists even after browser close
+      : firebase.auth.Auth.Persistence.SESSION;   // Cleared when tab closes
+    await firebase.auth().setPersistence(persistence);
+
     const cred = await firebase.auth().signInWithEmailAndPassword(email, pass);
     await loadUserData(cred.user.uid);
     completeAuth(cred.user);
@@ -722,14 +735,20 @@ function handleGuestLogin() {
   save();
   hideAuthScreen();
   checkLegal();
+  renderHome(); // Fix: render home after guest login
   showToast('Browsing as guest - Sign up to save your data!', '');
 }
 
 function completeAuth(user) {
   S.firebaseUid = user.uid;
+  // Save remember me preference
+  if ($('rememberMe')?.checked) {
+    localStorage.setItem('meRemember', 'true');
+  }
   save();
   hideAuthScreen();
   checkLegal();
+  renderHome(); // Fix: render home after login
 }
 
 async function loadUserData(uid) {
@@ -748,11 +767,32 @@ async function loadUserData(uid) {
 }
 
 function checkAuthState() {
-  // Check if user is logged in
+  // Check if user is logged in locally (guest or has firebase uid)
   if (S.firebaseUid || S.isGuest) {
     hideAuthScreen();
     return true;
   }
+
+  // Check if "Remember me" was selected - try to restore Firebase session
+  const remembered = localStorage.getItem('meRemember');
+  if (remembered) {
+    // Firebase will auto-restore session, set up listener
+    initFirebase().then(ok => {
+      if (ok && firebase.auth) {
+        firebase.auth().onAuthStateChanged(user => {
+          if (user) {
+            S.firebaseUid = user.uid;
+            loadUserData(user.uid);
+            save();
+            hideAuthScreen();
+            checkLegal();
+            renderHome();
+          }
+        });
+      }
+    });
+  }
+
   showAuthScreen();
   return false;
 }
