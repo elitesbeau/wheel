@@ -514,6 +514,9 @@
       <div class="card"><div class="card-title">Brokerage (Optional)</div><div style="padding:12px;background:var(--green-bg);border-radius:12px;margin-bottom:16px;font-size:13px;color:var(--green)"><span class="live-dot"></span><b>Live pricing works without login!</b><br><span style="opacity:0.8">Connect Alpaca only to sync your actual positions.</span></div><div id="brokerStatus"></div><div class="form-group"><label class="form-label">Alpaca API Key</label><input type="text" class="form-input" id="apiKeyInput" placeholder="PK..."></div><div class="form-group"><label class="form-label">Secret Key</label><input type="password" class="form-input" id="secretKeyInput" placeholder="••••••••"></div><div class="form-group"><label class="form-label">Account Size ($)</label><input type="number" class="form-input" id="accSizeInput" value="25000"></div><button class="btn" onclick="connectBroker()">Connect</button></div>
       <div class="card"><div class="card-title">Preferences</div><div class="setting-row"><span>Dark Mode</span><button class="switch" id="themeSwitch" onclick="toggleTheme()"><div class="switch-knob"></div></button></div><div class="setting-row"><span>Notifications</span><button class="switch" id="notifSwitch" onclick="toggleNotif()"><div class="switch-knob"></div></button></div></div>
       <div class="card" id="proCard"><div style="text-align:center"><div style="font-size:18px;font-weight:700;margin-bottom:8px">Upgrade to Premium</div><div style="font-size:13px;color:var(--text2);margin-bottom:20px">Unlock live signals & more</div><button class="btn" onclick="openPremium()">Get Premium · $9.99/mo</button></div></div>
+      <div style="padding:16px;margin-bottom:100px">
+        <button class="btn" onclick="confirmSignOut()" style="width:100%;background:transparent;border:2px solid var(--red);color:var(--red)">Sign Out</button>
+      </div>
     </div>
   </div>
 
@@ -534,7 +537,7 @@
       <button class="btn btn-outline" onclick="saveEmailSubscription()" style="width:100%">Save Email Preferences</button>
     </div>
     <div style="padding:16px 0;border-bottom:1px solid var(--border)"><div class="form-group" style="margin-bottom:12px"><label class="form-label">Alpaca API Key</label><input type="text" class="form-input" id="qApiKey" placeholder="PK..."></div><div class="form-group" style="margin-bottom:12px"><label class="form-label">Secret Key</label><input type="password" class="form-input" id="qSecretKey" placeholder="••••••••"></div><button class="btn btn-outline" onclick="quickSaveApi()">Save API Keys</button></div>
-    <button class="btn btn-red mt-4" onclick="signOut()"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Sign Out</button>
+    <button class="btn btn-red mt-4" onclick="confirmSignOut()"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Sign Out</button>
   </div></div>
 
   <div class="modal-bg" id="addModal" onclick="closeModal('addModal')"><div class="modal" onclick="event.stopPropagation()"><div class="modal-handle"></div><div class="modal-header"><span class="modal-title">Add Position</span><button class="modal-close" onclick="closeModal('addModal')"><svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div><div class="toggle"><button class="toggle-btn active" id="addCspBtn" onclick="setAddMode('csp')">CSP</button><button class="toggle-btn" id="addCcBtn" onclick="setAddMode('cc')">CC</button><button class="toggle-btn" id="addSharesBtn" onclick="setAddMode('shares')">Shares</button></div><div class="form-group"><label class="form-label">Symbol</label><input type="text" class="form-input" id="addSymbol" placeholder="AAPL" style="text-transform:uppercase" maxlength="5"></div><div id="optFields"><div class="form-group"><label class="form-label">Strike</label><input type="number" class="form-input" id="addStrike" placeholder="150" step="0.5"></div><div class="form-group"><label class="form-label">Expiration</label><input type="date" class="form-input" id="addExp"></div><div class="form-group"><label class="form-label">Premium</label><input type="number" class="form-input" id="addPremium" placeholder="2.50" step="0.01"></div></div><div id="shareFields" class="hidden"><div class="form-group"><label class="form-label">Cost Basis</label><input type="number" class="form-input" id="addCost" placeholder="150" step="0.01"></div></div><div class="form-group"><label class="form-label">Contracts</label><input type="number" class="form-input" id="addContracts" value="1" min="1"></div><button class="btn" onclick="savePosition()">Add Position</button></div></div>
@@ -1842,6 +1845,12 @@ function openModal(id){$(id)?.classList.add('show')}
 function closeModal(id){$(id)?.classList.remove('show')}
 function openSettings(){$('qApiKey').value=S.apiKey;$('qSecretKey').value=S.secretKey;loadEmailSettings();applyTheme();openModal('settingsModal')}
 function quickSaveApi(){S.apiKey=$('qApiKey').value.trim();S.secretKey=$('qSecretKey').value.trim();save();updateStatus();closeModal('settingsModal');if(S.apiKey)showToast('API keys saved!','success')}
+function confirmSignOut() {
+  if (confirm('Are you sure you want to sign out?')) {
+    signOut();
+  }
+}
+
 async function signOut(){
   try { if (firebase?.auth) await firebase.auth().signOut(); } catch(e) {}
   // Clear auth state but keep user data for when they log back in
