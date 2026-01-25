@@ -258,6 +258,10 @@
     .auth-switch a:hover{text-decoration:underline}
     .auth-divider{display:flex;align-items:center;gap:12px;margin:24px 0;color:#999;font-size:13px}
     .auth-divider::before,.auth-divider::after{content:'';flex:1;height:1px;background:#e5e5e5}
+    .confirm-modal{background:var(--card);border-radius:20px;padding:24px;max-width:320px;margin:20px;text-align:center}
+    .confirm-title{font-size:18px;font-weight:700;color:var(--text);margin-bottom:8px}
+    .confirm-message{font-size:14px;color:var(--text2);margin-bottom:24px;line-height:1.5}
+    .confirm-buttons{display:flex;gap:12px}
     .premium-modal{background:#fff;border-radius:24px;padding:32px 24px;text-align:center;max-width:340px;margin:20px}
     .premium-modal-icon{font-size:80px;margin-bottom:16px}
     .premium-modal h2{font-size:24px;font-weight:700;margin-bottom:12px;color:#1a1a1a}
@@ -378,6 +382,18 @@
         By creating an account, you agree to Market Elites'<br><a href="#">Terms of Use</a> and <a href="#">Privacy Policy</a>.
       </div>
       <div class="auth-switch">Already have an account? <a href="#" onclick="showAuthTab('login');return false">Sign in</a></div>
+    </div>
+  </div>
+
+  <!-- Confirm Modal -->
+  <div class="modal-bg center" id="confirmModal" onclick="closeModal('confirmModal')">
+    <div class="confirm-modal" onclick="event.stopPropagation()">
+      <div class="confirm-title" id="confirmTitle">Are you sure?</div>
+      <div class="confirm-message" id="confirmMessage">This action cannot be undone.</div>
+      <div class="confirm-buttons">
+        <button class="btn btn-outline" onclick="closeModal('confirmModal')" style="flex:1">Cancel</button>
+        <button class="btn" id="confirmAction" onclick="closeModal('confirmModal')" style="flex:1">Confirm</button>
+      </div>
     </div>
   </div>
 
@@ -1844,9 +1860,14 @@ function closeModal(id){$(id)?.classList.remove('show')}
 function openSettings(){$('qApiKey').value=S.apiKey;$('qSecretKey').value=S.secretKey;loadEmailSettings();applyTheme();openModal('settingsModal')}
 function quickSaveApi(){S.apiKey=$('qApiKey').value.trim();S.secretKey=$('qSecretKey').value.trim();save();updateStatus();closeModal('settingsModal');if(S.apiKey)showToast('API keys saved!','success')}
 function confirmSignOut() {
-  if (confirm('Are you sure you want to sign out?')) {
-    signOut();
-  }
+  showConfirm('Sign Out', 'Are you sure you want to sign out?', signOut);
+}
+
+function showConfirm(title, message, onConfirm) {
+  $('confirmTitle').textContent = title;
+  $('confirmMessage').textContent = message;
+  $('confirmAction').onclick = () => { closeModal('confirmModal'); onConfirm(); };
+  openModal('confirmModal');
 }
 
 async function signOut(){
