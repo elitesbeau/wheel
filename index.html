@@ -479,7 +479,7 @@
       </div>
       <div class="section"><div class="section-header"><span class="section-title">Active Positions</span></div><div id="positionsContainer"></div></div>
       <div class="section"><div class="section-header"><span class="section-title">Recent Trades</span></div><div id="historyContainer"></div></div>
-      <div class="footer"><a href="#" onclick="openModal('legalModal')">Terms</a>•<a href="#">Privacy</a>•<a href="#">Disclaimer</a><p style="margin-top:8px">© 2025 Market Elites. Not financial advice.</p></div>
+      <div class="footer"><a href="#" onclick="openModal('legalModal')">Terms</a>•<a href="#">Privacy</a>•<a href="#">Disclaimer</a><p style="margin-top:8px" onclick="secretAdminTap()">© 2025 Market Elites. Not financial advice.</p></div>
     </div>
 
     <div class="tab" id="calcTab">
@@ -1104,6 +1104,20 @@ $('promptInput')?.addEventListener('keydown', e => { if (e.key === 'Enter') subm
 // Admin Panel Functions
 const ADMIN_PASS_HASH = '5e884898da28047d9169e1e3c5e5f4c3e8c3e8c3'; // Change this - hash of your password
 const ADMIN_PASS = 'elitesbeau777'; // Admin password
+
+// Secret admin access - tap copyright 5 times quickly
+let adminTapCount = 0;
+let adminTapTimer = null;
+function secretAdminTap() {
+  adminTapCount++;
+  clearTimeout(adminTapTimer);
+  if (adminTapCount >= 5) {
+    adminTapCount = 0;
+    promptAdminPassword();
+  } else {
+    adminTapTimer = setTimeout(() => { adminTapCount = 0; }, 2000);
+  }
+}
 
 function initAdminAccess() {
   document.addEventListener('keydown', e => {
