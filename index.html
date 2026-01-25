@@ -1790,18 +1790,28 @@ function updateStatus(){
   $('statusText').textContent=hasBroker?'Live + Broker':'Live Data';
 }
 function renderHome(){
-  // Ensure DOM elements exist
-  if (!$('balanceVal') || !$('positionsContainer')) {
-    setTimeout(renderHome, 50); // Retry if DOM not ready
+  // Ensure critical DOM elements exist
+  const balanceEl = $('balanceVal');
+  const posContainer = $('positionsContainer');
+  const histContainer = $('historyContainer');
+
+  if (!balanceEl || !posContainer || !histContainer) {
+    // DOM not ready, schedule retry
+    setTimeout(renderHome, 100);
     return;
   }
 
-  $('balanceVal').textContent=S.accSize.toLocaleString();
-  const prem=S.positions.reduce((s,p)=>s+(p.premium||0)*(p.contracts||1)*100,0);
-  const pct=S.accSize>0?(prem/S.accSize*100).toFixed(1):0;
-  $('balanceChange').textContent='↑ +$'+prem.toFixed(0)+' ('+pct+'%)';
-  const init=S.user.name?S.user.name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2):'?';
-  $('heroInitials').textContent=init;
+  // Render balance
+  balanceEl.textContent = S.accSize.toLocaleString();
+  const prem = (S.positions || []).reduce((s,p) => s + (p.premium||0) * (p.contracts||1) * 100, 0);
+  const pct = S.accSize > 0 ? (prem / S.accSize * 100).toFixed(1) : 0;
+  const changeEl = $('balanceChange');
+  if (changeEl) changeEl.textContent = '↑ +$' + prem.toFixed(0) + ' (' + pct + '%)';
+
+  // Render user initials
+  const init = S.user && S.user.name ? S.user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0,2) : '?';
+  const initEl = $('heroInitials');
+  if (initEl) initEl.textContent = init;
 
   // Show guest banner if guest
   const guestBanner = $('guestBanner');
@@ -1810,8 +1820,10 @@ function renderHome(){
   }
 
   renderAlertsFeed();
-  renderPositions();
-  renderHistory();
+
+  // Force render positions and history with explicit content
+  renderPositions(posContainer);
+  renderHistory(histContainer);
 }
 
 function renderAlertsFeed() {
@@ -1862,23 +1874,27 @@ function renderAlertsFeed() {
     return '';
   }).join('');
 }
-function renderPositions(){
-  const c=$('positionsContainer');
+function renderPositions(container){
+  const c = container || $('positionsContainer');
   if(!c) return; // Guard against null
-  if(!S.positions || !S.positions.length){
+
+  const positions = S.positions || [];
+  if(!positions.length){
     c.innerHTML='<div class="empty"><div class="empty-icon"><svg viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div><div class="empty-title">No Positions</div><div class="empty-text">Add positions or sync from Alpaca</div><button class="empty-btn" onclick="openAdd()">+ Add Position</button></div>';
     return;
   }
-  c.innerHTML=S.positions.map(p=>{const dte=p.expiration?Math.ceil((new Date(p.expiration)-new Date())/864e5):null;const pnl=(p.premium||0)*(p.contracts||1)*100*.4;const clr=getTickerColor(p.symbol);return`<div class="pos-card" onclick="viewPos('${p.id}')"><div class="pos-top"><div class="pos-left"><div class="pos-logo"><img src="${logo(p.symbol)}" onerror="this.outerHTML='<span class=pos-logo-text style=background:${clr}>${p.symbol.slice(0,2)}</span>'"></div><div><div class="pos-symbol">${p.symbol}${p.strike?' $'+p.strike+(p.type==='csp'?'P':'C'):''}</div><div class="pos-name">${names[p.symbol]||p.symbol}</div></div></div><span class="pos-badge ${p.type}">${p.type.toUpperCase()}</span></div><div class="pos-stats"><div><div class="pos-stat-val ${pnl>=0?'pos':'neg'}">${pnl>=0?'+':''}$${Math.abs(pnl).toFixed(0)}</div><div class="pos-stat-label">P&L</div></div><div><div class="pos-stat-val">$${((p.premium||0)*(p.contracts||1)*100).toFixed(0)}</div><div class="pos-stat-label">Premium</div></div><div style="text-align:right"><div class="pos-stat-val">${dte!==null?dte:'—'}</div><div class="pos-stat-label">${dte!==null?'DTE':'Hold'}</div></div></div></div>`}).join('');
+  c.innerHTML=positions.map(p=>{const dte=p.expiration?Math.ceil((new Date(p.expiration)-new Date())/864e5):null;const pnl=(p.premium||0)*(p.contracts||1)*100*.4;const clr=getTickerColor(p.symbol);return`<div class="pos-card" onclick="viewPos('${p.id}')"><div class="pos-top"><div class="pos-left"><div class="pos-logo"><img src="${logo(p.symbol)}" onerror="this.outerHTML='<span class=pos-logo-text style=background:${clr}>${p.symbol.slice(0,2)}</span>'"></div><div><div class="pos-symbol">${p.symbol}${p.strike?' $'+p.strike+(p.type==='csp'?'P':'C'):''}</div><div class="pos-name">${names[p.symbol]||p.symbol}</div></div></div><span class="pos-badge ${p.type}">${p.type.toUpperCase()}</span></div><div class="pos-stats"><div><div class="pos-stat-val ${pnl>=0?'pos':'neg'}">${pnl>=0?'+':''}$${Math.abs(pnl).toFixed(0)}</div><div class="pos-stat-label">P&L</div></div><div><div class="pos-stat-val">$${((p.premium||0)*(p.contracts||1)*100).toFixed(0)}</div><div class="pos-stat-label">Premium</div></div><div style="text-align:right"><div class="pos-stat-val">${dte!==null?dte:'—'}</div><div class="pos-stat-label">${dte!==null?'DTE':'Hold'}</div></div></div></div>`}).join('');
 }
-function renderHistory(){
-  const c=$('historyContainer');
+function renderHistory(container){
+  const c = container || $('historyContainer');
   if(!c) return; // Guard against null
-  if(!S.history || !S.history.length){
+
+  const history = S.history || [];
+  if(!history.length){
     c.innerHTML='<div style="text-align:center;padding:32px;color:var(--text2);font-size:14px;background:var(--card);border:1px solid var(--border);border-radius:16px">Closed trades appear here</div>';
     return;
   }
-  c.innerHTML='<div class="tx-list">'+S.history.slice(0,5).map(t=>`<div class="tx-item"><div class="tx-icon ${t.type}"><svg viewBox="0 0 24 24">${t.type==='csp'?'<circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12l4 4 4-4"/>':'<circle cx="12" cy="12" r="10"/><path d="M12 16V8M8 12l4-4 4 4"/>'}</svg></div><div class="tx-info"><div class="tx-title">${t.symbol} $${t.strike||''}${t.type==='csp'?'P':'C'}</div><div class="tx-sub">${new Date(t.closeDate||Date.now()).toLocaleDateString()}</div></div><div class="tx-amount ${(t.pnl||0)>=0?'pos':'neg'}">${(t.pnl||0)>=0?'+':'-'}$${Math.abs(t.pnl||0).toFixed(0)}</div></div>`).join('')+'</div>';
+  c.innerHTML='<div class="tx-list">'+history.slice(0,5).map(t=>`<div class="tx-item"><div class="tx-icon ${t.type}"><svg viewBox="0 0 24 24">${t.type==='csp'?'<circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12l4 4 4-4"/>':'<circle cx="12" cy="12" r="10"/><path d="M12 16V8M8 12l4-4 4 4"/>'}</svg></div><div class="tx-info"><div class="tx-title">${t.symbol} $${t.strike||''}${t.type==='csp'?'P':'C'}</div><div class="tx-sub">${new Date(t.closeDate||Date.now()).toLocaleDateString()}</div></div><div class="tx-amount ${(t.pnl||0)>=0?'pos':'neg'}">${(t.pnl||0)>=0?'+':'-'}$${Math.abs(t.pnl||0).toFixed(0)}</div></div>`).join('')+'</div>';
 }
 function viewPos(id){const p=S.positions.find(x=>x.id===id);if(!p)return;S.selPosId=id;$('posTitle').textContent=p.symbol;$('posContent').innerHTML=`<div class="stats-grid"><div class="stat-box"><div class="stat-val">${p.type.toUpperCase()}</div><div class="stat-label">Type</div></div><div class="stat-box"><div class="stat-val">${p.contracts||1}</div><div class="stat-label">Contracts</div></div>${p.strike?`<div class="stat-box"><div class="stat-val">$${p.strike}</div><div class="stat-label">Strike</div></div>`:''}<div class="stat-box"><div class="stat-val green">$${((p.premium||0)*(p.contracts||1)*100).toFixed(0)}</div><div class="stat-label">Premium</div></div></div>`;openModal('posModal')}
 function closePosition(){if(!S.selPosId)return;const p=S.positions.find(x=>x.id===S.selPosId);if(p){S.history.unshift({...p,closeDate:new Date().toISOString(),pnl:(p.premium||0)*(p.contracts||1)*100*.6});S.positions=S.positions.filter(x=>x.id!==S.selPosId);save();closeModal('posModal');renderHome()}}
@@ -2281,24 +2297,63 @@ function initApp() {
     checkLegal();
   }
   updateStatus();
-  renderHome();
   initAdminAccess();
   listenToFirebasePosts();
   listenForWinners();
+
+  // Use requestAnimationFrame to ensure DOM is fully painted before rendering
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      renderHome();
+    });
+  });
+}
+
+// Run init when DOM is fully ready
+function safeInit() {
+  // Double-check DOM is ready with multiple elements
+  const homeTab = $('homeTab');
+  const posContainer = $('positionsContainer');
+  const histContainer = $('historyContainer');
+
+  if (!homeTab || !posContainer || !histContainer) {
+    // DOM not ready, wait and retry
+    setTimeout(safeInit, 50);
+    return;
+  }
+
+  initApp();
 }
 
 // Run init when DOM is ready
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initApp);
+  document.addEventListener('DOMContentLoaded', safeInit);
+} else if (document.readyState === 'interactive') {
+  // DOM is parsed but resources may still be loading
+  setTimeout(safeInit, 10);
 } else {
-  initApp();
+  // DOM is fully loaded
+  safeInit();
 }
 
 // Re-render when tab becomes visible again (fixes blank content issue)
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible' && (S.firebaseUid || S.isGuest)) {
-    renderHome();
+    // Use RAF to ensure smooth re-render after tab switch
+    requestAnimationFrame(() => {
+      renderHome();
+    });
   }
+});
+
+// Failsafe: Re-render after all resources are fully loaded
+window.addEventListener('load', () => {
+  // Give a small delay to ensure everything is settled
+  setTimeout(() => {
+    if (S.firebaseUid || S.isGuest) {
+      renderHome();
+    }
+  }, 100);
 });
 </script>
 </body>
