@@ -202,9 +202,59 @@
     .status-badge.rolled{background:var(--purple-bg);color:var(--purple)}
     .status-badge.closed{background:var(--text3);color:var(--bg)}
     .position-select{width:100%;background:var(--input);border:1px solid var(--border);border-radius:12px;padding:14px 16px;font-size:15px;color:var(--text);outline:none;cursor:pointer}
+    .auth-container{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;background:var(--bg)}
+    .auth-logo{font-size:48px;margin-bottom:8px}
+    .auth-title{font-size:28px;font-weight:800;margin-bottom:4px}
+    .auth-subtitle{font-size:14px;color:var(--text2);margin-bottom:32px}
+    .auth-card{width:100%;max-width:380px;background:var(--card);border-radius:20px;padding:24px;border:1px solid var(--border)}
+    .auth-tabs{display:flex;background:var(--input);border-radius:10px;padding:4px;margin-bottom:20px}
+    .auth-tab{flex:1;padding:10px;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;background:transparent;color:var(--text2)}
+    .auth-tab.active{background:var(--card);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.1)}
+    .auth-divider{display:flex;align-items:center;gap:12px;margin:20px 0;color:var(--text3);font-size:12px}
+    .auth-divider::before,.auth-divider::after{content:'';flex:1;height:1px;background:var(--border)}
+    .auth-footer{text-align:center;margin-top:20px;font-size:13px;color:var(--text2)}
+    .auth-footer a{color:var(--blue);text-decoration:none}
+    .status-badge.assigned{background:var(--orange-bg);color:var(--orange)}
+    .status-badge.called{background:var(--blue-bg);color:var(--blue)}
+    .post-action-btn.assigned{background:var(--orange-bg);color:var(--orange)}
+    .post-action-btn.called{background:var(--blue-bg);color:var(--blue)}
+    .home-alerts{margin-top:16px}
+    .home-alert-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:8px;display:flex;align-items:center;gap:12px}
+    .home-alert-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px}
+    .home-alert-content{flex:1}
+    .home-alert-title{font-size:13px;font-weight:600}
+    .home-alert-sub{font-size:11px;color:var(--text2)}
   </style>
 </head>
 <body>
+  <!-- Auth Screen -->
+  <div class="auth-container" id="authScreen">
+    <div class="auth-logo">📈</div>
+    <div class="auth-title">Market Elites</div>
+    <div class="auth-subtitle">Master the Wheel Strategy</div>
+    <div class="auth-card">
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="loginTab" onclick="showAuthTab('login')">Sign In</button>
+        <button class="auth-tab" id="signupTab" onclick="showAuthTab('signup')">Sign Up</button>
+      </div>
+      <div id="loginForm">
+        <div class="form-group"><label class="form-label">Email</label><input type="email" class="form-input" id="loginEmail" placeholder="you@example.com"></div>
+        <div class="form-group"><label class="form-label">Password</label><input type="password" class="form-input" id="loginPassword" placeholder="••••••••"></div>
+        <button class="btn" onclick="handleLogin()" style="margin-top:8px">Sign In</button>
+        <div class="auth-footer"><a href="#" onclick="showForgotPassword()">Forgot password?</a></div>
+      </div>
+      <div id="signupForm" class="hidden">
+        <div class="form-group"><label class="form-label">Full Name</label><input type="text" class="form-input" id="signupName" placeholder="John Doe"></div>
+        <div class="form-group"><label class="form-label">Email</label><input type="email" class="form-input" id="signupEmail" placeholder="you@example.com"></div>
+        <div class="form-group"><label class="form-label">Password</label><input type="password" class="form-input" id="signupPassword" placeholder="Min 6 characters"></div>
+        <div class="form-group"><label class="form-label">Confirm Password</label><input type="password" class="form-input" id="signupConfirm" placeholder="••••••••"></div>
+        <button class="btn" onclick="handleSignup()" style="margin-top:8px">Create Account</button>
+      </div>
+      <div class="auth-divider">or continue with</div>
+      <button class="btn btn-outline" onclick="handleGuestLogin()">Continue as Guest</button>
+    </div>
+  </div>
+
   <div class="modal-bg center" id="legalModal">
     <div class="modal">
       <div class="modal-header"><span class="modal-title">Terms & Risk Disclosure</span></div>
@@ -428,6 +478,131 @@ const S={theme:'light',mode:'csp',addMode:'csp',apiKey:'',secretKey:'',accSize:2
 const names={AAPL:'Apple Inc.',NVDA:'NVIDIA',TSLA:'Tesla',MSFT:'Microsoft',AMD:'AMD',SPY:'S&P 500 ETF',QQQ:'Nasdaq 100 ETF',AMZN:'Amazon',GOOGL:'Alphabet',META:'Meta Platforms',RKLB:'Rocket Lab',PLTR:'Palantir',SOFI:'SoFi',COIN:'Coinbase',HOOD:'Robinhood',NET:'Cloudflare',SNOW:'Snowflake',CRWD:'CrowdStrike',DDOG:'Datadog',ZS:'Zscaler'};
 const domains={AAPL:'apple.com',NVDA:'nvidia.com',TSLA:'tesla.com',MSFT:'microsoft.com',AMD:'amd.com',SPY:'ssga.com',QQQ:'invesco.com',AMZN:'amazon.com',GOOGL:'google.com',META:'meta.com',RKLB:'rocketlabusa.com',PLTR:'palantir.com',SOFI:'sofi.com',COIN:'coinbase.com',HOOD:'robinhood.com',NET:'cloudflare.com',SNOW:'snowflake.com',CRWD:'crowdstrike.com',DDOG:'datadoghq.com',ZS:'zscaler.com'};
 const signals=[{type:'csp',ticker:'NVDA',strike:130,exp:'Jan 24',prem:'$3.20',delta:'0.25',time:'2h ago'},{type:'cc',ticker:'AAPL',strike:260,exp:'Jan 31',prem:'$2.80',delta:'0.30',time:'5h ago'},{type:'csp',ticker:'AMD',strike:135,exp:'Feb 7',prem:'$4.50',delta:'0.28',time:'1d ago'}];
+
+// ========== AUTHENTICATION ==========
+function showAuthTab(tab) {
+  $('loginTab').classList.toggle('active', tab === 'login');
+  $('signupTab').classList.toggle('active', tab === 'signup');
+  $('loginForm').classList.toggle('hidden', tab !== 'login');
+  $('signupForm').classList.toggle('hidden', tab !== 'signup');
+}
+
+async function handleLogin() {
+  const email = $('loginEmail').value.trim();
+  const pass = $('loginPassword').value;
+  if (!email || !pass) return showToast('Please fill all fields', 'error');
+
+  try {
+    if (!await initFirebase()) throw new Error('Firebase init failed');
+    const cred = await firebase.auth().signInWithEmailAndPassword(email, pass);
+    await loadUserData(cred.user.uid);
+    completeAuth(cred.user);
+  } catch (e) {
+    console.error('Login error:', e);
+    showToast(e.message || 'Login failed', 'error');
+  }
+}
+
+async function handleSignup() {
+  const name = $('signupName').value.trim();
+  const email = $('signupEmail').value.trim();
+  const pass = $('signupPassword').value;
+  const confirm = $('signupConfirm').value;
+
+  if (!name || !email || !pass) return showToast('Please fill all fields', 'error');
+  if (pass !== confirm) return showToast('Passwords do not match', 'error');
+  if (pass.length < 6) return showToast('Password must be 6+ characters', 'error');
+
+  try {
+    if (!await initFirebase()) throw new Error('Firebase init failed');
+    const cred = await firebase.auth().createUserWithEmailAndPassword(email, pass);
+
+    // Save user profile to Firebase
+    await firebase.database().ref('users/' + cred.user.uid).set({
+      name: name,
+      email: email,
+      isPremium: false,
+      createdAt: Date.now()
+    });
+
+    S.user.name = name;
+    S.user.email = email;
+    S.isPremium = false;
+    save();
+
+    completeAuth(cred.user);
+    showToast('Welcome to Market Elites!', 'success');
+  } catch (e) {
+    console.error('Signup error:', e);
+    showToast(e.message || 'Signup failed', 'error');
+  }
+}
+
+function handleGuestLogin() {
+  S.isGuest = true;
+  S.user.name = 'Guest';
+  save();
+  hideAuthScreen();
+  checkLegal();
+  showToast('Browsing as guest - Sign up to save your data!', '');
+}
+
+function completeAuth(user) {
+  S.firebaseUid = user.uid;
+  save();
+  hideAuthScreen();
+  checkLegal();
+}
+
+async function loadUserData(uid) {
+  try {
+    const snapshot = await firebase.database().ref('users/' + uid).once('value');
+    const data = snapshot.val();
+    if (data) {
+      S.user.name = data.name || '';
+      S.user.email = data.email || '';
+      S.isPremium = data.isPremium || false;
+      save();
+    }
+  } catch (e) {
+    console.error('Load user data error:', e);
+  }
+}
+
+function checkAuthState() {
+  // Check if user is logged in
+  if (S.firebaseUid || S.isGuest) {
+    hideAuthScreen();
+    return true;
+  }
+  showAuthScreen();
+  return false;
+}
+
+function showAuthScreen() {
+  $('authScreen').style.display = 'flex';
+  document.querySelector('.app').style.display = 'none';
+  document.querySelector('.bottom-nav').style.display = 'none';
+}
+
+function hideAuthScreen() {
+  $('authScreen').style.display = 'none';
+  document.querySelector('.app').style.display = 'block';
+  document.querySelector('.bottom-nav').style.display = 'flex';
+}
+
+function showForgotPassword() {
+  showPrompt('Reset Password', 'Enter your email address', async (email) => {
+    if (!email) return;
+    try {
+      if (!await initFirebase()) throw new Error('Firebase init failed');
+      await firebase.auth().sendPasswordResetEmail(email);
+      showToast('Password reset email sent!', 'success');
+    } catch (e) {
+      showToast(e.message || 'Reset failed', 'error');
+    }
+  });
+}
 
 // Live pricing cache
 const priceCache = {};
@@ -762,6 +937,12 @@ async function sendEmailNotifications(post) {
     } else if (post.kind === 'roll') {
       subject = `🔄 Position Roll Alert`;
       body = `Rolling position:\n${post.original} → ${post.newPos}\nCredit/Debit: ${post.credit}${post.notes ? '\nNotes: ' + post.notes : ''}`;
+    } else if (post.kind === 'assigned') {
+      subject = `📦 ${post.ticker} Assigned - Wheel Continues!`;
+      body = `Your CSP on ${post.ticker} $${post.strike} was assigned!\n\nYou now own 100 shares at $${post.strike}.\nNext step: Sell covered calls to continue the wheel strategy.`;
+    } else if (post.kind === 'called') {
+      subject = `📤 ${post.ticker} Called Away - Wheel Complete!`;
+      body = `Your CC on ${post.ticker} $${post.strike} was exercised!\n\nShares sold at $${post.strike}.\nWheel cycle complete! Time to start selling CSPs again.`;
     }
 
     // Send to each subscriber
@@ -862,6 +1043,9 @@ async function deletePostFromFirebase(postId) {
 }
 
 // Listen for real-time updates (for all users)
+// Track which winners we've celebrated to avoid duplicates
+const celebratedWinners = new Set();
+
 async function listenToFirebasePosts() {
   if (!await initFirebase()) return;
   try {
@@ -871,12 +1055,40 @@ async function listenToFirebasePosts() {
       snapshot.forEach(child => {
         posts.unshift({ id: child.key, ...child.val() });
       });
+
+      // Check for new winners to celebrate
+      posts.forEach(p => {
+        if (p.status === 'winner' && p.id && !celebratedWinners.has(p.id)) {
+          // Only celebrate if this is recent (within last 30 seconds)
+          if (p.closedAt && Date.now() - p.closedAt < 30000) {
+            celebratedWinners.add(p.id);
+            if (!S.adminAuthenticated) { // Don't double-celebrate on admin side
+              showCelebration(p);
+            }
+          } else {
+            // Mark as already celebrated if it's old
+            celebratedWinners.add(p.id);
+          }
+        }
+      });
+
       S.adminPosts = posts;
       renderSignals();
+      renderAlertsFeed(); // Update home alerts too
     });
   } catch (e) {
     console.error('Firebase listen error:', e);
   }
+}
+
+// Listen for winners (backup method)
+async function listenForWinners() {
+  if (!await initFirebase()) return;
+  // Pre-populate celebrated winners to avoid showing old celebrations on load
+  const posts = S.adminPosts || [];
+  posts.forEach(p => {
+    if (p.status === 'winner' && p.id) celebratedWinners.add(p.id);
+  });
 }
 
 function setAdminTab(tab) {
@@ -1018,6 +1230,8 @@ function renderAdminPosts() {
       showActions = true;
       if (status === 'winner') statusBadge = '<span class="status-badge winner">WIN 🎉</span>';
       else if (status === 'rolled') statusBadge = '<span class="status-badge rolled">ROLLED</span>';
+      else if (status === 'assigned') statusBadge = '<span class="status-badge assigned">ASSIGNED 📦</span>';
+      else if (status === 'called') statusBadge = '<span class="status-badge called">CALLED AWAY 📤</span>';
       else if (status === 'closed') statusBadge = '<span class="status-badge closed">CLOSED</span>';
       else statusBadge = '<span class="status-badge open">OPEN</span>';
     } else if (p.kind === 'announcement') {
@@ -1026,12 +1240,29 @@ function renderAdminPosts() {
       label = `<span style="color:var(--purple)">ROLL</span> ${p.original?.split(' ')[0] || 'Position'}`;
     }
 
-    const actions = showActions && status === 'open' ? `
-      <div class="post-actions">
-        <button class="post-action-btn winner" onclick="markPostWinner(${i})">🎉 Winner</button>
-        <button class="post-action-btn roll" onclick="markPostRolled(${i})">🔄 Rolled</button>
-        <button class="post-action-btn delete" onclick="deletePost(${i})">Delete</button>
-      </div>` : `<div class="post-actions"><button class="post-action-btn delete" onclick="deletePost(${i})">Delete</button></div>`;
+    // Different actions based on signal type and status
+    let actions = '';
+    if (showActions && status === 'open') {
+      if (p.type === 'csp') {
+        // CSP: can win, roll, or get assigned
+        actions = `<div class="post-actions">
+          <button class="post-action-btn winner" onclick="markPostWinner(${i})">🎉 Winner</button>
+          <button class="post-action-btn assigned" onclick="markPostAssigned(${i})">📦 Assigned</button>
+          <button class="post-action-btn roll" onclick="markPostRolled(${i})">🔄 Roll</button>
+          <button class="post-action-btn delete" onclick="deletePost(${i})">✕</button>
+        </div>`;
+      } else {
+        // CC: can win, roll, or get called away
+        actions = `<div class="post-actions">
+          <button class="post-action-btn winner" onclick="markPostWinner(${i})">🎉 Winner</button>
+          <button class="post-action-btn called" onclick="markPostCalled(${i})">📤 Called</button>
+          <button class="post-action-btn roll" onclick="markPostRolled(${i})">🔄 Roll</button>
+          <button class="post-action-btn delete" onclick="deletePost(${i})">✕</button>
+        </div>`;
+      }
+    } else {
+      actions = `<div class="post-actions"><button class="post-action-btn delete" onclick="deletePost(${i})">Delete</button></div>`;
+    }
 
     return `<div style="padding:10px 0;border-bottom:1px solid var(--border)">
       <div style="display:flex;justify-content:space-between;align-items:center">
@@ -1088,6 +1319,87 @@ async function markPostRolled(index) {
   renderAdminPosts();
   renderSignals();
   showToast('Position marked as rolled', 'success');
+}
+
+// Mark CSP as assigned (now holding shares, start selling CCs)
+async function markPostAssigned(index) {
+  const posts = S.adminPosts || [];
+  if (!posts[index]) return;
+
+  posts[index].status = 'assigned';
+  posts[index].assignedAt = Date.now();
+
+  // Save to Firebase
+  if (await initFirebase() && posts[index].id) {
+    try {
+      await firebase.database().ref('posts/' + posts[index].id).update({ status: 'assigned', assignedAt: Date.now() });
+    } catch (e) { console.error('Firebase update error:', e); }
+  }
+
+  save();
+  renderAdminPosts();
+  renderSignals();
+
+  // Send notification about assignment
+  await sendAssignmentNotification(posts[index], 'assigned');
+  showToast(`${posts[index].ticker} assigned! Time to sell covered calls 📦`, 'success');
+}
+
+// Mark CC as called away (shares sold, back to selling CSPs)
+async function markPostCalled(index) {
+  const posts = S.adminPosts || [];
+  if (!posts[index]) return;
+
+  posts[index].status = 'called';
+  posts[index].calledAt = Date.now();
+
+  // Save to Firebase
+  if (await initFirebase() && posts[index].id) {
+    try {
+      await firebase.database().ref('posts/' + posts[index].id).update({ status: 'called', calledAt: Date.now() });
+    } catch (e) { console.error('Firebase update error:', e); }
+  }
+
+  save();
+  renderAdminPosts();
+  renderSignals();
+
+  // Send notification about call
+  await sendAssignmentNotification(posts[index], 'called');
+  showToast(`${posts[index].ticker} called away! Back to selling puts 📤`, 'success');
+}
+
+// Send notification for assigned/called
+async function sendAssignmentNotification(post, type) {
+  const webhookUrl = localStorage.getItem('discordWebhook');
+  if (webhookUrl) {
+    const isAssigned = type === 'assigned';
+    try {
+      await fetch(webhookUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          embeds: [{
+            title: isAssigned ? `📦 ${post.ticker} Assigned!` : `📤 ${post.ticker} Called Away!`,
+            description: isAssigned
+              ? `CSP $${post.strike} was assigned. Now holding 100 shares - time to sell covered calls!`
+              : `CC $${post.strike} was exercised. Shares sold at strike - back to selling puts!`,
+            color: isAssigned ? 0xff9500 : 0x007aff,
+            timestamp: new Date().toISOString()
+          }]
+        })
+      });
+    } catch (e) { console.error('Discord error:', e); }
+  }
+
+  // Email notification
+  await sendEmailNotifications({
+    ...post,
+    kind: type,
+    message: type === 'assigned'
+      ? `CSP assigned - now holding shares, will sell covered calls`
+      : `CC exercised - shares called away, back to selling puts`
+  });
 }
 
 // Show celebration animation
@@ -1173,7 +1485,7 @@ function openModal(id){$(id)?.classList.add('show')}
 function closeModal(id){$(id)?.classList.remove('show')}
 function openSettings(){$('qApiKey').value=S.apiKey;$('qSecretKey').value=S.secretKey;loadEmailSettings();applyTheme();openModal('settingsModal')}
 function quickSaveApi(){S.apiKey=$('qApiKey').value.trim();S.secretKey=$('qSecretKey').value.trim();save();updateStatus();closeModal('settingsModal');if(S.apiKey)showToast('API keys saved!','success')}
-function signOut(){if(confirm('Sign out and clear all data?')){localStorage.removeItem('meV6');location.reload()}}
+async function signOut(){if(confirm('Sign out and clear all data?')){try{if(firebase?.auth)await firebase.auth().signOut()}catch(e){}localStorage.removeItem('meV6');location.reload()}}
 function openAdd(){setAddMode('csp');openModal('addModal')}
 function openLearn(){$('learnContent').innerHTML=['basics','csp','cc','delta'].map(id=>{const t={basics:['Wheel Basics','Learn fundamentals','Beginner','blue'],csp:['Cash Secured Puts','Master selling puts','Intermediate','green'],cc:['Covered Calls','Income from shares','Intermediate','purple'],delta:['Delta Selection','Choose right strikes','Advanced','orange']}[id];return`<div onclick="showLesson('${id}')" style="background:var(--input);border-radius:16px;padding:16px;margin-bottom:12px;cursor:pointer"><div style="display:flex;align-items:center;gap:12px;margin-bottom:8px"><div style="width:40px;height:40px;border-radius:10px;background:var(--${t[3]}-bg);display:flex;align-items:center;justify-content:center"><span style="font-size:18px">${{basics:'📚',csp:'📉',cc:'📈',delta:'🎯'}[id]}</span></div><span style="font-weight:600">${t[0]}</span></div><p style="font-size:13px;color:var(--text2)">${t[1]}</p><span style="display:inline-block;padding:4px 8px;background:var(--card);border-radius:6px;font-size:11px;color:var(--text2);margin-top:8px">${t[2]}</span></div>`}).join('');openModal('learnModal')}
 function showLesson(id){const c={basics:'<h3>The Wheel Strategy</h3><p>1. Sell Cash-Secured Puts on stocks you want</p><p>2. If assigned, sell Covered Calls</p><p>3. If called away, restart</p><p><b>Key:</b> 0.20-0.30 delta, 30-45 DTE</p>',csp:'<h3>Cash Secured Puts</h3><p>Get paid to buy stocks at lower prices.</p><p><b>Delta guide:</b></p><ul><li>0.30 = 70% win rate</li><li>0.20 = 80% win rate</li></ul>',cc:'<h3>Covered Calls</h3><p>Generate income from shares.</p><ul><li>Sell above cost basis</li><li>Avoid earnings</li></ul>',delta:'<h3>Delta Selection</h3><p>Delta = probability of ITM</p><p><b>Sweet spot:</b> 0.20-0.30 delta with 30-45 DTE</p>'}[id];$('learnContent').innerHTML=`<div style="font-size:14px;line-height:1.7;color:var(--text2)">${c}</div><button class="btn btn-outline mt-4" onclick="openLearn()">← Back</button>`}
@@ -1535,6 +1847,24 @@ function renderAlerts(){const c=$('alertsContainer');const alerts=[];S.positions
 function renderSignals(){
   const c=$('signalsContainer');
   const posts = S.adminPosts || [];
+  const disclaimer = $('exampleDisclaimer');
+
+  // NON-PREMIUM: Show only examples
+  if (!S.isPremium) {
+    if (disclaimer) disclaimer.style.display = 'block';
+
+    let html = '<div class="card-title" style="margin:16px 0 12px">Example Signals</div>';
+    signals.forEach((s, i) => {
+      const locked = i > 0;
+      html += `<div class="signal-card ${locked?'locked':''}" style="border-left:3px solid var(--${s.type==='csp'?'green':'blue'})"><div class="signal-header"><span class="signal-type ${s.type}">${s.type.toUpperCase()}</span><span class="signal-time">${s.time}</span></div><div class="signal-ticker">${s.ticker}</div><div class="signal-details">$${s.strike} ${s.type==='csp'?'Put':'Call'} · Exp ${s.exp}</div><div style="display:flex;gap:16px;font-size:13px"><span>Premium: <b style="color:var(--green)">${s.prem}</b></span><span>Delta: <b>${s.delta}</b></span></div>${locked?`<div class="signal-lock"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><span>Unlock with Premium</span></div>`:''}</div>`;
+    });
+    html += '<button class="btn mt-4" onclick="openPremium()">Unlock Live Signals</button>';
+    c.innerHTML = html;
+    return;
+  }
+
+  // PREMIUM: Show real signals
+  if (disclaimer) disclaimer.style.display = 'none';
 
   // Separate by type
   const sigs = posts.filter(p => p.kind === 'signal');
@@ -1545,12 +1875,6 @@ function renderSignals(){
   const openSigs = sigs.filter(p => !p.status || p.status === 'open');
   const closedSigs = sigs.filter(p => p.status && p.status !== 'open');
 
-  // Hide example disclaimer if there are real posts
-  const disclaimer = $('exampleDisclaimer');
-  if (disclaimer) {
-    disclaimer.style.display = (sigs.length > 0 || anns.length > 0 || rolls.length > 0) ? 'none' : 'block';
-  }
-
   let html = '';
 
   // Announcements at top
@@ -1559,37 +1883,38 @@ function renderSignals(){
   });
 
   // Roll updates
-  rolls.slice(0, 3).forEach(r => {
+  rolls.slice(0, 5).forEach(r => {
     html += `<div class="signal-card" style="border-left:3px solid var(--purple)"><div class="signal-header"><span class="signal-type" style="background:var(--purple-bg);color:var(--purple)">ROLL</span><span class="signal-time">${getTimeAgo(r.timestamp)}</span></div><div style="font-size:13px;margin:8px 0"><span style="color:var(--red)">${r.original}</span> → <span style="color:var(--green)">${r.newPos}</span></div><div style="font-size:14px;font-weight:600;color:var(--green)">${r.credit}</div>${r.notes?`<div style="font-size:12px;color:var(--text2);margin-top:4px">${r.notes}</div>`:''}</div>`;
   });
 
   // OPEN POSITIONS section
-  if (openSigs.length > 0 || (!sigs.length && signals.length)) {
-    html += `<div class="card-title" style="margin:16px 0 12px;display:flex;align-items:center;gap:8px"><span style="display:inline-block;width:8px;height:8px;background:var(--green);border-radius:50%;animation:pulse 2s infinite"></span>Open Positions</div>`;
-    const openList = openSigs.length ? openSigs : signals;
-    openList.slice(0, 10).forEach((s, i) => {
-      const locked = !S.isPremium && i > 0;
+  if (openSigs.length > 0) {
+    html += `<div class="card-title" style="margin:16px 0 12px;display:flex;align-items:center;gap:8px"><span style="display:inline-block;width:8px;height:8px;background:var(--green);border-radius:50%;animation:pulse 2s infinite"></span>Open Positions (${openSigs.length})</div>`;
+    openSigs.forEach((s) => {
       const time = s.timestamp ? getTimeAgo(s.timestamp) : s.time;
-      html += `<div class="signal-card ${locked?'locked':''}" style="border-left:3px solid var(--${s.type==='csp'?'green':'blue'})"><div class="signal-header"><span class="signal-type ${s.type}">${s.type.toUpperCase()}</span><span class="signal-time">${time}</span></div><div class="signal-ticker">${s.ticker}</div><div class="signal-details">$${s.strike} ${s.type==='csp'?'Put':'Call'} · Exp ${s.exp}</div><div style="display:flex;gap:16px;font-size:13px"><span>Premium: <b style="color:var(--green)">${s.prem}</b></span><span>Delta: <b>${s.delta}</b></span></div>${locked?`<div class="signal-lock"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><span>Unlock with Premium</span></div>`:''}</div>`;
+      html += `<div class="signal-card" style="border-left:3px solid var(--${s.type==='csp'?'green':'blue'})"><div class="signal-header"><span class="signal-type ${s.type}">${s.type.toUpperCase()}</span><span class="signal-time">${time}</span></div><div class="signal-ticker">${s.ticker}</div><div class="signal-details">$${s.strike} ${s.type==='csp'?'Put':'Call'} · Exp ${s.exp}</div><div style="display:flex;gap:16px;font-size:13px"><span>Premium: <b style="color:var(--green)">${s.prem}</b></span><span>Delta: <b>${s.delta}</b></span></div></div>`;
     });
+  } else {
+    html += `<div class="empty" style="padding:24px"><div class="empty-title">No Open Positions</div><div class="empty-text">New signals will appear here when posted</div></div>`;
   }
 
   // CLOSED POSITIONS section
   if (closedSigs.length > 0) {
-    html += `<div class="card-title" style="margin:24px 0 12px">📊 Closed Positions</div>`;
-    closedSigs.slice(0, 10).forEach((s, i) => {
-      const locked = !S.isPremium && i > 2;
-      const statusBadge = s.status === 'winner'
-        ? '<span class="status-badge winner">WIN 🎉</span>'
-        : s.status === 'rolled'
-        ? '<span class="status-badge rolled">ROLLED</span>'
-        : '<span class="status-badge closed">CLOSED</span>';
-      html += `<div class="signal-card ${locked?'locked':''}" style="border-left:3px solid ${s.status==='winner'?'var(--green)':'var(--text3)'}${s.status==='winner'?'':';opacity:0.8'}"><div class="signal-header"><span class="signal-type ${s.type}">${s.type.toUpperCase()}</span>${statusBadge}<span class="signal-time" style="margin-left:auto">${getTimeAgo(s.closedAt || s.timestamp)}</span></div><div class="signal-ticker">${s.ticker}</div><div class="signal-details">$${s.strike} ${s.type==='csp'?'Put':'Call'} · Exp ${s.exp}</div><div style="display:flex;gap:16px;font-size:13px"><span>Premium: <b style="color:var(--green)">${s.prem}</b></span></div>${locked?`<div class="signal-lock"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><span>Unlock with Premium</span></div>`:''}</div>`;
+    html += `<div class="card-title" style="margin:24px 0 12px">📊 Position History (${closedSigs.length})</div>`;
+    closedSigs.slice(0, 15).forEach((s) => {
+      let statusBadge = '';
+      if (s.status === 'winner') statusBadge = '<span class="status-badge winner">WIN 🎉</span>';
+      else if (s.status === 'rolled') statusBadge = '<span class="status-badge rolled">ROLLED</span>';
+      else if (s.status === 'assigned') statusBadge = '<span class="status-badge assigned">ASSIGNED 📦</span>';
+      else if (s.status === 'called') statusBadge = '<span class="status-badge called">CALLED 📤</span>';
+      else statusBadge = '<span class="status-badge closed">CLOSED</span>';
+
+      const borderColor = s.status === 'winner' ? 'var(--green)' : s.status === 'assigned' ? 'var(--orange)' : s.status === 'called' ? 'var(--blue)' : 'var(--text3)';
+      html += `<div class="signal-card" style="border-left:3px solid ${borderColor}${['winner','assigned','called'].includes(s.status)?'':';opacity:0.8'}"><div class="signal-header"><span class="signal-type ${s.type}">${s.type.toUpperCase()}</span>${statusBadge}<span class="signal-time" style="margin-left:auto">${getTimeAgo(s.closedAt || s.timestamp)}</span></div><div class="signal-ticker">${s.ticker}</div><div class="signal-details">$${s.strike} ${s.type==='csp'?'Put':'Call'} · Exp ${s.exp}</div><div style="display:flex;gap:16px;font-size:13px"><span>Premium: <b style="color:var(--green)">${s.prem}</b></span></div></div>`;
     });
   }
 
-  if (!S.isPremium) html += '<button class="btn mt-4" onclick="openPremium()">Unlock All Signals</button>';
-  c.innerHTML = html;
+  c.innerHTML = html || '<div class="empty"><div class="empty-title">No Signals Yet</div><div class="empty-text">Live trading signals will appear here</div></div>';
 }
 function renderProfile(){
   $('userName').value=S.user.name||'';
@@ -1616,7 +1941,14 @@ function renderProfile(){
 }
 function saveProfile(){S.user.name=$('userName').value.trim();S.user.email=$('userEmail').value.trim();S.user.phone=$('userPhone')?.value.trim()||'';save();renderProfile();showToast('Saved!','success')}
 function connectBroker(){S.apiKey=$('apiKeyInput').value.trim();S.secretKey=$('secretKeyInput').value.trim();S.accSize=parseInt($('accSizeInput').value)||25000;save();updateStatus();renderProfile();if(S.apiKey)showToast('Connected!','success')}
-load();applyTheme();updateStatus();checkLegal();renderHome();initAdminAccess();listenToFirebasePosts();
+load();applyTheme();
+// Check auth state on load
+if (!checkAuthState()) {
+  // Not logged in, auth screen will show
+} else {
+  checkLegal();
+}
+updateStatus();renderHome();initAdminAccess();listenToFirebasePosts();listenForWinners();
 </script>
 </body>
 </html>
