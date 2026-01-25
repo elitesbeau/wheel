@@ -151,8 +151,10 @@
     .lesson-content ul,.lesson-content ol{margin:16px 0;padding-left:24px}
     .lesson-content li{margin-bottom:8px}
     .lesson-content strong{color:var(--text);font-weight:600}
-    .lesson-video{width:100%;aspect-ratio:16/9;border-radius:12px;background:#000;margin:20px 0;overflow:hidden}
+    .lesson-video{width:100%;aspect-ratio:16/9;border-radius:12px;background:#000;margin:20px 0 8px 0;overflow:hidden}
     .lesson-video iframe{width:100%;height:100%;border:none}
+    .video-credit{font-size:12px;color:var(--text3);margin-bottom:16px;text-align:right}
+    .video-credit a{color:var(--text3);text-decoration:underline}
     .lesson-img{width:100%;border-radius:12px;margin:20px 0}
     .lesson-callout{background:var(--input);border-left:4px solid var(--blue);padding:16px;border-radius:0 12px 12px 0;margin:20px 0}
     .lesson-callout.warning{border-color:var(--orange);background:var(--orange-bg)}
@@ -2519,6 +2521,14 @@ function submitQuiz() {
 
   const quiz = currentQuiz.quiz;
   const total = quiz.questions.length;
+
+  // Check all questions are answered
+  const answered = Object.keys(quizAnswers).length;
+  if (answered < total) {
+    showToast(`Please answer all ${total} questions (${answered}/${total} answered)`, 'error');
+    return;
+  }
+
   let correct = 0;
 
   quiz.questions.forEach((q, idx) => {
@@ -2566,6 +2576,7 @@ function getLessonContent(chapterId) {
       <div class="lesson-video">
         <iframe src="https://www.youtube.com/embed/7PM4rNDr4oI" frameborder="0" allowfullscreen></iframe>
       </div>
+      <div class="video-credit">Video: <a href="https://youtube.com/@InTheMoney" target="_blank">InTheMoney</a></div>
 
       <p>Options are <strong>financial contracts</strong> that give you the right—but not the obligation—to buy or sell an underlying asset (like a stock) at a predetermined price within a specific time period.</p>
 
@@ -2637,6 +2648,7 @@ function getLessonContent(chapterId) {
       <div class="lesson-video">
         <iframe src="https://www.youtube.com/embed/MiybniIIvx0" frameborder="0" allowfullscreen></iframe>
       </div>
+      <div class="video-credit">Video: <a href="https://youtube.com/@InTheMoney" target="_blank">InTheMoney</a></div>
 
       <p>There are only two types of options: <strong>CALLS</strong> and <strong>PUTS</strong>. Understanding the difference is fundamental to everything we do.</p>
 
@@ -2798,6 +2810,7 @@ function getLessonContent(chapterId) {
       <div class="lesson-video">
         <iframe src="https://www.youtube.com/embed/kCJcEOYuuII" frameborder="0" allowfullscreen></iframe>
       </div>
+      <div class="video-credit">Video: <a href="https://youtube.com/@projectfinance" target="_blank">projectfinance</a></div>
 
       <p>Understanding what drives option prices is crucial for consistent profitability. Option premiums aren't random—they're based on mathematical models influenced by several factors.</p>
 
@@ -2906,6 +2919,7 @@ function getLessonContent(chapterId) {
       <div class="lesson-video">
         <iframe src="https://www.youtube.com/embed/GxmIvvROge4" frameborder="0" allowfullscreen></iframe>
       </div>
+      <div class="video-credit">Video: <a href="https://youtube.com/@InTheMoney" target="_blank">InTheMoney</a></div>
 
       <p>Delta is arguably the most important Greek for wheel traders. It tells you two critical things: how much your option price will change when the stock moves, and your approximate probability of profit.</p>
 
@@ -2990,6 +3004,7 @@ function getLessonContent(chapterId) {
       <div class="lesson-video">
         <iframe src="https://www.youtube.com/embed/kCJcEOYuuII" frameborder="0" allowfullscreen></iframe>
       </div>
+      <div class="video-credit">Video: <a href="https://youtube.com/@projectfinance" target="_blank">projectfinance</a></div>
 
       <p>Theta is the option seller's best friend. It represents how much value an option loses each day simply due to time passing. As a wheel trader, <strong>theta works FOR you</strong>.</p>
 
@@ -3079,6 +3094,7 @@ function getLessonContent(chapterId) {
       <div class="lesson-video">
         <iframe src="https://www.youtube.com/embed/OtRsMJfxqKE" frameborder="0" allowfullscreen></iframe>
       </div>
+      <div class="video-credit">Video: <a href="https://youtube.com/@tastylive" target="_blank">tastylive</a></div>
 
       <p>Implied Volatility (IV) and its Greek, Vega, are crucial for maximizing premium collection. Understanding IV is what separates profitable wheel traders from the rest.</p>
 
@@ -3189,6 +3205,7 @@ function getLessonContent(chapterId) {
       <div class="lesson-video">
         <iframe src="https://www.youtube.com/embed/dRYBh6dtxjY" frameborder="0" allowfullscreen></iframe>
       </div>
+      <div class="video-credit">Video: <a href="https://youtube.com/@InTheMoney" target="_blank">InTheMoney</a></div>
 
       <p>The Wheel Strategy is a systematic approach to generating consistent income from options while building positions in stocks you want to own. It's called "The Wheel" because it cycles between two phases repeatedly.</p>
 
@@ -3481,6 +3498,7 @@ function getLessonContent(chapterId) {
       <div class="lesson-video">
         <iframe src="https://www.youtube.com/embed/J5mL1B5WKzQ" frameborder="0" allowfullscreen></iframe>
       </div>
+      <div class="video-credit">Video: <a href="https://youtube.com/@InTheMoney" target="_blank">InTheMoney</a></div>
 
       <p>The Cash Secured Put (CSP) is the entry point of the Wheel Strategy. It's one of the most powerful income-generating strategies available, and mastering it is essential for consistent profits.</p>
 
@@ -3879,6 +3897,7 @@ function getLessonContent(chapterId) {
       <div class="lesson-video">
         <iframe src="https://www.youtube.com/embed/jnTsQBJHMSk" frameborder="0" allowfullscreen></iframe>
       </div>
+      <div class="video-credit">Video: <a href="https://youtube.com/@InTheMoney" target="_blank">InTheMoney</a></div>
 
       <p>The Covered Call is Phase 2 of the Wheel Strategy. Once you own shares (either from a CSP assignment or outright purchase), you can generate income by selling calls against them.</p>
 
