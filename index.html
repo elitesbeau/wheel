@@ -1847,8 +1847,24 @@ function renderAlertsFeed() {
     return '';
   }).join('');
 }
-function renderPositions(){const c=$('positionsContainer');if(!S.positions.length){c.innerHTML='<div class="empty"><div class="empty-icon"><svg viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div><div class="empty-title">No Positions</div><div class="empty-text">Add positions or sync from Alpaca</div><button class="empty-btn" onclick="openAdd()">+ Add Position</button></div>';return}c.innerHTML=S.positions.map(p=>{const dte=p.expiration?Math.ceil((new Date(p.expiration)-new Date())/864e5):null;const pnl=(p.premium||0)*(p.contracts||1)*100*.4;const clr=getTickerColor(p.symbol);return`<div class="pos-card" onclick="viewPos('${p.id}')"><div class="pos-top"><div class="pos-left"><div class="pos-logo"><img src="${logo(p.symbol)}" onerror="this.outerHTML='<span class=pos-logo-text style=background:${clr}>${p.symbol.slice(0,2)}</span>'"></div><div><div class="pos-symbol">${p.symbol}${p.strike?' $'+p.strike+(p.type==='csp'?'P':'C'):''}</div><div class="pos-name">${names[p.symbol]||p.symbol}</div></div></div><span class="pos-badge ${p.type}">${p.type.toUpperCase()}</span></div><div class="pos-stats"><div><div class="pos-stat-val ${pnl>=0?'pos':'neg'}">${pnl>=0?'+':''}$${Math.abs(pnl).toFixed(0)}</div><div class="pos-stat-label">P&L</div></div><div><div class="pos-stat-val">$${((p.premium||0)*(p.contracts||1)*100).toFixed(0)}</div><div class="pos-stat-label">Premium</div></div><div style="text-align:right"><div class="pos-stat-val">${dte!==null?dte:'—'}</div><div class="pos-stat-label">${dte!==null?'DTE':'Hold'}</div></div></div></div>`}).join('')}
-function renderHistory(){const c=$('historyContainer');if(!S.history.length){c.innerHTML='<div style="text-align:center;padding:32px;color:var(--text2);font-size:14px;background:var(--card);border:1px solid var(--border);border-radius:16px">Closed trades appear here</div>';return}c.innerHTML='<div class="tx-list">'+S.history.slice(0,5).map(t=>`<div class="tx-item"><div class="tx-icon ${t.type}"><svg viewBox="0 0 24 24">${t.type==='csp'?'<circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12l4 4 4-4"/>':'<circle cx="12" cy="12" r="10"/><path d="M12 16V8M8 12l4-4 4 4"/>'}</svg></div><div class="tx-info"><div class="tx-title">${t.symbol} $${t.strike||''}${t.type==='csp'?'P':'C'}</div><div class="tx-sub">${new Date(t.closeDate||Date.now()).toLocaleDateString()}</div></div><div class="tx-amount ${(t.pnl||0)>=0?'pos':'neg'}">${(t.pnl||0)>=0?'+':'-'}$${Math.abs(t.pnl||0).toFixed(0)}</div></div>`).join('')+'</div>'}
+function renderPositions(){
+  const c=$('positionsContainer');
+  if(!c) return; // Guard against null
+  if(!S.positions || !S.positions.length){
+    c.innerHTML='<div class="empty"><div class="empty-icon"><svg viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div><div class="empty-title">No Positions</div><div class="empty-text">Add positions or sync from Alpaca</div><button class="empty-btn" onclick="openAdd()">+ Add Position</button></div>';
+    return;
+  }
+  c.innerHTML=S.positions.map(p=>{const dte=p.expiration?Math.ceil((new Date(p.expiration)-new Date())/864e5):null;const pnl=(p.premium||0)*(p.contracts||1)*100*.4;const clr=getTickerColor(p.symbol);return`<div class="pos-card" onclick="viewPos('${p.id}')"><div class="pos-top"><div class="pos-left"><div class="pos-logo"><img src="${logo(p.symbol)}" onerror="this.outerHTML='<span class=pos-logo-text style=background:${clr}>${p.symbol.slice(0,2)}</span>'"></div><div><div class="pos-symbol">${p.symbol}${p.strike?' $'+p.strike+(p.type==='csp'?'P':'C'):''}</div><div class="pos-name">${names[p.symbol]||p.symbol}</div></div></div><span class="pos-badge ${p.type}">${p.type.toUpperCase()}</span></div><div class="pos-stats"><div><div class="pos-stat-val ${pnl>=0?'pos':'neg'}">${pnl>=0?'+':''}$${Math.abs(pnl).toFixed(0)}</div><div class="pos-stat-label">P&L</div></div><div><div class="pos-stat-val">$${((p.premium||0)*(p.contracts||1)*100).toFixed(0)}</div><div class="pos-stat-label">Premium</div></div><div style="text-align:right"><div class="pos-stat-val">${dte!==null?dte:'—'}</div><div class="pos-stat-label">${dte!==null?'DTE':'Hold'}</div></div></div></div>`}).join('');
+}
+function renderHistory(){
+  const c=$('historyContainer');
+  if(!c) return; // Guard against null
+  if(!S.history || !S.history.length){
+    c.innerHTML='<div style="text-align:center;padding:32px;color:var(--text2);font-size:14px;background:var(--card);border:1px solid var(--border);border-radius:16px">Closed trades appear here</div>';
+    return;
+  }
+  c.innerHTML='<div class="tx-list">'+S.history.slice(0,5).map(t=>`<div class="tx-item"><div class="tx-icon ${t.type}"><svg viewBox="0 0 24 24">${t.type==='csp'?'<circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12l4 4 4-4"/>':'<circle cx="12" cy="12" r="10"/><path d="M12 16V8M8 12l4-4 4 4"/>'}</svg></div><div class="tx-info"><div class="tx-title">${t.symbol} $${t.strike||''}${t.type==='csp'?'P':'C'}</div><div class="tx-sub">${new Date(t.closeDate||Date.now()).toLocaleDateString()}</div></div><div class="tx-amount ${(t.pnl||0)>=0?'pos':'neg'}">${(t.pnl||0)>=0?'+':'-'}$${Math.abs(t.pnl||0).toFixed(0)}</div></div>`).join('')+'</div>';
+}
 function viewPos(id){const p=S.positions.find(x=>x.id===id);if(!p)return;S.selPosId=id;$('posTitle').textContent=p.symbol;$('posContent').innerHTML=`<div class="stats-grid"><div class="stat-box"><div class="stat-val">${p.type.toUpperCase()}</div><div class="stat-label">Type</div></div><div class="stat-box"><div class="stat-val">${p.contracts||1}</div><div class="stat-label">Contracts</div></div>${p.strike?`<div class="stat-box"><div class="stat-val">$${p.strike}</div><div class="stat-label">Strike</div></div>`:''}<div class="stat-box"><div class="stat-val green">$${((p.premium||0)*(p.contracts||1)*100).toFixed(0)}</div><div class="stat-label">Premium</div></div></div>`;openModal('posModal')}
 function closePosition(){if(!S.selPosId)return;const p=S.positions.find(x=>x.id===S.selPosId);if(p){S.history.unshift({...p,closeDate:new Date().toISOString(),pnl:(p.premium||0)*(p.contracts||1)*100*.6});S.positions=S.positions.filter(x=>x.id!==S.selPosId);save();closeModal('posModal');renderHome()}}
 async function syncPositions(){if(!S.apiKey)return showToast('Add API keys in settings first','error');try{$('statusPill').className='status live';$('statusText').textContent='Syncing...';const r=await fetch('https://paper-api.alpaca.markets/v2/positions',{headers:{'APCA-API-KEY-ID':S.apiKey,'APCA-API-SECRET-KEY':S.secretKey}});if(!r.ok)throw new Error('Failed');const pos=await r.json();pos.forEach(p=>{if(!S.positions.find(x=>x.symbol===p.symbol)){S.positions.push({id:Date.now().toString()+Math.random(),symbol:p.symbol,type:'shares',contracts:parseInt(p.qty),costBasis:parseFloat(p.avg_entry_price),synced:true,openDate:new Date().toISOString()})}});const ar=await fetch('https://paper-api.alpaca.markets/v2/account',{headers:{'APCA-API-KEY-ID':S.apiKey,'APCA-API-SECRET-KEY':S.secretKey}});if(ar.ok){const a=await ar.json();S.accSize=parseFloat(a.equity)||S.accSize}save();$('statusPill').className='status live';$('statusText').textContent='Live';renderHome()}catch(e){$('statusPill').className='status';$('statusText').textContent='Error';showToast('Sync failed','error')}}
@@ -2239,13 +2255,28 @@ function renderProfile(){
 function saveProfile(){S.user.name=$('userName').value.trim();S.user.email=$('userEmail').value.trim();S.user.phone=$('userPhone')?.value.trim()||'';save();renderProfile();showToast('Saved!','success')}
 function connectBroker(){S.apiKey=$('apiKeyInput').value.trim();S.secretKey=$('secretKeyInput').value.trim();S.accSize=parseInt($('accSizeInput').value)||25000;save();updateStatus();renderProfile();if(S.apiKey)showToast('Connected!','success')}
 load();applyTheme();
-// Check auth state on load
-if (!checkAuthState()) {
-  // Not logged in, auth screen will show
-} else {
-  checkLegal();
+
+// Initialize app when DOM is ready
+function initApp() {
+  // Check auth state on load
+  if (!checkAuthState()) {
+    // Not logged in, auth screen will show
+  } else {
+    checkLegal();
+  }
+  updateStatus();
+  renderHome();
+  initAdminAccess();
+  listenToFirebasePosts();
+  listenForWinners();
 }
-updateStatus();renderHome();initAdminAccess();listenToFirebasePosts();listenForWinners();
+
+// Run init when DOM is ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initApp);
+} else {
+  initApp();
+}
 
 // Re-render when tab becomes visible again (fixes blank content issue)
 document.addEventListener('visibilitychange', () => {
