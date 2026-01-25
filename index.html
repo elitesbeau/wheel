@@ -687,6 +687,8 @@ function dismissAlertsPopup() {
   S.alertsPopupDismissed = true;
   save();
   closeModal('premiumPopup');
+  // Now go to profile
+  nav('profile');
 }
 
 // Called when user clicks avatar/profile button
@@ -2244,6 +2246,13 @@ if (!checkAuthState()) {
   checkLegal();
 }
 updateStatus();renderHome();initAdminAccess();listenToFirebasePosts();listenForWinners();
+
+// Re-render when tab becomes visible again (fixes blank content issue)
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && (S.firebaseUid || S.isGuest)) {
+    renderHome();
+  }
+});
 </script>
 </body>
 </html>
