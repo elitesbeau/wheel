@@ -368,7 +368,7 @@
       </div>
 
       <button class="auth-btn primary" onclick="submitPremiumInterest()" style="margin-bottom:12px">Turn on alerts</button>
-      <button class="auth-btn secondary" onclick="closeModal('premiumPopup')">Not now</button>
+      <button class="auth-btn secondary" onclick="dismissAlertsPopup()">Not now</button>
     </div>
   </div>
 
@@ -399,7 +399,7 @@
             <button class="icon-btn" onclick="openSettings()">
               <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
             </button>
-            <button class="avatar-btn" onclick="nav('profile')"><span id="heroInitials">?</span></button>
+            <button class="avatar-btn" onclick="goToProfile()"><span id="heroInitials">?</span></button>
           </div>
           <div class="status" id="statusPill"><span class="status-dot"></span><span id="statusText">Offline</span></div>
         </div>
@@ -646,19 +646,49 @@ function submitPremiumInterest() {
       firebase.database().ref('premiumInterest/' + emailKey).set({
         email: email,
         timestamp: Date.now(),
-        source: 'premium_popup'
+        source: 'alerts_popup'
       });
     }
   });
 
+  // Also save email to user's alert subscription
+  S.alertEmail = email;
+  S.alertsPopupDismissed = true;
+  save();
+
   closeModal('premiumPopup');
-  showToast('You\'re on the list! We\'ll notify you when premium launches.', 'success');
+  showToast('You\'re on the list! We\'ll notify you of new signals.', 'success');
+
+  // Now go to profile
+  nav('profile');
 }
 
-function openPremiumPopup() {
+// Show alerts popup (only once, on first profile click)
+function showAlertsPopupOnce() {
+  // Check if already dismissed
+  if (S.alertsPopupDismissed) return false;
+
   // Pre-fill email if user is logged in
   if (S.user.email) $('premiumEmail').value = S.user.email;
   openModal('premiumPopup');
+  return true;
+}
+
+// Called when "Not now" is clicked on alerts popup
+function dismissAlertsPopup() {
+  S.alertsPopupDismissed = true;
+  save();
+  closeModal('premiumPopup');
+}
+
+// Called when user clicks avatar/profile button
+function goToProfile() {
+  // Show alerts popup once if not dismissed and not premium
+  if (!S.isPremium && !S.alertsPopupDismissed) {
+    showAlertsPopupOnce();
+    return;
+  }
+  nav('profile');
 }
 
 async function handleLogin() {
@@ -1710,7 +1740,7 @@ function showLesson(id){const c={basics:'<h3>The Wheel Strategy</h3><p>1. Sell C
 function openAnalytics(){const prem=S.positions.reduce((s,p)=>s+(p.premium||0)*(p.contracts||1)*100,0)+S.history.reduce((s,t)=>s+(t.premium||0)*(t.contracts||1)*100,0);const wins=S.history.filter(t=>(t.pnl||0)>=0).length;const total=S.history.length;$('aPrem').textContent=prem.toFixed(0);$('aWin').textContent=total>0?Math.round(wins/total*100)+'%':'0%';$('aTrades').textContent=total;openModal('analyticsModal')}
 function openAI(){if(!$('aiMessages').innerHTML)$('aiMessages').innerHTML='<div class="ai-msg bot">Hey! I\'m <b>Wheely</b> 🤖 Ask me about delta, DTE, rolling, or position sizing!</div>';openModal('aiModal')}
 function sendAI(){const i=$('aiInput'),m=i.value.trim();if(!m)return;$('aiMessages').innerHTML+=`<div class="ai-msg user">${m}</div>`;i.value='';setTimeout(()=>{const l=m.toLowerCase();let r='The wheel: sell CSPs until assigned, then sell CCs. Target 0.20-0.30 delta, 30-45 DTE.';if(l.includes('delta'))r='<b>Delta:</b> Target 0.20-0.30 for CSPs. 70-80% win rate.';else if(l.includes('dte')||l.includes('expir'))r='<b>DTE:</b> 30-45 days optimal for theta decay.';else if(l.includes('roll'))r='<b>Rolling:</b> Always roll for a credit!';$('aiMessages').innerHTML+=`<div class="ai-msg bot">${r}</div>`;$('aiMessages').scrollTop=$('aiMessages').scrollHeight},500)}
-function openPremium(){openPremiumPopup()}
+function openPremium(){openModal('premiumModal')}
 function toggleNotif(){S.notifOn=!S.notifOn;['notifSwitch','qNotifSwitch'].forEach(id=>$(id)?.classList.toggle('on',S.notifOn));save()}
 function updateStatus(){
   const hasBroker=S.apiKey.length>10&&S.secretKey.length>10;
