@@ -66,14 +66,56 @@ Read SESSION-NOTES.md in that directory for full context on what we've done and 
 - Clean, professional design
 - Should contain all work items from today + future tasks
 
-### 2. UI Overhaul - Build Multiple Themes to Compare
-Beau wants to see several visual directions side by side:
-- **Dark pro trader** (Webull/TradingView style - neon accents, glass effects)
-- **Clean minimal** (Robinhood style - light, airy, friendly)
-- **Luxury fintech** (Bloomberg meets luxury brand - dark + gold/copper)
-- **80s retro** (neon, synthwave, retro-futuristic)
-- **Fun/playful** (energetic, colorful, game-like)
-- Build as theme switcher so Beau can toggle between them
+### 2. UI Overhaul - FULL REDESIGN, NOT JUST COLORS
+**Color themes already added (6 total) but Beau says site still looks AI-generated.**
+The problem is structural, not just color:
+- Every card has same border-radius, same padding, same spacing = no hierarchy
+- No shadows/depth = feels flat like a wireframe
+- Typography is monotonous (all Inter, similar sizes)
+- No texture, no gradients, no personality
+- Hero section is a plain dark rectangle
+- Forms look like Bootstrap defaults
+- No micro-animations or transitions
+
+**What each theme ACTUALLY needs (full structural overhaul):**
+
+**Pro Trader (Webull/TradingView):**
+- Dense data layout, smaller padding, compact cards
+- Monospace numbers, sharp 4px corners
+- Thin borders, dark glass nav bar
+- Header with real-time ticker tape / market summary bar
+- Split-panel feel, data tables not cards
+
+**Luxury Fintech:**
+- Generous whitespace, large typography
+- Thin hairline borders, no chunky cards
+- Serif or elegant sans-serif display font (Playfair Display?)
+- Subtle gold gradient accents, matte surfaces
+- Elegant transitions (ease-out, 300ms)
+
+**80s Retro:**
+- Grid lines / scan lines overlay
+- Chunky pixel-style or retro display font
+- Neon glow on text and borders
+- CRT screen effect or VHS-style noise
+- Animated gradient backgrounds
+
+**Fun/Playful:**
+- Asymmetric layouts, tilted cards
+- Bouncy animations (spring easing)
+- Blob shapes, emoji accents
+- Bold display font, large rounded corners (24px+)
+- Colorful gradients, confetti-like elements
+
+**Clean Minimal (Robinhood):**
+- Lots of white space, thin text
+- SF Pro / system font stack
+- Green brand color only, minimal other colors
+- Large touch targets, simple iconography
+- Smooth slide transitions
+
+**Approach:** Build each as a complete component override, not just CSS variables.
+Check `C:\Users\Beau_\Documents\wheel\ui-references\` for any reference images Beau drops in.
 
 ### 3. Still Needs User Config
 - Groq API key (free at console.groq.com) -> Settings in app
