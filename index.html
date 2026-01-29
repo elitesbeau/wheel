@@ -4,8 +4,15 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="theme-color" content="#000">
-  <title>Market Elites</title>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#1d1d1f">
+  <meta name="description" content="Master the wheel strategy. Track your options portfolio, get live trading signals, and learn to generate consistent income selling cash secured puts and covered calls.">
+  <meta property="og:title" content="Market Elites — Wheel Strategy Platform">
+  <meta property="og:description" content="Track your wheel strategy portfolio, get live signals, and learn to generate consistent income from options.">
+  <meta property="og:type" content="website">
+  <link rel="icon" type="image/png" href="logo.png">
+  <link rel="apple-touch-icon" href="logo.png">
+  <title>Market Elites — Wheel Strategy Platform</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
   <style>
@@ -265,21 +272,21 @@
     @media(min-width:600px){.auth-header{padding:40px 40px 0}}
     .auth-logo-img{height:40px;width:auto}
     .auth-back{width:40px;height:40px;border:none;background:none;cursor:pointer;display:flex;align-items:center;justify-content:center}
-    .auth-back svg{width:24px;height:24px;stroke:var(--text1);stroke-width:2;fill:none}
+    .auth-back svg{width:24px;height:24px;stroke:var(--text);stroke-width:2;fill:none}
     .auth-page-title{font-size:13px;font-weight:600;color:var(--text3);letter-spacing:1px;text-transform:uppercase}
     .auth-content{flex:1;padding:20px 24px}
-    .auth-welcome{font-size:26px;font-weight:700;color:var(--text1);margin-bottom:6px;text-align:center}
+    .auth-welcome{font-size:26px;font-weight:700;color:var(--text);margin-bottom:6px;text-align:center}
     @media(min-width:600px){.auth-welcome{font-size:30px}}
     .auth-subtitle{font-size:14px;color:var(--text2);margin-bottom:28px;line-height:1.5;text-align:center}
     @media(min-width:600px){.auth-subtitle{font-size:15px}}
     .float-input{position:relative;margin-bottom:20px}
     .float-input input{width:100%;padding:20px 16px 8px;font-size:16px;border:2px solid var(--border);border-radius:12px;background:var(--card);color:var(--text);outline:none;transition:all .2s;box-sizing:border-box}
-    .float-input input:focus{border-color:var(--text1, var(--text));box-shadow:0 0 0 4px rgba(0,0,0,0.04)}
+    .float-input input:focus{border-color:var(--text);box-shadow:0 0 0 4px rgba(0,0,0,0.04)}
     .float-input input:hover:not(:focus){border-color:var(--text3)}
     .float-input label{position:absolute;left:16px;top:50%;transform:translateY(-50%);font-size:16px;color:var(--text3);pointer-events:none;transition:all .2s}
     .float-input input:focus+label,.float-input input:not(:placeholder-shown)+label{top:12px;transform:translateY(0);font-size:11px;color:var(--text2);font-weight:500}
     .float-input .toggle-pass{position:absolute;right:16px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;padding:4px}
-    .float-input .toggle-pass svg{width:20px;height:20px;stroke:#999;stroke-width:1.5;fill:none}
+    .float-input .toggle-pass svg{width:20px;height:20px;stroke:var(--text3);stroke-width:1.5;fill:none}
     .pass-requirements{margin-bottom:24px}
     .pass-requirements p{font-size:13px;color:var(--text2);margin-bottom:12px;font-weight:500}
     .pass-checks{display:grid;grid-template-columns:1fr 1fr;gap:8px}
@@ -289,20 +296,20 @@
     .pass-check.valid .check-circle{background:var(--green);border-color:var(--green)}
     .pass-check.valid .check-circle::after{content:'✓';color:#fff;font-size:10px}
     .auth-btn{width:100%;padding:16px;font-size:16px;font-weight:600;border:none;border-radius:12px;cursor:pointer;transition:all .2s}
-    .auth-btn.primary{background:var(--text1);color:var(--bg)}
+    .auth-btn.primary{background:var(--text);color:var(--bg)}
     .auth-btn.primary:hover{opacity:0.85;transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,0.15)}
     .auth-btn.primary:active{transform:translateY(0);box-shadow:none}
     .auth-btn.primary:disabled{background:var(--border);color:var(--text3);cursor:not-allowed;transform:none;box-shadow:none}
-    .auth-btn.secondary{background:var(--card);color:var(--text1);border:2px solid var(--border)}
-    .auth-btn.secondary:hover{border-color:var(--text1);background:var(--input)}
-    .auth-btn.google{background:var(--card);color:var(--text1);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:12px}
+    .auth-btn.secondary{background:var(--card);color:var(--text);border:2px solid var(--border)}
+    .auth-btn.secondary:hover{border-color:var(--text);background:var(--input)}
+    .auth-btn.google{background:var(--card);color:var(--text);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:12px}
     .auth-btn.google:hover{border-color:var(--blue);background:var(--input)}
     .auth-btn.google svg{flex-shrink:0}
     .auth-terms{font-size:12px;color:var(--text3);text-align:center;margin-top:auto;padding:24px;line-height:1.6}
-    .auth-terms a{color:var(--text1);text-decoration:underline}
+    .auth-terms a{color:var(--text);text-decoration:underline}
     .auth-switch{text-align:center;padding:20px;font-size:14px;color:var(--text2);border-top:1px solid var(--border)}
     @media(min-width:600px){.auth-switch{background:var(--input);border-radius:0 0 24px 24px}}
-    .auth-switch a{color:var(--text1);font-weight:600;text-decoration:none}
+    .auth-switch a{color:var(--text);font-weight:600;text-decoration:none}
     .auth-switch a:hover{text-decoration:underline}
     .auth-divider{display:flex;align-items:center;gap:12px;margin:24px 0;color:var(--text3);font-size:13px}
     .auth-divider::before,.auth-divider::after{content:'';flex:1;height:1px;background:var(--border)}
@@ -356,11 +363,11 @@
         </div>
 
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px">
-          <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:#666;cursor:pointer">
+          <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text2);cursor:pointer">
             <input type="checkbox" id="rememberMe" style="width:18px;height:18px;accent-color:var(--text);cursor:pointer">
             Remember me
           </label>
-          <a href="#" onclick="showForgotPassword();return false" style="font-size:13px;color:#1a1a1a;font-weight:500;text-decoration:none">Forgot password?</a>
+          <a href="#" onclick="showForgotPassword();return false" style="font-size:13px;color:var(--text);font-weight:500;text-decoration:none">Forgot password?</a>
         </div>
 
         <button class="auth-btn primary" onclick="handleLogin()">Sign In</button>
@@ -372,8 +379,8 @@
           Continue with Google
         </button>
 
-        <button class="auth-btn google" onclick="handleAppleSignIn()" style="background:#fff;color:#1a1a1a;border-color:#e5e5e5">
-          <svg viewBox="0 0 24 24" width="20" height="20"><path fill="#1a1a1a" d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg>
+        <button class="auth-btn google" onclick="handleAppleSignIn()" style="background:var(--card);color:var(--text);border-color:var(--border)">
+          <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg>
           Continue with Apple
         </button>
 
@@ -431,8 +438,8 @@
           Sign up with Google
         </button>
 
-        <button class="auth-btn google" onclick="handleAppleSignIn()" style="background:#fff;color:#1a1a1a;border-color:#e5e5e5">
-          <svg viewBox="0 0 24 24" width="20" height="20"><path fill="#1a1a1a" d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg>
+        <button class="auth-btn google" onclick="handleAppleSignIn()" style="background:var(--card);color:var(--text);border-color:var(--border)">
+          <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg>
           Sign up with Apple
         </button>
       </div>
@@ -534,7 +541,7 @@
           <div style="font-size:24px;margin-bottom:8px">👋</div>
           <div style="font-size:16px;font-weight:600;color:#fff;margin-bottom:4px">You're browsing as a guest</div>
           <div style="font-size:13px;color:#999;margin-bottom:16px">Create an account to save your portfolio and get alerts</div>
-          <button class="btn" onclick="promptCreateAccount()" style="background:#fff;color:#1a1a1a">Create Free Account</button>
+          <button class="btn" onclick="promptCreateAccount()" style="background:var(--card);color:var(--text)">Create Free Account</button>
         </div>
       </div>
       <div class="section" id="newUserBanner" style="display:none">
