@@ -741,7 +741,7 @@
   <div class="toast" id="toast"></div>
 
 <script>
-const S={theme:'light',mode:'csp',addMode:'csp',apiKey:'',secretKey:'',accSize:25000,positions:[],history:[],selPosId:null,user:{name:'',email:''},isPremium:false,legalOk:false,notifOn:false,watchlist:['AAPL','NVDA','TSLA','SPY','AMD','MSFT']};
+const S={theme:'light',mode:'csp',addMode:'csp',apiKey:'',secretKey:'',accSize:25000,positions:[],history:[],selPosId:null,user:{name:'',email:''},isPremium:false,legalOk:false,notifOn:false,emailAlerts:false,alertEmail:'',alertsPopupDismissed:false,watchlist:['AAPL','NVDA','TSLA','SPY','AMD','MSFT']};
 const names={AAPL:'Apple Inc.',NVDA:'NVIDIA',TSLA:'Tesla',MSFT:'Microsoft',AMD:'AMD',SPY:'S&P 500 ETF',QQQ:'Nasdaq 100 ETF',AMZN:'Amazon',GOOGL:'Alphabet',META:'Meta Platforms',RKLB:'Rocket Lab',PLTR:'Palantir',SOFI:'SoFi',COIN:'Coinbase',HOOD:'Robinhood',NET:'Cloudflare',SNOW:'Snowflake',CRWD:'CrowdStrike',DDOG:'Datadog',ZS:'Zscaler'};
 const domains={AAPL:'apple.com',NVDA:'nvidia.com',TSLA:'tesla.com',MSFT:'microsoft.com',AMD:'amd.com',SPY:'ssga.com',QQQ:'invesco.com',AMZN:'amazon.com',GOOGL:'google.com',META:'meta.com',RKLB:'rocketlabusa.com',PLTR:'palantir.com',SOFI:'sofi.com',COIN:'coinbase.com',HOOD:'robinhood.com',NET:'cloudflare.com',SNOW:'snowflake.com',CRWD:'crowdstrike.com',DDOG:'datadoghq.com',ZS:'zscaler.com'};
 const signals=[{type:'csp',ticker:'NVDA',strike:130,exp:'Jan 24',prem:'$3.20',delta:'0.25',time:'2h ago'},{type:'cc',ticker:'AAPL',strike:260,exp:'Jan 31',prem:'$2.80',delta:'0.30',time:'5h ago'},{type:'csp',ticker:'AMD',strike:135,exp:'Feb 7',prem:'$4.50',delta:'0.28',time:'1d ago'}];
@@ -789,11 +789,21 @@ function submitPremiumInterest() {
     return;
   }
 
-  // Save to Firebase
+  // Subscribe to email alerts in Firebase
   initFirebase().then(ok => {
     if (ok) {
       const emailKey = email.replace(/[.#$[\]]/g, '_');
-      firebase.database().ref('premiumInterest/' + emailKey).set({
+      const db = firebase.database();
+      // Add to actual email subscribers list so they receive alerts
+      db.ref('emailSubscribers/' + emailKey).set({
+        email: email,
+        active: true,
+        subscribedAt: Date.now(),
+        source: 'alerts_popup',
+        uid: S.firebaseUid || null
+      });
+      // Also track interest
+      db.ref('premiumInterest/' + emailKey).set({
         email: email,
         timestamp: Date.now(),
         source: 'alerts_popup'
@@ -801,15 +811,17 @@ function submitPremiumInterest() {
     }
   });
 
-  // Also save email to user's alert subscription
   S.alertEmail = email;
+  S.emailAlerts = true;
   S.alertsPopupDismissed = true;
   save();
 
   closeModal('premiumPopup');
-  showToast('You\'re on the list! We\'ll notify you of new signals.', 'success');
+  showToast('Alerts activated! You\'ll be notified of new signals.', 'success');
 
-  // Now go to profile
+  // Request browser notifications too
+  requestBrowserNotifications();
+
   nav('profile');
 }
 
@@ -841,8 +853,8 @@ function goToProfile() {
     return;
   }
 
-  // Show alerts popup once if not dismissed and not premium
-  if (!S.isPremium && !S.alertsPopupDismissed) {
+  // Show alerts popup once if not dismissed, not premium, and alerts not already on
+  if (!S.isPremium && !S.alertsPopupDismissed && !S.notifOn && !S.emailAlerts) {
     showAlertsPopupOnce();
     return;
   }
@@ -1621,6 +1633,8 @@ async function deletePostFromFirebase(postId) {
 // Listen for real-time updates (for all users)
 // Track which winners we've celebrated to avoid duplicates
 const celebratedWinners = new Set();
+const notifiedPosts = new Set();
+let initialPostsLoaded = false;
 
 async function listenToFirebasePosts() {
   if (!await initFirebase()) return;
@@ -1631,6 +1645,38 @@ async function listenToFirebasePosts() {
       snapshot.forEach(child => {
         posts.unshift({ id: child.key, ...child.val() });
       });
+
+      // On first load, mark all existing posts as already notified
+      if (!initialPostsLoaded) {
+        posts.forEach(p => { if (p.id) notifiedPosts.add(p.id); });
+        initialPostsLoaded = true;
+      } else {
+        // Notify about genuinely new posts (not from admin who just posted)
+        posts.forEach(p => {
+          if (p.id && !notifiedPosts.has(p.id)) {
+            notifiedPosts.add(p.id);
+            if (!S.adminAuthenticated) {
+              // Browser notification
+              if (p.kind === 'signal') {
+                showBrowserNotification(
+                  `New ${(p.type||'').toUpperCase()} Signal: ${p.ticker}`,
+                  `$${p.strike} ${p.type==='csp'?'Put':'Call'} · Exp ${p.exp} · Premium ${p.prem}`
+                );
+              } else if (p.kind === 'winner') {
+                showBrowserNotification(
+                  `Winner! ${p.ticker}`,
+                  p.content || 'A position was closed for profit!'
+                );
+              } else if (p.kind === 'announcement') {
+                showBrowserNotification(
+                  'Market Elites Announcement',
+                  p.content || 'New announcement posted'
+                );
+              }
+            }
+          }
+        });
+      }
 
       // Check for new winners to celebrate
       posts.forEach(p => {
@@ -2087,7 +2133,6 @@ async function signOut(){
   // Clear auth state but keep user data for when they log back in
   S.firebaseUid = null;
   S.isGuest = false;
-  S.alertsPopupDismissed = false;
   localStorage.removeItem('meRemember');
   save();
   showAuthScreen();
@@ -5378,7 +5423,73 @@ async function activatePremium() {
   renderSignals();
   showToast('Premium activated!', 'success');
 }
-function toggleNotif(){S.notifOn=!S.notifOn;['notifSwitch','qNotifSwitch'].forEach(id=>$(id)?.classList.toggle('on',S.notifOn));save()}
+function toggleNotif(){
+  if (!S.notifOn) {
+    // Turning ON - request browser permission
+    requestBrowserNotifications().then(granted => {
+      S.notifOn = granted;
+      ['notifSwitch','qNotifSwitch'].forEach(id=>$(id)?.classList.toggle('on',S.notifOn));
+      save();
+      if (granted) {
+        showToast('Notifications enabled!', 'success');
+        // Also subscribe email if available
+        if (S.alertEmail || S.user?.email) {
+          subscribeEmailToAlerts(S.alertEmail || S.user.email);
+        }
+      }
+    });
+  } else {
+    // Turning OFF
+    S.notifOn = false;
+    ['notifSwitch','qNotifSwitch'].forEach(id=>$(id)?.classList.toggle('on', false));
+    save();
+    showToast('Notifications disabled', '');
+  }
+}
+
+// Request browser notification permission
+async function requestBrowserNotifications() {
+  if (!('Notification' in window)) {
+    showToast('Browser notifications not supported', 'error');
+    return false;
+  }
+  if (Notification.permission === 'granted') return true;
+  if (Notification.permission === 'denied') {
+    showToast('Notifications blocked. Enable in browser settings.', 'error');
+    return false;
+  }
+  const permission = await Notification.requestPermission();
+  return permission === 'granted';
+}
+
+// Subscribe email to Firebase alerts
+async function subscribeEmailToAlerts(email) {
+  if (!email || !email.includes('@')) return;
+  const ok = await initFirebase();
+  if (!ok) return;
+  const emailKey = email.replace(/[.#$[\]]/g, '_');
+  firebase.database().ref('emailSubscribers/' + emailKey).set({
+    email: email,
+    active: true,
+    subscribedAt: Date.now(),
+    source: 'notif_toggle',
+    uid: S.firebaseUid || null
+  });
+}
+
+// Show browser notification for new posts
+function showBrowserNotification(title, body) {
+  if (!S.notifOn || Notification.permission !== 'granted') return;
+  try {
+    const n = new Notification(title, {
+      body: body,
+      icon: 'logo.png',
+      badge: 'logo.png',
+      tag: 'market-elites-' + Date.now()
+    });
+    n.onclick = () => { window.focus(); n.close(); };
+  } catch(e) { console.error('Notification error:', e); }
+}
 function updateStatus(){
   const hasBroker=S.apiKey.length>10&&S.secretKey.length>10;
   // Always show live for market data (no API key needed)
@@ -5954,7 +6065,14 @@ function renderProfile(){
   $('pTrades').textContent=total;
   $('pWinRate').textContent=total?Math.round(wins/total*100)+'%':'0%';
   $('pPremium').textContent='$'+prem.toFixed(0);
-  // Show alert prefs for premium users
+  // Sync notification switches to current state
+  ['notifSwitch','qNotifSwitch'].forEach(id=>$(id)?.classList.toggle('on',!!S.notifOn));
+  const emailSw = $('emailAlertSwitch');
+  if (emailSw) emailSw.classList.toggle('active', !!S.emailAlerts);
+  const alertEmailInput = $('userAlertEmail');
+  if (alertEmailInput && S.alertEmail) alertEmailInput.value = S.alertEmail;
+
+  // Show alert prefs for premium users, but show basic notif controls for all
   if(S.isPremium){show('proBadge');hide('proCard');$('alertPrefsCard').style.display='block';}
   else{$('alertPrefsCard').style.display='none';}
 }
