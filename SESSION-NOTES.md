@@ -83,12 +83,14 @@ Beau wants to see several visual directions side by side:
 - Discord webhook -> Admin panel -> Notification Settings
 - GitHub Pages -> Repo Settings > Pages > main branch
 
-### 4. Known Issues / Debt
+### 4. Known Issues / Debt (FIX FIRST TOMORROW)
+- **ADMIN CHAIN PICKER NOT WORKING** - Load Chain button and signal posting from chain picker in admin panel is broken. Needs debugging - likely the fetchOptionsChain (Yahoo via corsproxy) is failing silently. Test in browser console to see errors. May need alternative options data source.
+- **USER CHAIN PICKER ALSO MAY NOT WORK** - Same root cause (corsproxy/Yahoo). Both the user Add Position chain picker and admin signal chain picker depend on fetchOptionsChain().
 - Options chain relies on Yahoo Finance via corsproxy (fragile for production)
-- Some education video IDs need replacement (3 broken: GxmIvvROge4, OtRsMJfxqKE, J5mL1B5WKzQ)
 - Video attribution wrong on 4 others (content is fine, credits are wrong)
-- Chain picker needs Enter key listeners wired up (added via DOMContentLoaded)
+- Chain picker Enter key listeners added via DOMContentLoaded
 - EmailJS needs setup for email alerts to actually send
+- Education video IDs fixed (3 broken ones replaced with verified videos)
 
 ## Tech Stack
 - Single HTML file (no build tools)
