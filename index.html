@@ -657,28 +657,26 @@
       <button class="chip-btn" onclick="quickAddTicker('QQQ')">QQQ</button>
     </div>
 
-    <!-- Ticker input with live price -->
+    <!-- Ticker input with live price + load chain -->
     <div class="form-group">
-      <label class="form-label">Symbol</label>
-      <div style="position:relative">
-        <input type="text" class="form-input" id="addSymbol" placeholder="Type ticker..." style="text-transform:uppercase;padding-right:100px" maxlength="5" oninput="onAddTickerInput(this.value)">
-        <div id="addTickerPrice" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:13px;font-weight:600;color:var(--text2);display:none"></div>
+      <label class="form-label">Symbol — type any ticker</label>
+      <div style="display:flex;gap:8px">
+        <input type="text" class="form-input" id="addSymbol" placeholder="e.g. AAPL, NVDA, SPY..." style="text-transform:uppercase;flex:1;font-size:18px;font-weight:600;letter-spacing:1px" maxlength="6">
+        <button class="btn" onclick="loadAddChainBtn()" id="addLoadChainBtn" style="white-space:nowrap;padding:10px 18px">Load Chain</button>
       </div>
+      <div id="addTickerPrice" style="font-size:13px;margin-top:6px;color:var(--text3)"></div>
     </div>
 
     <!-- Options chain picker (loads after ticker) -->
     <div id="addChainPicker" style="display:none">
-      <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:8px">SELECT FROM CHAIN</div>
+      <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:8px">TAP A STRIKE TO SELECT</div>
       <div id="addChainExps" style="display:flex;gap:6px;overflow-x:auto;padding-bottom:8px;margin-bottom:8px"></div>
-      <div id="addChainStrikes" style="max-height:200px;overflow-y:auto;border:1px solid var(--border);border-radius:12px"></div>
+      <div id="addChainStrikes" style="max-height:220px;overflow-y:auto;border:1px solid var(--border);border-radius:12px"></div>
     </div>
 
-    <!-- Manual entry (fallback / edit) -->
-    <div id="addManualToggle" style="margin:8px 0">
-      <button class="btn btn-outline" onclick="toggleManualAdd()" style="width:100%;font-size:12px;padding:8px" id="manualToggleBtn">Enter manually instead</button>
-    </div>
-
-    <div id="optFields" class="hidden">
+    <!-- Manual entry fields (always visible as fallback) -->
+    <div id="optFields">
+      <div style="font-size:12px;font-weight:600;color:var(--text2);margin:12px 0 8px" id="manualEntryLabel">OR ENTER MANUALLY</div>
       <div class="form-group"><label class="form-label">Strike</label><input type="number" class="form-input" id="addStrike" placeholder="150" step="0.5"></div>
       <div class="form-group"><label class="form-label">Expiration</label><input type="date" class="form-input" id="addExp"></div>
       <div class="form-group"><label class="form-label">Premium</label><input type="number" class="form-input" id="addPremium" placeholder="2.50" step="0.01"></div>
@@ -762,12 +760,12 @@
       </div>
 
       <div class="form-group">
-        <label class="form-label">Ticker</label>
+        <label class="form-label">Ticker — any stock or ETF</label>
         <div style="display:flex;gap:8px">
-          <input type="text" class="form-input" id="adminTicker" placeholder="NVDA" style="text-transform:uppercase;flex:1" oninput="adminTickerDebounced(this.value)">
-          <button class="btn btn-outline" onclick="loadAdminChain()" style="white-space:nowrap;padding:8px 16px;font-size:12px">Load Chain</button>
+          <input type="text" class="form-input" id="adminTicker" placeholder="e.g. NVDA" style="text-transform:uppercase;flex:1;font-size:18px;font-weight:600;letter-spacing:1px" maxlength="6">
+          <button class="btn" onclick="loadAdminChain()" style="white-space:nowrap;padding:10px 18px">Load Chain</button>
         </div>
-        <div id="adminTickerInfo" style="font-size:12px;margin-top:4px;color:var(--text3)"></div>
+        <div id="adminTickerInfo" style="font-size:13px;margin-top:6px;color:var(--text3)"></div>
       </div>
 
       <!-- Admin chain picker -->
@@ -1959,26 +1957,33 @@ function adminQuickTicker(sym) {
   loadAdminChain();
 }
 
-function adminTickerDebounced(val) {
-  clearTimeout(adminTickerTimer);
-  if (val.trim().length >= 1) {
-    adminTickerTimer = setTimeout(() => loadAdminChain(), 600);
-  }
-}
+// Admin ticker also loads on Enter key
+document.addEventListener('DOMContentLoaded', () => {
+  const adminInput = $('adminTicker');
+  if (adminInput) adminInput.addEventListener('keydown', e => { if (e.key === 'Enter') loadAdminChain(); });
+  const addInput = $('addSymbol');
+  if (addInput) addInput.addEventListener('keydown', e => { if (e.key === 'Enter') loadAddChainBtn(); });
+});
 
 async function loadAdminChain() {
   const sym = $('adminTicker').value.trim().toUpperCase();
-  if (!sym) return;
+  if (!sym) { showToast('Type a ticker first', 'error'); return; }
 
-  $('adminTickerInfo').textContent = 'Loading...';
+  $('adminTickerInfo').innerHTML = `Loading <b>${sym}</b>...`;
 
   try {
     const quote = await fetchLiveQuote(sym);
     if (quote) {
       const color = quote.change >= 0 ? 'var(--green)' : 'var(--red)';
       $('adminTickerInfo').innerHTML = `<b>${sym}</b> $${quote.price.toFixed(2)} <span style="color:${color}">${quote.change >= 0?'+':''}${quote.change.toFixed(2)} (${quote.changePercent}%)</span>`;
+    } else {
+      $('adminTickerInfo').innerHTML = `<span style="color:var(--orange)">${sym} — could not fetch price. Enter details manually below.</span>`;
     }
+  } catch(e) {
+    $('adminTickerInfo').innerHTML = `<span style="color:var(--orange)">Price fetch failed for ${sym}</span>`;
+  }
 
+  try {
     const chain = await fetchOptionsChain(sym);
     if (chain && (chain.puts.length || chain.calls.length)) {
       adminChainData = chain;
@@ -1990,9 +1995,15 @@ async function loadAdminChain() {
       ).join('');
 
       renderAdminChain(chain);
+      showToast('Chain loaded! Tap a strike to auto-fill.', 'success');
+    } else {
+      $('adminChainPicker').style.display = 'none';
+      $('adminTickerInfo').innerHTML += ' <span style="color:var(--orange)">· No options chain available</span>';
     }
   } catch(e) {
-    $('adminTickerInfo').textContent = 'Not found';
+    $('adminChainPicker').style.display = 'none';
+    $('adminTickerInfo').innerHTML += ' <span style="color:var(--orange)">· Chain fetch failed</span>';
+    console.error('Admin chain error:', e);
   }
 }
 
@@ -5911,46 +5922,45 @@ function closePosition(){
   }
 }
 async function syncPositions(){if(!S.apiKey)return showToast('Add API keys in settings first','error');try{$('statusPill').className='status live';$('statusText').textContent='Syncing...';const r=await fetch('https://paper-api.alpaca.markets/v2/positions',{headers:{'APCA-API-KEY-ID':S.apiKey,'APCA-API-SECRET-KEY':S.secretKey}});if(!r.ok)throw new Error('Failed');const pos=await r.json();pos.forEach(p=>{if(!S.positions.find(x=>x.symbol===p.symbol)){S.positions.push({id:Date.now().toString()+Math.random(),symbol:p.symbol,type:'shares',contracts:parseInt(p.qty),costBasis:parseFloat(p.avg_entry_price),synced:true,openDate:new Date().toISOString()})}});const ar=await fetch('https://paper-api.alpaca.markets/v2/account',{headers:{'APCA-API-KEY-ID':S.apiKey,'APCA-API-SECRET-KEY':S.secretKey}});if(ar.ok){const a=await ar.json();S.accSize=parseFloat(a.equity)||S.accSize}save();$('statusPill').className='status live';$('statusText').textContent='Live';renderHome()}catch(e){$('statusPill').className='status';$('statusText').textContent='Error';showToast('Sync failed','error')}}
-function setAddMode(m){S.addMode=m;$('addCspBtn').classList.toggle('active',m==='csp');$('addCcBtn').classList.toggle('active',m==='cc');$('addSharesBtn').classList.toggle('active',m==='shares');if(m==='shares'){hide('optFields');show('shareFields')}else{show('optFields');hide('shareFields')}}
+function setAddMode(m){S.addMode=m;$('addCspBtn').classList.toggle('active',m==='csp');$('addCcBtn').classList.toggle('active',m==='cc');$('addSharesBtn').classList.toggle('active',m==='shares');if(m==='shares'){hide('optFields');show('shareFields');$('addChainPicker').style.display='none'}else{show('optFields');hide('shareFields')}}
 // --- Smart Add Position ---
 let addChainData = null;
 let addSelectedChainOption = null;
-let addManualMode = false;
-let addTickerDebounce = null;
 
 function quickAddTicker(sym) {
   $('addSymbol').value = sym;
   document.querySelectorAll('#addModal .chip-btn').forEach(b => b.classList.toggle('active', b.textContent === sym));
-  loadAddChain(sym);
+  loadAddChainBtn();
 }
 
-function onAddTickerInput(val) {
-  const sym = val.trim().toUpperCase();
-  clearTimeout(addTickerDebounce);
-  if (sym.length >= 1) {
-    addTickerDebounce = setTimeout(() => loadAddChain(sym), 500);
-  }
-  // Highlight matching chip
-  document.querySelectorAll('#addModal .chip-btn').forEach(b => b.classList.toggle('active', b.textContent === sym));
+function loadAddChainBtn() {
+  const sym = $('addSymbol').value.trim().toUpperCase();
+  if (!sym) { showToast('Type a ticker first', 'error'); return; }
+  loadAddChain(sym);
 }
 
 async function loadAddChain(sym) {
   const priceEl = $('addTickerPrice');
   const pickerEl = $('addChainPicker');
+  const btn = $('addLoadChainBtn');
 
-  priceEl.style.display = 'inline';
-  priceEl.textContent = 'Loading...';
+  priceEl.textContent = 'Loading ' + sym + '...';
   priceEl.style.color = 'var(--text3)';
+  if (btn) { btn.disabled = true; btn.textContent = 'Loading...'; }
 
   try {
     const quote = await fetchLiveQuote(sym);
     if (quote) {
-      priceEl.textContent = `$${quote.price.toFixed(2)}`;
-      priceEl.style.color = quote.change >= 0 ? 'var(--green)' : 'var(--red)';
+      const color = quote.change >= 0 ? 'var(--green)' : 'var(--red)';
+      priceEl.innerHTML = `<b>${sym}</b> $${quote.price.toFixed(2)} <span style="color:${color}">${quote.change >= 0?'+':''}${quote.change.toFixed(2)} (${quote.changePercent}%)</span>`;
     } else {
-      priceEl.textContent = '';
+      priceEl.innerHTML = `<span style="color:var(--red)">Could not fetch price for ${sym}</span>`;
     }
-  } catch(e) { priceEl.textContent = ''; }
+  } catch(e) {
+    priceEl.innerHTML = `<span style="color:var(--red)">Price fetch failed</span>`;
+  }
+
+  if (btn) { btn.disabled = false; btn.textContent = 'Load Chain'; }
 
   // Load options chain
   if (S.addMode === 'shares') return;
@@ -5958,8 +5968,7 @@ async function loadAddChain(sym) {
     const chain = await fetchOptionsChain(sym);
     if (!chain || (!chain.puts.length && !chain.calls.length)) {
       pickerEl.style.display = 'none';
-      // Show manual fields if no chain
-      if (!addManualMode) toggleManualAdd();
+      priceEl.innerHTML += ' <span style="color:var(--orange)">· No options chain found — use manual entry below</span>';
       return;
     }
     addChainData = chain;
@@ -5978,6 +5987,7 @@ async function loadAddChain(sym) {
     renderAddChainStrikes(chain);
   } catch(e) {
     pickerEl.style.display = 'none';
+    priceEl.innerHTML += ' <span style="color:var(--orange)">· Chain load failed — use manual entry</span>';
   }
 }
 
@@ -6047,29 +6057,22 @@ function selectChainOption(strike, bid, ask, expiration, delta, iv) {
   const row = $('addChainStrikes').querySelector(`[data-strike="${strike}"]`);
   if (row) row.classList.add('selected');
 
-  // Fill manual fields too
+  // Fill manual fields too (so they're in sync)
   $('addStrike').value = strike;
   $('addPremium').value = mid.toFixed(2);
+  // Fill expiration from active tab
+  const activeExpBtn = $('addChainExps')?.querySelector('.chain-exp-btn.active');
+  if (activeExpBtn) {
+    const expText = activeExpBtn.textContent.trim().split('(')[0].trim();
+    // Try to set date input if possible
+    $('addExp').value = expText;
+  }
 
   // Show summary
   const sym = $('addSymbol').value.trim().toUpperCase();
   const isCsp = S.addMode === 'csp';
   $('addSelectedSummary').style.display = 'block';
   $('addSummaryText').textContent = `${sym} $${strike} ${isCsp?'Put':'Call'} · Premium $${mid.toFixed(2)} · ${delta ? 'Δ' + Math.abs(delta).toFixed(2) : ''}`;
-}
-
-function toggleManualAdd() {
-  addManualMode = !addManualMode;
-  const fields = S.addMode === 'shares' ? 'shareFields' : 'optFields';
-  if (addManualMode) {
-    show(fields);
-    $('addChainPicker').style.display = 'none';
-    $('manualToggleBtn').textContent = 'Pick from chain';
-  } else {
-    hide(fields);
-    if (addChainData) $('addChainPicker').style.display = 'block';
-    $('manualToggleBtn').textContent = 'Enter manually instead';
-  }
 }
 
 function savePosition(){
@@ -6079,21 +6082,11 @@ function savePosition(){
   if(S.addMode==='shares') {
     p.costBasis=parseFloat($('addCost').value)||0;
   } else {
-    // Use chain selection or manual entry
-    if (addSelectedChainOption && !addManualMode) {
-      p.strike = addSelectedChainOption.strike;
-      p.premium = addSelectedChainOption.mid;
-      // Get expiration from active tab
-      const activeExp = $('addChainExps')?.querySelector('.chain-exp-btn.active');
-      if (activeExp) {
-        const expText = activeExp.textContent.trim().split('(')[0].trim();
-        p.expiration = expText;
-      }
-    } else {
-      p.strike=parseFloat($('addStrike').value)||0;
-      p.expiration=$('addExp').value;
-      p.premium=parseFloat($('addPremium').value)||0;
-    }
+    // Use chain selection if available, otherwise use manual fields
+    p.strike=parseFloat($('addStrike').value)||0;
+    p.expiration=$('addExp').value;
+    p.premium=parseFloat($('addPremium').value)||0;
+    // Chain selection auto-fills these fields, so they'll have values either way
     if(!p.strike)return showToast('Select a strike price','error');
   }
   S.positions.push(p);save();
@@ -6101,9 +6094,9 @@ function savePosition(){
   // Reset state
   addSelectedChainOption = null;
   addChainData = null;
-  addManualMode = false;
   $('addSelectedSummary').style.display = 'none';
   $('addChainPicker').style.display = 'none';
+  $('addTickerPrice').textContent = '';
   renderHome();
   showToast(`Added ${sym} ${p.strike?'$'+p.strike:''}${S.addMode==='csp'?'P':S.addMode==='cc'?'C':''} to portfolio!`,'success');
 }
