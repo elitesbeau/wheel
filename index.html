@@ -717,8 +717,12 @@
 
     <div style="margin-top:24px;padding-top:16px;border-top:1px solid var(--border)">
       <div class="card-title">Notification Settings</div>
-      <div class="form-group" style="margin-top:12px"><label class="form-label">Discord Webhook URL</label><input type="text" class="form-input" id="discordWebhook" placeholder="https://discord.com/api/webhooks/..."></div>
-      <p style="font-size:11px;color:var(--text3);margin-top:4px">Posts sent to your Discord server</p>
+      <div style="margin-top:12px">
+        <div class="form-label" style="font-weight:600;margin-bottom:8px">🎮 Discord Alerts</div>
+        <div class="form-group"><label class="form-label">Webhook URL</label><input type="text" class="form-input" id="discordWebhook" placeholder="https://discord.com/api/webhooks/..."></div>
+        <p style="font-size:11px;color:var(--text3);margin-top:4px">Signals, winners & announcements sent to your Discord server</p>
+        <button class="btn btn-outline" onclick="testDiscordWebhook()" style="margin-top:8px;font-size:12px;padding:6px 16px">🧪 Send Test Message</button>
+      </div>
 
       <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
         <div class="form-label" style="font-weight:600;margin-bottom:8px">📧 EmailJS (Free Email Alerts)</div>
@@ -1419,40 +1423,125 @@ async function savePostToFirebase(post) {
 // Send notification to Discord webhook
 async function sendDiscordNotification(post) {
   const webhookUrl = localStorage.getItem('discordWebhook');
-  if (!webhookUrl) return;
+  if (!webhookUrl) {
+    console.warn('Discord: No webhook URL configured');
+    return;
+  }
 
-  let embed = { color: 0x00ff00, timestamp: new Date().toISOString() };
+  const brand = {
+    name: 'Market Elites',
+    icon_url: 'https://raw.githubusercontent.com/elitesbeau/wheel/main/logo.png'
+  };
+
+  let embed = {
+    timestamp: new Date().toISOString(),
+    footer: { text: 'Market Elites · The Wheel Strategy', icon_url: brand.icon_url },
+    author: { name: brand.name, icon_url: brand.icon_url }
+  };
 
   if (post.kind === 'signal') {
-    embed.title = `🚨 New ${post.type.toUpperCase()} Signal`;
-    embed.description = `**${post.ticker}** $${post.strike} ${post.type === 'csp' ? 'Put' : 'Call'}`;
+    const isCsp = post.type === 'csp';
+    embed.title = `${isCsp ? '🟢' : '🔵'} NEW ${post.type.toUpperCase()} SIGNAL`;
+    embed.color = isCsp ? 0x34c759 : 0x007aff;
+    embed.description = [
+      `## ${post.ticker}`,
+      `**$${post.strike} ${isCsp ? 'Put' : 'Call'}**`,
+      '',
+      `> ${isCsp ? 'Cash Secured Put' : 'Covered Call'} — Sell to open`
+    ].join('\n');
     embed.fields = [
-      { name: 'Expiration', value: post.exp, inline: true },
-      { name: 'Premium', value: post.prem, inline: true },
-      { name: 'Delta', value: post.delta, inline: true }
+      { name: '📅 Expiration', value: `\`${post.exp || 'N/A'}\``, inline: true },
+      { name: '💰 Premium', value: `\`${post.prem || 'N/A'}\``, inline: true },
+      { name: '📊 Delta', value: `\`${post.delta || 'N/A'}\``, inline: true }
     ];
-    embed.color = post.type === 'csp' ? 0x34c759 : 0x007aff;
+    if (post.iv) embed.fields.push({ name: '📈 IV', value: `\`${post.iv}\``, inline: true });
+    if (post.notes) embed.fields.push({ name: '📝 Notes', value: post.notes, inline: false });
   } else if (post.kind === 'announcement') {
-    embed.title = `📢 ${post.title}`;
-    embed.description = post.message;
+    embed.title = `📢 ${post.title || 'Announcement'}`;
+    embed.description = post.message || post.content || '';
     embed.color = 0xff9500;
   } else if (post.kind === 'roll') {
-    embed.title = `🔄 Position Roll`;
-    embed.description = `${post.original} → ${post.newPos}`;
-    embed.fields = [{ name: 'Credit/Debit', value: post.credit, inline: true }];
-    if (post.notes) embed.fields.push({ name: 'Notes', value: post.notes, inline: false });
+    embed.title = '🔄 POSITION ROLL';
     embed.color = 0xaf52de;
+    embed.description = [
+      '**Original →** ' + (post.original || 'N/A'),
+      '**New Position →** ' + (post.newPos || 'N/A')
+    ].join('\n');
+    embed.fields = [{ name: '💵 Credit/Debit', value: `\`${post.credit || 'N/A'}\``, inline: true }];
+    if (post.notes) embed.fields.push({ name: '📝 Notes', value: post.notes, inline: false });
+  } else if (post.kind === 'winner') {
+    embed.title = `🎉 WINNER — ${post.ticker}`;
+    embed.color = 0x34c759;
+    embed.description = [
+      `**${(post.type||'').toUpperCase()} $${post.strike} ${post.type==='csp'?'Put':'Call'}** closed for profit!`,
+      '',
+      '> Another successful wheel cycle 💪'
+    ].join('\n');
+    embed.fields = [
+      { name: '💰 Premium', value: `\`${post.prem || 'N/A'}\``, inline: true },
+      { name: '📅 Expiration', value: `\`${post.exp || 'N/A'}\``, inline: true }
+    ];
+  } else if (post.kind === 'assigned') {
+    embed.title = `📦 ASSIGNED — ${post.ticker}`;
+    embed.color = 0xff9500;
+    embed.description = [
+      `**CSP $${post.strike} Put** was assigned`,
+      '',
+      '> Now holding 100 shares — time to sell covered calls! 🔄'
+    ].join('\n');
+  } else if (post.kind === 'called') {
+    embed.title = `📤 CALLED AWAY — ${post.ticker}`;
+    embed.color = 0x007aff;
+    embed.description = [
+      `**CC $${post.strike} Call** was exercised`,
+      '',
+      '> Shares sold at strike — back to selling puts! 🔄'
+    ].join('\n');
+  } else {
+    // Generic fallback
+    embed.title = '📋 New Update';
+    embed.description = post.content || post.message || '';
+    embed.color = 0x86868b;
   }
 
   try {
-    await fetch(webhookUrl, {
+    const res = await fetch(webhookUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ embeds: [embed] })
+      body: JSON.stringify({
+        username: 'Market Elites',
+        avatar_url: brand.icon_url,
+        embeds: [embed]
+      })
     });
+    if (!res.ok) {
+      const errText = await res.text().catch(() => '');
+      console.error('Discord webhook failed:', res.status, errText);
+      showToast('Discord alert failed: ' + res.status, 'error');
+    }
   } catch (e) {
     console.error('Discord webhook error:', e);
+    showToast('Discord alert failed to send', 'error');
   }
+}
+
+// Test Discord webhook
+async function testDiscordWebhook() {
+  const webhookUrl = $('discordWebhook')?.value.trim() || localStorage.getItem('discordWebhook');
+  if (!webhookUrl) {
+    showToast('Enter a Discord webhook URL first', 'error');
+    return;
+  }
+  // Save it first
+  localStorage.setItem('discordWebhook', webhookUrl);
+
+  showToast('Sending test message...', '');
+  await sendDiscordNotification({
+    kind: 'announcement',
+    title: 'Connection Test',
+    message: '**Discord alerts are live!** 🟢\n\nYou\'ll receive notifications here when new signals, winners, and announcements are posted.\n\n*— Market Elites*',
+    timestamp: Date.now()
+  });
 }
 
 // Save admin settings
@@ -1557,8 +1646,13 @@ async function sendEmailNotifications(post) {
 function toggleEmailAlerts() {
   S.emailAlerts = !S.emailAlerts;
   const sw = $('emailAlertSwitch');
-  if (sw) sw.classList.toggle('active', S.emailAlerts);
+  if (sw) sw.classList.toggle('on', S.emailAlerts);
   save();
+  if (S.emailAlerts) {
+    showToast('Email alerts enabled', 'success');
+  } else {
+    showToast('Email alerts disabled', '');
+  }
 }
 
 // Save email subscription to Firebase
@@ -1582,12 +1676,16 @@ async function saveEmailSubscription() {
     const emailKey = email.replace(/[.#$[\]]/g, '_'); // Firebase-safe key
     await db.ref('emailSubscribers/' + emailKey).set({
       email: email,
-      active: S.emailAlerts !== false,
-      subscribedAt: Date.now()
+      active: true,
+      subscribedAt: Date.now(),
+      uid: S.firebaseUid || null
     });
     S.alertEmail = email;
+    S.emailAlerts = true;
+    const sw = $('emailAlertSwitch');
+    if (sw) sw.classList.toggle('on', true);
     save();
-    showToast('Email alerts enabled!', 'success');
+    showToast('Email alerts subscribed!', 'success');
   } catch (e) {
     console.error('Subscription error:', e);
     showToast('Failed to subscribe', 'error');
@@ -2001,28 +2099,7 @@ async function markPostCalled(postId) {
 
 // Send notification for assigned/called
 async function sendAssignmentNotification(post, type) {
-  const webhookUrl = localStorage.getItem('discordWebhook');
-  if (webhookUrl) {
-    const isAssigned = type === 'assigned';
-    try {
-      await fetch(webhookUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          embeds: [{
-            title: isAssigned ? `📦 ${post.ticker} Assigned!` : `📤 ${post.ticker} Called Away!`,
-            description: isAssigned
-              ? `CSP $${post.strike} was assigned. Now holding 100 shares - time to sell covered calls!`
-              : `CC $${post.strike} was exercised. Shares sold at strike - back to selling puts!`,
-            color: isAssigned ? 0xff9500 : 0x007aff,
-            timestamp: new Date().toISOString()
-          }]
-        })
-      });
-    } catch (e) { console.error('Discord error:', e); }
-  }
-
-  // Email notification
+  await sendDiscordNotification({ ...post, kind: type });
   await sendEmailNotifications({
     ...post,
     kind: type,
@@ -2064,30 +2141,7 @@ function showCelebration(post) {
 
 // Send winner notification
 async function sendWinnerNotification(post) {
-  // Discord notification
-  const webhookUrl = localStorage.getItem('discordWebhook');
-  if (webhookUrl) {
-    try {
-      await fetch(webhookUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          embeds: [{
-            title: `🎉 WINNER! ${post.ticker} Closed for Profit!`,
-            description: `${post.type.toUpperCase()} $${post.strike} ${post.type === 'csp' ? 'Put' : 'Call'} expired worthless or closed for profit!`,
-            color: 0x34c759,
-            fields: [
-              { name: 'Premium Collected', value: post.prem, inline: true },
-              { name: 'Expiration', value: post.exp, inline: true }
-            ],
-            timestamp: new Date().toISOString()
-          }]
-        })
-      });
-    } catch (e) { console.error('Discord error:', e); }
-  }
-
-  // Email notification
+  await sendDiscordNotification({ ...post, kind: 'winner' });
   await sendEmailNotifications({ ...post, kind: 'winner' });
 }
 
@@ -6068,7 +6122,7 @@ function renderProfile(){
   // Sync notification switches to current state
   ['notifSwitch','qNotifSwitch'].forEach(id=>$(id)?.classList.toggle('on',!!S.notifOn));
   const emailSw = $('emailAlertSwitch');
-  if (emailSw) emailSw.classList.toggle('active', !!S.emailAlerts);
+  if (emailSw) emailSw.classList.toggle('on', !!S.emailAlerts);
   const alertEmailInput = $('userAlertEmail');
   if (alertEmailInput && S.alertEmail) alertEmailInput.value = S.alertEmail;
 
