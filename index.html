@@ -117,41 +117,214 @@
     .tab{display:none}.tab.active{display:block}
     .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius,16px);padding:20px;margin:0 16px 16px;box-shadow:var(--card-shadow,none)}
 
-    /* Pro: subtle gradient border on cards */
-    [data-theme=pro] .card{border-color:#2a2e39}
-    [data-theme=pro] .hero{background:linear-gradient(180deg,#131722 0%,#0a0e17 100%)}
-    [data-theme=pro] .signal-card{border-radius:4px}
-    [data-theme=pro] .btn{border-radius:4px;text-transform:uppercase;letter-spacing:0.5px;font-size:12px}
+    /* ============================================
+       PRO TRADER — Webull / TradingView feel
+       Dense, data-forward, sharp, monospace numbers
+       ============================================ */
+    [data-theme=pro] body{font-family:'SF Mono','Fira Code','Consolas',monospace}
+    [data-theme=pro] .app{max-width:480px}
+    [data-theme=pro] .hero{border-radius:0;margin:0 0 2px;padding:16px 16px 14px;background:linear-gradient(180deg,#131722 0%,#0d111b 100%);border-bottom:1px solid #2a2e39}
+    [data-theme=pro] .hero::before{display:none}
+    [data-theme=pro] .hero-top{margin-bottom:16px}
+    [data-theme=pro] .balance-amount{font-size:32px;font-weight:700;font-family:'SF Mono','Fira Code','Consolas',monospace;letter-spacing:-0.5px}
+    [data-theme=pro] .balance-label{font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:rgba(255,255,255,.4)}
+    [data-theme=pro] .balance-change{border-radius:3px;font-size:12px;padding:3px 8px;font-family:'SF Mono',monospace}
+    [data-theme=pro] .hero-balance{margin-bottom:16px}
+    [data-theme=pro] .hero-actions{gap:4px}
+    [data-theme=pro] .hero-btn-icon{width:42px;height:42px;border-radius:6px;border:1px solid #2a2e39;background:rgba(41,98,255,.06)}
+    [data-theme=pro] .hero-btn span{font-size:10px;text-transform:uppercase;letter-spacing:0.8px;color:rgba(255,255,255,.5)}
+    [data-theme=pro] .card{border-radius:4px;padding:14px;margin:0 8px 8px;border:1px solid #2a2e39}
+    [data-theme=pro] .card-title{font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:#787b86;font-weight:600}
+    [data-theme=pro] .section{padding:0 8px;margin-bottom:8px}
+    [data-theme=pro] .section-title{font-size:13px;text-transform:uppercase;letter-spacing:1.2px;font-weight:600;color:#787b86}
+    [data-theme=pro] .pos-card{border-radius:4px;padding:12px;margin-bottom:6px;border:1px solid #2a2e39}
+    [data-theme=pro] .pos-card:hover{border-color:#2962ff}
+    [data-theme=pro] .pos-logo{border-radius:4px;width:36px;height:36px}
+    [data-theme=pro] .pos-logo-text{border-radius:4px;font-size:11px}
+    [data-theme=pro] .pos-symbol{font-size:14px;font-family:'SF Mono',monospace}
+    [data-theme=pro] .pos-name{font-size:11px}
+    [data-theme=pro] .pos-badge{border-radius:3px;font-size:10px;padding:3px 6px;letter-spacing:0.5px}
+    [data-theme=pro] .pos-stat-val{font-size:13px;font-family:'SF Mono',monospace}
+    [data-theme=pro] .pos-stat-label{font-size:10px;text-transform:uppercase;letter-spacing:0.5px}
+    [data-theme=pro] .btn{border-radius:4px;text-transform:uppercase;letter-spacing:0.8px;font-size:12px;font-weight:600;padding:10px 16px;background:#2962ff}
+    [data-theme=pro] .btn-outline{background:transparent;color:#2962ff;border:1px solid #2962ff}
+    [data-theme=pro] .signal-card{border-radius:4px;padding:12px;border-width:2px}
+    [data-theme=pro] .signal-ticker{font-family:'SF Mono',monospace;font-size:18px}
+    [data-theme=pro] .signal-details{font-family:'SF Mono',monospace;font-size:12px}
+    [data-theme=pro] .signal-type{border-radius:3px;font-size:10px;letter-spacing:1px;padding:3px 8px}
+    [data-theme=pro] .nav{border-top:1px solid #2a2e39;border-radius:0;background:rgba(10,14,23,.98)}
+    [data-theme=pro] .nav-btn{padding:8px 4px;min-height:48px}
+    [data-theme=pro] .nav-btn span{font-size:9px;text-transform:uppercase;letter-spacing:0.5px}
+    [data-theme=pro] .toggle{border-radius:4px}
+    [data-theme=pro] .toggle-btn{border-radius:3px;font-size:11px;text-transform:uppercase;letter-spacing:0.5px}
+    [data-theme=pro] .toggle-btn.active{background:#2962ff}
+    [data-theme=pro] .form-input{border-radius:4px;font-size:13px;padding:10px 12px}
+    [data-theme=pro] .form-label{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#787b86}
+    [data-theme=pro] .tx-list{border-radius:4px}
+    [data-theme=pro] .tx-icon{border-radius:4px;width:32px;height:32px}
+    [data-theme=pro] .tx-title{font-size:13px;font-family:'SF Mono',monospace}
+    [data-theme=pro] .tx-amount{font-family:'SF Mono',monospace;font-size:13px}
+    [data-theme=pro] .quick-icon{border-radius:6px;width:44px;height:44px}
+    [data-theme=pro] .quick-btn span{font-size:10px;text-transform:uppercase;letter-spacing:0.5px}
+    [data-theme=pro] .empty{border-radius:4px;padding:24px 16px}
+    [data-theme=pro] .modal{border-radius:6px}
+    [data-theme=pro] .switch{border-radius:4px;width:40px;height:22px}
+    [data-theme=pro] .switch-knob{width:18px;height:18px;border-radius:3px}
+    [data-theme=pro] .switch.on{background:#2962ff}
+    [data-theme=pro] .switch.on .switch-knob{transform:translateX(18px)}
+    [data-theme=pro] .chip-btn{border-radius:3px;font-family:'SF Mono',monospace;font-size:11px}
+    [data-theme=pro] .copy-trade-btn{border-radius:3px;font-size:11px;text-transform:uppercase;letter-spacing:0.5px}
+    [data-theme=pro] .chain-row{padding:8px 10px;font-family:'SF Mono',monospace;font-size:12px}
+    [data-theme=pro] .chain-exp-btn{border-radius:3px;font-family:'SF Mono',monospace}
+    [data-theme=pro] .home-alert-card{border-radius:4px}
 
-    /* Luxury: gold accents, elegant borders */
-    [data-theme=luxury] .card{border-color:#2a2925;border-width:0.5px}
-    [data-theme=luxury] .hero{background:linear-gradient(135deg,#16161a 0%,#1e1a14 100%);border:0.5px solid rgba(201,169,98,.15)}
-    [data-theme=luxury] .btn{background:linear-gradient(135deg,#c9a962,#a8893e);color:#0c0c0f;font-weight:700;letter-spacing:0.5px}
-    [data-theme=luxury] .btn-outline{background:transparent;color:#c9a962;border-color:#c9a962}
-    [data-theme=luxury] .nav{border-top:0.5px solid rgba(201,169,98,.2)}
+    /* ============================================
+       LUXURY FINTECH — Bloomberg meets high fashion
+       Spacious, elegant, gold, thin borders
+       ============================================ */
+    [data-theme=luxury] .app{max-width:440px}
+    [data-theme=luxury] .hero{border-radius:0;margin:0 0 24px;padding:28px 20px;background:linear-gradient(170deg,#1a1814 0%,#0c0c0f 100%);border-bottom:0.5px solid rgba(201,169,98,.15)}
+    [data-theme=luxury] .hero::before{background:radial-gradient(circle,rgba(201,169,98,.04) 0%,transparent 70%)}
+    [data-theme=luxury] .balance-amount{font-size:40px;font-weight:300;letter-spacing:-1px}
+    [data-theme=luxury] .balance-label{font-size:11px;text-transform:uppercase;letter-spacing:3px;color:rgba(255,255,255,.35)}
+    [data-theme=luxury] .balance-change{border-radius:4px;background:rgba(201,169,98,.1);color:#c9a962}
+    [data-theme=luxury] .card{border-radius:2px;padding:24px;margin:0 20px 16px;border:0.5px solid #2a2925}
+    [data-theme=luxury] .card-title{font-size:11px;text-transform:uppercase;letter-spacing:2.5px;color:#9b9792;font-weight:400}
+    [data-theme=luxury] .section{padding:0 20px;margin-bottom:20px}
+    [data-theme=luxury] .section-title{font-size:14px;text-transform:uppercase;letter-spacing:2px;font-weight:400;color:#9b9792}
+    [data-theme=luxury] .section-link{color:#c9a962;font-weight:400;letter-spacing:0.5px}
+    [data-theme=luxury] .pos-card{border-radius:2px;padding:18px;border:0.5px solid #2a2925}
+    [data-theme=luxury] .pos-logo{border-radius:2px}
+    [data-theme=luxury] .pos-logo-text{border-radius:2px;background:linear-gradient(135deg,#c9a962,#8b7355)}
+    [data-theme=luxury] .pos-symbol{font-size:15px;font-weight:400;letter-spacing:0.5px}
+    [data-theme=luxury] .pos-badge{border-radius:2px;font-weight:400;letter-spacing:1px}
+    [data-theme=luxury] .pos-stat-val{font-weight:300;font-size:16px}
+    [data-theme=luxury] .btn{border-radius:2px;background:linear-gradient(135deg,#c9a962 0%,#a8893e 100%);color:#0c0c0f;font-weight:500;letter-spacing:1.5px;text-transform:uppercase;font-size:12px;padding:14px 24px;transition:all .3s ease}
+    [data-theme=luxury] .btn:hover{box-shadow:0 4px 20px rgba(201,169,98,.25)}
+    [data-theme=luxury] .btn-outline{background:transparent;color:#c9a962;border:0.5px solid #c9a962}
+    [data-theme=luxury] .signal-card{border-radius:2px;border-width:0.5px;padding:18px}
+    [data-theme=luxury] .signal-ticker{font-weight:300;font-size:22px;letter-spacing:1px}
+    [data-theme=luxury] .signal-type{border-radius:2px;font-weight:400;letter-spacing:1.5px}
+    [data-theme=luxury] .nav{border-top:0.5px solid rgba(201,169,98,.12);background:rgba(12,12,15,.98)}
+    [data-theme=luxury] .nav-btn span{letter-spacing:0.5px}
+    [data-theme=luxury] .toggle{border-radius:2px}
+    [data-theme=luxury] .toggle-btn{border-radius:2px;letter-spacing:1px;font-weight:400}
     [data-theme=luxury] .toggle-btn.active{background:#c9a962;color:#0c0c0f}
+    [data-theme=luxury] .form-input{border-radius:2px;border-width:0.5px;border-color:#2a2925;padding:14px 16px}
+    [data-theme=luxury] .form-label{text-transform:uppercase;letter-spacing:1.5px;font-size:10px;color:#9b9792;font-weight:400}
+    [data-theme=luxury] .tx-list{border-radius:2px;border-width:0.5px}
+    [data-theme=luxury] .quick-icon{border-radius:2px}
+    [data-theme=luxury] .hero-btn-icon{border-radius:2px;border-color:rgba(201,169,98,.2)}
+    [data-theme=luxury] .hero-btn span{letter-spacing:1px;color:rgba(201,169,98,.6)}
+    [data-theme=luxury] .empty{border-radius:2px;border-width:0.5px}
+    [data-theme=luxury] .modal{border-radius:4px}
+    [data-theme=luxury] .switch.on{background:linear-gradient(135deg,#c9a962,#a8893e)}
+    [data-theme=luxury] .copy-trade-btn{border-radius:2px;background:#c9a962;color:#0c0c0f}
+    [data-theme=luxury] .chip-btn{border-radius:2px;letter-spacing:1px}
+    [data-theme=luxury] .chain-exp-btn{border-radius:2px}
 
-    /* Retro: neon glow, synthwave vibes */
-    [data-theme=retro] .card{border-color:#3d2a5c;box-shadow:var(--glow)}
-    [data-theme=retro] .hero{background:linear-gradient(180deg,#241535 0%,#1a1025 100%);box-shadow:0 0 40px rgba(199,125,255,.06)}
-    [data-theme=retro] .btn{background:linear-gradient(135deg,#ff2d6f,#c77dff);color:#fff;font-weight:700;text-shadow:0 0 10px rgba(255,45,111,.5)}
-    [data-theme=retro] .btn-outline{background:transparent;color:#c77dff;border-color:#c77dff;text-shadow:0 0 8px rgba(199,125,255,.4)}
-    [data-theme=retro] .signal-type.csp{background:rgba(0,255,135,.15);color:#00ff87;text-shadow:0 0 8px rgba(0,255,135,.4)}
-    [data-theme=retro] .signal-type.cc{background:rgba(0,212,255,.15);color:#00d4ff;text-shadow:0 0 8px rgba(0,212,255,.4)}
-    [data-theme=retro] .nav{border-top:1px solid #3d2a5c;box-shadow:0 -2px 20px rgba(199,125,255,.08)}
-    [data-theme=retro] .toggle-btn.active{background:#ff2d6f;color:#fff;box-shadow:0 0 12px rgba(255,45,111,.3)}
-    [data-theme=retro] .hero-value{text-shadow:0 0 20px rgba(199,125,255,.3)}
-    [data-theme=retro] .switch.on{background:#ff2d6f;box-shadow:0 0 10px rgba(255,45,111,.4)}
+    /* ============================================
+       80s RETRO — Synthwave / Outrun
+       Neon glow, scan lines, CRT feel, bold
+       ============================================ */
+    [data-theme=retro] body{font-family:'Orbitron','Rajdhani','Inter',sans-serif}
+    [data-theme=retro] .app::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.03) 2px,rgba(0,0,0,.03) 4px);pointer-events:none;z-index:9999}
+    [data-theme=retro] .hero{border-radius:0;margin:0 0 16px;padding:24px 16px;background:linear-gradient(180deg,#2d1845 0%,#1a1025 60%,#0d0519 100%);border-bottom:2px solid #c77dff;box-shadow:0 4px 30px rgba(199,125,255,.1),0 0 1px rgba(199,125,255,.3)}
+    [data-theme=retro] .hero::before{background:radial-gradient(ellipse at 50% 0%,rgba(255,45,111,.12) 0%,transparent 60%)}
+    [data-theme=retro] .balance-amount{font-size:38px;font-weight:900;background:linear-gradient(180deg,#ff2d6f,#c77dff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-shadow:none;filter:drop-shadow(0 0 20px rgba(255,45,111,.3))}
+    [data-theme=retro] .balance-label{font-size:10px;text-transform:uppercase;letter-spacing:3px;color:#c77dff}
+    [data-theme=retro] .balance-change{border-radius:4px;border:1px solid rgba(0,255,135,.3);background:rgba(0,255,135,.08);box-shadow:0 0 12px rgba(0,255,135,.1)}
+    [data-theme=retro] .hero-btn-icon{border-radius:8px;border:1.5px solid #c77dff;box-shadow:0 0 10px rgba(199,125,255,.15);background:rgba(199,125,255,.06)}
+    [data-theme=retro] .hero-btn span{color:#c77dff;text-transform:uppercase;letter-spacing:1px;font-size:9px}
+    [data-theme=retro] .card{border-radius:8px;border:1px solid #3d2a5c;box-shadow:0 0 15px rgba(199,125,255,.06),inset 0 1px 0 rgba(199,125,255,.06);padding:18px}
+    [data-theme=retro] .card-title{text-transform:uppercase;letter-spacing:2px;font-size:12px;color:#c77dff;text-shadow:0 0 8px rgba(199,125,255,.3)}
+    [data-theme=retro] .section-title{text-transform:uppercase;letter-spacing:2px;font-size:14px;color:#c77dff;text-shadow:0 0 8px rgba(199,125,255,.2)}
+    [data-theme=retro] .section-link{color:#00d4ff;text-shadow:0 0 8px rgba(0,212,255,.3)}
+    [data-theme=retro] .pos-card{border-radius:8px;border:1px solid #3d2a5c;box-shadow:0 0 10px rgba(199,125,255,.04)}
+    [data-theme=retro] .pos-card:hover{border-color:#c77dff;box-shadow:0 0 20px rgba(199,125,255,.1)}
+    [data-theme=retro] .pos-logo{border-radius:8px}
+    [data-theme=retro] .pos-logo-text{border-radius:8px;background:linear-gradient(135deg,#ff2d6f,#c77dff)}
+    [data-theme=retro] .pos-symbol{color:#f0e6ff;text-shadow:0 0 6px rgba(240,230,255,.2)}
+    [data-theme=retro] .pos-badge.csp{background:rgba(0,255,135,.12);color:#00ff87;text-shadow:0 0 6px rgba(0,255,135,.3);border:1px solid rgba(0,255,135,.2)}
+    [data-theme=retro] .pos-badge.cc{background:rgba(0,212,255,.12);color:#00d4ff;text-shadow:0 0 6px rgba(0,212,255,.3);border:1px solid rgba(0,212,255,.2)}
+    [data-theme=retro] .btn{border-radius:6px;background:linear-gradient(135deg,#ff2d6f,#c77dff);color:#fff;font-weight:700;text-transform:uppercase;letter-spacing:1px;text-shadow:0 0 10px rgba(255,45,111,.5);box-shadow:0 0 20px rgba(255,45,111,.2);border:none;transition:all .2s}
+    [data-theme=retro] .btn:hover{box-shadow:0 0 30px rgba(255,45,111,.35);transform:translateY(-1px)}
+    [data-theme=retro] .btn-outline{background:transparent;color:#c77dff;border:1.5px solid #c77dff;text-shadow:0 0 8px rgba(199,125,255,.4);box-shadow:0 0 10px rgba(199,125,255,.08)}
+    [data-theme=retro] .signal-card{border-radius:8px;border:1px solid #3d2a5c;box-shadow:0 0 10px rgba(199,125,255,.04)}
+    [data-theme=retro] .signal-ticker{font-size:20px;font-weight:900;text-shadow:0 0 12px rgba(240,230,255,.15)}
+    [data-theme=retro] .signal-type.csp{background:rgba(0,255,135,.12);color:#00ff87;text-shadow:0 0 8px rgba(0,255,135,.4);border:1px solid rgba(0,255,135,.2)}
+    [data-theme=retro] .signal-type.cc{background:rgba(0,212,255,.12);color:#00d4ff;text-shadow:0 0 8px rgba(0,212,255,.4);border:1px solid rgba(0,212,255,.2)}
+    [data-theme=retro] .nav{border-top:2px solid #c77dff;border-radius:0;background:rgba(26,16,37,.98);box-shadow:0 -4px 20px rgba(199,125,255,.08)}
+    [data-theme=retro] .nav-btn.active svg{stroke:#ff2d6f;filter:drop-shadow(0 0 6px rgba(255,45,111,.4))}
+    [data-theme=retro] .nav-btn.active span{color:#ff2d6f;text-shadow:0 0 6px rgba(255,45,111,.4)}
+    [data-theme=retro] .toggle{border-radius:6px;border:1px solid #3d2a5c}
+    [data-theme=retro] .toggle-btn{border-radius:4px}
+    [data-theme=retro] .toggle-btn.active{background:linear-gradient(135deg,#ff2d6f,#c77dff);color:#fff;box-shadow:0 0 12px rgba(255,45,111,.3)}
+    [data-theme=retro] .form-input{border-radius:6px;border:1px solid #3d2a5c;background:#2e1d42}
+    [data-theme=retro] .form-input:focus{border-color:#c77dff;box-shadow:0 0 12px rgba(199,125,255,.15)}
+    [data-theme=retro] .form-label{color:#c77dff;text-transform:uppercase;letter-spacing:1.5px;font-size:10px}
+    [data-theme=retro] .tx-list{border-radius:8px;border-color:#3d2a5c}
+    [data-theme=retro] .tx-icon{border-radius:8px}
+    [data-theme=retro] .quick-icon{border-radius:8px;box-shadow:0 0 10px rgba(199,125,255,.06)}
+    [data-theme=retro] .quick-btn span{text-transform:uppercase;letter-spacing:1px;font-size:10px;color:#b89fda}
+    [data-theme=retro] .empty{border-radius:8px;border-color:#3d2a5c}
+    [data-theme=retro] .modal{border-radius:8px;border:1px solid #3d2a5c;box-shadow:0 0 40px rgba(199,125,255,.1)}
+    [data-theme=retro] .switch{border-radius:6px}
+    [data-theme=retro] .switch-knob{border-radius:4px}
+    [data-theme=retro] .switch.on{background:linear-gradient(135deg,#ff2d6f,#c77dff);box-shadow:0 0 10px rgba(255,45,111,.3)}
+    [data-theme=retro] .copy-trade-btn{background:linear-gradient(135deg,#00ff87,#00d4ff);color:#1a1025;border-radius:6px;font-weight:700}
+    [data-theme=retro] .chip-btn{border-radius:6px;border-color:#3d2a5c;color:#c77dff}
+    [data-theme=retro] .chip-btn:hover,.chip-btn.active{background:linear-gradient(135deg,#ff2d6f,#c77dff);color:#fff;border-color:transparent}
+    [data-theme=retro] .chain-exp-btn{border-radius:6px;border-color:#3d2a5c;color:#b89fda}
+    [data-theme=retro] .chain-exp-btn.active{background:linear-gradient(135deg,#ff2d6f,#c77dff);color:#fff;border-color:transparent}
+    [data-theme=retro] .home-alert-card{border-radius:8px;border-color:#3d2a5c}
+    [data-theme=retro] .status{border:1px solid rgba(199,125,255,.2);background:rgba(199,125,255,.06)}
 
-    /* Fun: rounded, bouncy, colorful */
-    [data-theme=fun] .card{border-radius:20px;border-color:#ede3f7}
-    [data-theme=fun] .hero{background:linear-gradient(135deg,#2d1b69,#6366f1);border-radius:28px}
-    [data-theme=fun] .btn{border-radius:24px;background:linear-gradient(135deg,#6366f1,#a855f7);font-weight:700}
-    [data-theme=fun] .btn-outline{border-radius:24px;border-color:#6366f1;color:#6366f1}
-    [data-theme=fun] .signal-card{border-radius:16px}
-    [data-theme=fun] .nav{border-radius:24px 24px 0 0}
-    [data-theme=fun] .toggle-btn.active{background:#6366f1;border-radius:20px}
+    /* ============================================
+       FUN / PLAYFUL — Bouncy, colorful, friendly
+       Big corners, gradients, emoji-friendly
+       ============================================ */
+    [data-theme=fun] .hero{border-radius:28px;margin:8px 12px 20px;background:linear-gradient(135deg,#2d1b69 0%,#6366f1 50%,#a855f7 100%);padding:24px;box-shadow:0 8px 30px rgba(99,102,241,.2)}
+    [data-theme=fun] .hero::before{background:radial-gradient(circle at 80% 20%,rgba(255,255,255,.15) 0%,transparent 50%)}
+    [data-theme=fun] .balance-amount{font-size:42px;font-weight:800}
+    [data-theme=fun] .balance-change{border-radius:20px}
+    [data-theme=fun] .hero-btn-icon{border-radius:16px;border-color:rgba(255,255,255,.3);background:rgba(255,255,255,.1)}
+    [data-theme=fun] .card{border-radius:20px;padding:20px;border-color:#ede3f7;box-shadow:0 2px 12px rgba(45,27,105,.04)}
+    [data-theme=fun] .card-title{color:#6b5b95}
+    [data-theme=fun] .section-title{color:#2d1b69}
+    [data-theme=fun] .section-link{color:#6366f1}
+    [data-theme=fun] .pos-card{border-radius:20px;border-color:#ede3f7;box-shadow:0 2px 8px rgba(45,27,105,.03)}
+    [data-theme=fun] .pos-logo{border-radius:14px}
+    [data-theme=fun] .pos-logo-text{border-radius:14px;background:linear-gradient(135deg,#6366f1,#a855f7)}
+    [data-theme=fun] .pos-badge{border-radius:12px;font-weight:700}
+    [data-theme=fun] .btn{border-radius:24px;background:linear-gradient(135deg,#6366f1,#a855f7);font-weight:700;box-shadow:0 4px 15px rgba(99,102,241,.25);padding:14px 24px;transition:all .2s cubic-bezier(.34,1.56,.64,1)}
+    [data-theme=fun] .btn:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(99,102,241,.35)}
+    [data-theme=fun] .btn:active{transform:scale(.96)}
+    [data-theme=fun] .btn-outline{border-radius:24px;border:2px solid #6366f1;color:#6366f1;background:transparent;box-shadow:none}
+    [data-theme=fun] .signal-card{border-radius:20px;border-color:#ede3f7}
+    [data-theme=fun] .signal-ticker{font-size:20px;font-weight:800}
+    [data-theme=fun] .signal-type{border-radius:12px;font-weight:700}
+    [data-theme=fun] .nav{border-radius:24px 24px 0 0;border-top:none;box-shadow:0 -4px 20px rgba(45,27,105,.06)}
+    [data-theme=fun] .nav-btn.active svg{stroke:#6366f1}
+    [data-theme=fun] .nav-btn.active span{color:#6366f1}
+    [data-theme=fun] .toggle{border-radius:20px}
+    [data-theme=fun] .toggle-btn{border-radius:16px}
+    [data-theme=fun] .toggle-btn.active{background:linear-gradient(135deg,#6366f1,#a855f7);box-shadow:0 2px 8px rgba(99,102,241,.25)}
+    [data-theme=fun] .form-input{border-radius:16px;border:2px solid #ede3f7;padding:14px 16px}
+    [data-theme=fun] .form-input:focus{border-color:#6366f1;box-shadow:0 0 0 3px rgba(99,102,241,.15)}
+    [data-theme=fun] .quick-icon{border-radius:16px}
+    [data-theme=fun] .tx-list{border-radius:20px;border-color:#ede3f7}
+    [data-theme=fun] .tx-icon{border-radius:14px}
+    [data-theme=fun] .empty{border-radius:20px;border-color:#ede3f7}
+    [data-theme=fun] .modal{border-radius:24px}
+    [data-theme=fun] .switch{border-radius:20px}
     [data-theme=fun] .switch.on{background:linear-gradient(135deg,#6366f1,#a855f7)}
+    [data-theme=fun] .copy-trade-btn{border-radius:16px;background:linear-gradient(135deg,#10b981,#06b6d4)}
+    [data-theme=fun] .chip-btn{border-radius:16px;border-color:#ede3f7}
+    [data-theme=fun] .chip-btn:hover,[data-theme=fun] .chip-btn.active{background:linear-gradient(135deg,#6366f1,#a855f7);color:#fff;border-color:transparent}
+    [data-theme=fun] .chain-exp-btn{border-radius:16px}
+    [data-theme=fun] .chain-exp-btn.active{background:linear-gradient(135deg,#6366f1,#a855f7);color:#fff}
+    [data-theme=fun] .home-alert-card{border-radius:16px}
     .card-title{font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:16px}
     .form-group{margin-bottom:16px}
     .form-label{font-size:13px;font-weight:500;color:var(--text2);margin-bottom:8px;display:block}
