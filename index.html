@@ -125,6 +125,16 @@
     .btn svg{width:18px;height:18px;stroke:#fff;stroke-width:2;fill:none}
     .btn-outline{background:transparent;border:1.5px solid var(--border);color:var(--text)}.btn-outline svg{stroke:var(--text)}
     .btn-red{background:var(--red-bg);color:var(--red)}.btn-red svg{stroke:var(--red)}
+    .chip-btn{background:var(--input);border:1px solid var(--border);border-radius:20px;padding:6px 14px;font-size:12px;font-weight:600;color:var(--text);cursor:pointer;transition:all .15s}
+    .chip-btn:hover,.chip-btn.active{background:var(--blue);color:#fff;border-color:var(--blue)}
+    .chain-row{display:flex;align-items:center;padding:10px 14px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s;gap:8px}
+    .chain-row:hover{background:var(--input)}
+    .chain-row:last-child{border-bottom:none}
+    .chain-row.selected{background:var(--green-bg)}
+    .chain-exp-btn{background:var(--input);border:1px solid var(--border);border-radius:16px;padding:5px 12px;font-size:11px;font-weight:600;white-space:nowrap;cursor:pointer;color:var(--text);transition:all .15s}
+    .chain-exp-btn.active{background:var(--blue);color:#fff;border-color:var(--blue)}
+    .copy-trade-btn{background:var(--green);color:#fff;border:none;border-radius:8px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:4px;margin-top:8px}
+    .copy-trade-btn:active{opacity:0.8}
     .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:none;align-items:flex-end;justify-content:center}
     .modal-bg.show{display:flex}.modal-bg.center{align-items:center}
     .modal{background:var(--card);border-radius:20px 20px 0 0;padding:20px;padding-bottom:max(20px,env(safe-area-inset-bottom));width:100%;max-width:430px;max-height:85vh;overflow-y:auto;animation:slideUp .3s ease}
@@ -629,7 +639,63 @@
     <button class="btn btn-red mt-4" onclick="confirmSignOut()"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Sign Out</button>
   </div></div>
 
-  <div class="modal-bg" id="addModal" onclick="closeModal('addModal')"><div class="modal" onclick="event.stopPropagation()"><div class="modal-handle"></div><div class="modal-header"><span class="modal-title">Add Position</span><button class="modal-close" onclick="closeModal('addModal')"><svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div><div class="toggle"><button class="toggle-btn active" id="addCspBtn" onclick="setAddMode('csp')">CSP</button><button class="toggle-btn" id="addCcBtn" onclick="setAddMode('cc')">CC</button><button class="toggle-btn" id="addSharesBtn" onclick="setAddMode('shares')">Shares</button></div><div class="form-group"><label class="form-label">Symbol</label><input type="text" class="form-input" id="addSymbol" placeholder="AAPL" style="text-transform:uppercase" maxlength="5"></div><div id="optFields"><div class="form-group"><label class="form-label">Strike</label><input type="number" class="form-input" id="addStrike" placeholder="150" step="0.5"></div><div class="form-group"><label class="form-label">Expiration</label><input type="date" class="form-input" id="addExp"></div><div class="form-group"><label class="form-label">Premium</label><input type="number" class="form-input" id="addPremium" placeholder="2.50" step="0.01"></div></div><div id="shareFields" class="hidden"><div class="form-group"><label class="form-label">Cost Basis</label><input type="number" class="form-input" id="addCost" placeholder="150" step="0.01"></div></div><div class="form-group"><label class="form-label">Contracts</label><input type="number" class="form-input" id="addContracts" value="1" min="1"></div><button class="btn" onclick="savePosition()">Add Position</button></div></div>
+  <div class="modal-bg" id="addModal" onclick="closeModal('addModal')"><div class="modal" onclick="event.stopPropagation()" style="max-height:85vh;overflow-y:auto">
+    <div class="modal-handle"></div>
+    <div class="modal-header"><span class="modal-title">Add Position</span><button class="modal-close" onclick="closeModal('addModal')"><svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+
+    <div class="toggle"><button class="toggle-btn active" id="addCspBtn" onclick="setAddMode('csp')">CSP</button><button class="toggle-btn" id="addCcBtn" onclick="setAddMode('cc')">CC</button><button class="toggle-btn" id="addSharesBtn" onclick="setAddMode('shares')">Shares</button></div>
+
+    <!-- Quick ticker buttons -->
+    <div style="display:flex;flex-wrap:wrap;gap:6px;margin:12px 0">
+      <button class="chip-btn" onclick="quickAddTicker('AAPL')">AAPL</button>
+      <button class="chip-btn" onclick="quickAddTicker('NVDA')">NVDA</button>
+      <button class="chip-btn" onclick="quickAddTicker('TSLA')">TSLA</button>
+      <button class="chip-btn" onclick="quickAddTicker('SPY')">SPY</button>
+      <button class="chip-btn" onclick="quickAddTicker('AMD')">AMD</button>
+      <button class="chip-btn" onclick="quickAddTicker('MSFT')">MSFT</button>
+      <button class="chip-btn" onclick="quickAddTicker('AMZN')">AMZN</button>
+      <button class="chip-btn" onclick="quickAddTicker('QQQ')">QQQ</button>
+    </div>
+
+    <!-- Ticker input with live price -->
+    <div class="form-group">
+      <label class="form-label">Symbol</label>
+      <div style="position:relative">
+        <input type="text" class="form-input" id="addSymbol" placeholder="Type ticker..." style="text-transform:uppercase;padding-right:100px" maxlength="5" oninput="onAddTickerInput(this.value)">
+        <div id="addTickerPrice" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:13px;font-weight:600;color:var(--text2);display:none"></div>
+      </div>
+    </div>
+
+    <!-- Options chain picker (loads after ticker) -->
+    <div id="addChainPicker" style="display:none">
+      <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:8px">SELECT FROM CHAIN</div>
+      <div id="addChainExps" style="display:flex;gap:6px;overflow-x:auto;padding-bottom:8px;margin-bottom:8px"></div>
+      <div id="addChainStrikes" style="max-height:200px;overflow-y:auto;border:1px solid var(--border);border-radius:12px"></div>
+    </div>
+
+    <!-- Manual entry (fallback / edit) -->
+    <div id="addManualToggle" style="margin:8px 0">
+      <button class="btn btn-outline" onclick="toggleManualAdd()" style="width:100%;font-size:12px;padding:8px" id="manualToggleBtn">Enter manually instead</button>
+    </div>
+
+    <div id="optFields" class="hidden">
+      <div class="form-group"><label class="form-label">Strike</label><input type="number" class="form-input" id="addStrike" placeholder="150" step="0.5"></div>
+      <div class="form-group"><label class="form-label">Expiration</label><input type="date" class="form-input" id="addExp"></div>
+      <div class="form-group"><label class="form-label">Premium</label><input type="number" class="form-input" id="addPremium" placeholder="2.50" step="0.01"></div>
+    </div>
+    <div id="shareFields" class="hidden">
+      <div class="form-group"><label class="form-label">Cost Basis</label><input type="number" class="form-input" id="addCost" placeholder="150" step="0.01"></div>
+    </div>
+    <div class="form-group"><label class="form-label">Contracts</label><input type="number" class="form-input" id="addContracts" value="1" min="1"></div>
+
+    <!-- Selected option summary -->
+    <div id="addSelectedSummary" style="display:none;background:var(--green-bg);border-radius:12px;padding:12px;margin-bottom:12px">
+      <div style="font-size:11px;text-transform:uppercase;font-weight:600;color:var(--green);margin-bottom:4px">Selected</div>
+      <div id="addSummaryText" style="font-size:14px;font-weight:600"></div>
+    </div>
+
+    <button class="btn" onclick="savePosition()" style="width:100%">Add Position</button>
+  </div></div>
 
   <div class="modal-bg" id="learnModal" onclick="closeModal('learnModal')">
     <div class="modal learn-modal" onclick="event.stopPropagation()">
@@ -680,14 +746,44 @@
 
     <div id="adminSignalForm">
       <div class="form-group"><label class="form-label">Type</label>
-        <div class="toggle"><button class="toggle-btn active" id="sigCspBtn" onclick="S.adminSigType='csp';this.classList.add('active');$('sigCcBtn').classList.remove('active')">CSP</button><button class="toggle-btn" id="sigCcBtn" onclick="S.adminSigType='cc';this.classList.add('active');$('sigCspBtn').classList.remove('active')">CC</button></div>
+        <div class="toggle"><button class="toggle-btn active" id="sigCspBtn" onclick="S.adminSigType='csp';this.classList.add('active');$('sigCcBtn').classList.remove('active');if(adminChainData)renderAdminChain(adminChainData)">CSP</button><button class="toggle-btn" id="sigCcBtn" onclick="S.adminSigType='cc';this.classList.add('active');$('sigCspBtn').classList.remove('active');if(adminChainData)renderAdminChain(adminChainData)">CC</button></div>
       </div>
-      <div class="form-group"><label class="form-label">Ticker</label><input type="text" class="form-input" id="adminTicker" placeholder="NVDA" style="text-transform:uppercase"></div>
+
+      <!-- Quick tickers -->
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin:8px 0">
+        <button class="chip-btn" onclick="adminQuickTicker('AAPL')">AAPL</button>
+        <button class="chip-btn" onclick="adminQuickTicker('NVDA')">NVDA</button>
+        <button class="chip-btn" onclick="adminQuickTicker('TSLA')">TSLA</button>
+        <button class="chip-btn" onclick="adminQuickTicker('SPY')">SPY</button>
+        <button class="chip-btn" onclick="adminQuickTicker('AMD')">AMD</button>
+        <button class="chip-btn" onclick="adminQuickTicker('MSFT')">MSFT</button>
+        <button class="chip-btn" onclick="adminQuickTicker('AMZN')">AMZN</button>
+        <button class="chip-btn" onclick="adminQuickTicker('QQQ')">QQQ</button>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Ticker</label>
+        <div style="display:flex;gap:8px">
+          <input type="text" class="form-input" id="adminTicker" placeholder="NVDA" style="text-transform:uppercase;flex:1" oninput="adminTickerDebounced(this.value)">
+          <button class="btn btn-outline" onclick="loadAdminChain()" style="white-space:nowrap;padding:8px 16px;font-size:12px">Load Chain</button>
+        </div>
+        <div id="adminTickerInfo" style="font-size:12px;margin-top:4px;color:var(--text3)"></div>
+      </div>
+
+      <!-- Admin chain picker -->
+      <div id="adminChainPicker" style="display:none;margin-bottom:12px">
+        <div id="adminChainExps" style="display:flex;gap:6px;overflow-x:auto;padding-bottom:8px;margin-bottom:8px"></div>
+        <div id="adminChainStrikes" style="max-height:180px;overflow-y:auto;border:1px solid var(--border);border-radius:12px"></div>
+      </div>
+
       <div class="form-group"><label class="form-label">Strike</label><input type="number" class="form-input" id="adminStrike" placeholder="130"></div>
       <div class="form-group"><label class="form-label">Expiration</label><input type="text" class="form-input" id="adminExp" placeholder="Feb 7"></div>
-      <div class="form-group"><label class="form-label">Premium</label><input type="text" class="form-input" id="adminPrem" placeholder="$3.20"></div>
-      <div class="form-group"><label class="form-label">Delta</label><input type="text" class="form-input" id="adminDelta" placeholder="0.25"></div>
-      <button class="btn" onclick="postSignal()">Post Signal</button>
+      <div style="display:flex;gap:8px">
+        <div class="form-group" style="flex:1"><label class="form-label">Premium</label><input type="text" class="form-input" id="adminPrem" placeholder="$3.20"></div>
+        <div class="form-group" style="flex:1"><label class="form-label">Delta</label><input type="text" class="form-input" id="adminDelta" placeholder="0.25"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Notes (optional)</label><input type="text" class="form-input" id="adminNotes" placeholder="High IV play, targeting 30 DTE..."></div>
+      <button class="btn" onclick="postSignal()" style="width:100%">Post Signal</button>
     </div>
 
     <div id="adminAnnForm" class="hidden">
@@ -1853,7 +1949,108 @@ function fillRollFromPosition() {
   $('rollNew').focus();
 }
 
+// Admin chain picker
+let adminChainData = null;
+let adminTickerTimer = null;
+
+function adminQuickTicker(sym) {
+  $('adminTicker').value = sym;
+  document.querySelectorAll('#adminSignalForm .chip-btn').forEach(b => b.classList.toggle('active', b.textContent === sym));
+  loadAdminChain();
+}
+
+function adminTickerDebounced(val) {
+  clearTimeout(adminTickerTimer);
+  if (val.trim().length >= 1) {
+    adminTickerTimer = setTimeout(() => loadAdminChain(), 600);
+  }
+}
+
+async function loadAdminChain() {
+  const sym = $('adminTicker').value.trim().toUpperCase();
+  if (!sym) return;
+
+  $('adminTickerInfo').textContent = 'Loading...';
+
+  try {
+    const quote = await fetchLiveQuote(sym);
+    if (quote) {
+      const color = quote.change >= 0 ? 'var(--green)' : 'var(--red)';
+      $('adminTickerInfo').innerHTML = `<b>${sym}</b> $${quote.price.toFixed(2)} <span style="color:${color}">${quote.change >= 0?'+':''}${quote.change.toFixed(2)} (${quote.changePercent}%)</span>`;
+    }
+
+    const chain = await fetchOptionsChain(sym);
+    if (chain && (chain.puts.length || chain.calls.length)) {
+      adminChainData = chain;
+      $('adminChainPicker').style.display = 'block';
+
+      const exps = (chain.expirations || []).slice(0, 6);
+      $('adminChainExps').innerHTML = exps.map((exp, i) =>
+        `<button class="chain-exp-btn${i===0?' active':''}" onclick="selectAdminExp(${exp},this)">${formatExpDate(exp)} (${calcDTE(exp)}d)</button>`
+      ).join('');
+
+      renderAdminChain(chain);
+    }
+  } catch(e) {
+    $('adminTickerInfo').textContent = 'Not found';
+  }
+}
+
+function selectAdminExp(expTs, btn) {
+  $('adminChainExps').querySelectorAll('.chain-exp-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const sym = $('adminTicker').value.trim().toUpperCase();
+  fetchOptionsChain(sym, expTs).then(chain => {
+    if (chain) { adminChainData = chain; renderAdminChain(chain); }
+  });
+}
+
+function renderAdminChain(chain) {
+  const isCsp = (S.adminSigType || 'csp') === 'csp';
+  const options = isCsp ? (chain.puts || []) : (chain.calls || []);
+  const price = chain.price || 0;
+
+  const near = options.filter(o => Math.abs(o.strike - price) / price < 0.12).sort((a,b) => b.strike - a.strike);
+
+  $('adminChainStrikes').innerHTML = `
+    <div class="chain-row" style="background:var(--input);font-size:11px;font-weight:600;color:var(--text3);cursor:default">
+      <div style="flex:1">Strike</div><div style="width:60px;text-align:right">Bid</div><div style="width:60px;text-align:right">Ask</div><div style="width:45px;text-align:right">Δ</div><div style="width:45px;text-align:right">IV</div>
+    </div>
+  ` + near.map(o => {
+    const delta = o.delta ? Math.abs(o.delta).toFixed(2) : '—';
+    const iv = o.impliedVolatility ? (o.impliedVolatility * 100).toFixed(0) + '%' : '—';
+    const atm = Math.abs(o.strike - price) / price < 0.01;
+    return `<div class="chain-row" onclick="pickAdminOption(${o.strike},${o.bid||0},${o.ask||0},${o.delta||0},${o.impliedVolatility||0})">
+      <div style="flex:1;font-weight:600;${atm?'color:var(--blue)':''}">$${o.strike}${atm?' ◄':''}</div>
+      <div style="width:60px;text-align:right;color:var(--green)">${(o.bid||0).toFixed(2)}</div>
+      <div style="width:60px;text-align:right">${(o.ask||0).toFixed(2)}</div>
+      <div style="width:45px;text-align:right;font-size:12px">${delta}</div>
+      <div style="width:45px;text-align:right;font-size:12px">${iv}</div>
+    </div>`;
+  }).join('');
+}
+
+function pickAdminOption(strike, bid, ask, delta, iv) {
+  const mid = ((bid + ask) / 2).toFixed(2);
+  $('adminStrike').value = strike;
+  $('adminPrem').value = '$' + mid;
+  $('adminDelta').value = delta ? Math.abs(delta).toFixed(2) : '';
+
+  // Get expiration from active tab
+  const activeExp = $('adminChainExps')?.querySelector('.chain-exp-btn.active');
+  if (activeExp) {
+    $('adminExp').value = activeExp.textContent.split('(')[0].trim();
+  }
+
+  // Highlight
+  $('adminChainStrikes').querySelectorAll('.chain-row').forEach(r => r.classList.remove('selected'));
+  event.currentTarget.classList.add('selected');
+
+  showToast(`Selected $${strike} · Premium $${mid}`, 'success');
+}
+
 async function postSignal() {
+  const notes = $('adminNotes')?.value.trim() || '';
   const sig = {
     type: S.adminSigType || 'csp',
     ticker: $('adminTicker').value.toUpperCase().trim(),
@@ -1861,6 +2058,7 @@ async function postSignal() {
     exp: $('adminExp').value.trim(),
     prem: $('adminPrem').value.trim(),
     delta: $('adminDelta').value.trim(),
+    notes: notes || undefined,
     time: 'Just now',
     timestamp: Date.now(),
     kind: 'signal'
@@ -1872,6 +2070,10 @@ async function postSignal() {
   $('adminExp').value = '';
   $('adminPrem').value = '';
   $('adminDelta').value = '';
+  if ($('adminNotes')) $('adminNotes').value = '';
+  $('adminTickerInfo').textContent = '';
+  $('adminChainPicker').style.display = 'none';
+  adminChainData = null;
   renderAdminPosts();
   renderSignals();
 }
@@ -5710,7 +5912,219 @@ function closePosition(){
 }
 async function syncPositions(){if(!S.apiKey)return showToast('Add API keys in settings first','error');try{$('statusPill').className='status live';$('statusText').textContent='Syncing...';const r=await fetch('https://paper-api.alpaca.markets/v2/positions',{headers:{'APCA-API-KEY-ID':S.apiKey,'APCA-API-SECRET-KEY':S.secretKey}});if(!r.ok)throw new Error('Failed');const pos=await r.json();pos.forEach(p=>{if(!S.positions.find(x=>x.symbol===p.symbol)){S.positions.push({id:Date.now().toString()+Math.random(),symbol:p.symbol,type:'shares',contracts:parseInt(p.qty),costBasis:parseFloat(p.avg_entry_price),synced:true,openDate:new Date().toISOString()})}});const ar=await fetch('https://paper-api.alpaca.markets/v2/account',{headers:{'APCA-API-KEY-ID':S.apiKey,'APCA-API-SECRET-KEY':S.secretKey}});if(ar.ok){const a=await ar.json();S.accSize=parseFloat(a.equity)||S.accSize}save();$('statusPill').className='status live';$('statusText').textContent='Live';renderHome()}catch(e){$('statusPill').className='status';$('statusText').textContent='Error';showToast('Sync failed','error')}}
 function setAddMode(m){S.addMode=m;$('addCspBtn').classList.toggle('active',m==='csp');$('addCcBtn').classList.toggle('active',m==='cc');$('addSharesBtn').classList.toggle('active',m==='shares');if(m==='shares'){hide('optFields');show('shareFields')}else{show('optFields');hide('shareFields')}}
-function savePosition(){const sym=$('addSymbol').value.trim().toUpperCase();if(!sym)return showToast('Enter symbol','error');const p={id:Date.now().toString(),symbol:sym,type:S.addMode,contracts:parseInt($('addContracts').value)||1,openDate:new Date().toISOString()};if(S.addMode==='shares')p.costBasis=parseFloat($('addCost').value)||0;else{p.strike=parseFloat($('addStrike').value)||0;p.expiration=$('addExp').value;p.premium=parseFloat($('addPremium').value)||0;if(!p.strike||!p.expiration)return showToast('Fill strike & expiration','error')}S.positions.push(p);save();closeModal('addModal');renderHome()}
+// --- Smart Add Position ---
+let addChainData = null;
+let addSelectedChainOption = null;
+let addManualMode = false;
+let addTickerDebounce = null;
+
+function quickAddTicker(sym) {
+  $('addSymbol').value = sym;
+  document.querySelectorAll('#addModal .chip-btn').forEach(b => b.classList.toggle('active', b.textContent === sym));
+  loadAddChain(sym);
+}
+
+function onAddTickerInput(val) {
+  const sym = val.trim().toUpperCase();
+  clearTimeout(addTickerDebounce);
+  if (sym.length >= 1) {
+    addTickerDebounce = setTimeout(() => loadAddChain(sym), 500);
+  }
+  // Highlight matching chip
+  document.querySelectorAll('#addModal .chip-btn').forEach(b => b.classList.toggle('active', b.textContent === sym));
+}
+
+async function loadAddChain(sym) {
+  const priceEl = $('addTickerPrice');
+  const pickerEl = $('addChainPicker');
+
+  priceEl.style.display = 'inline';
+  priceEl.textContent = 'Loading...';
+  priceEl.style.color = 'var(--text3)';
+
+  try {
+    const quote = await fetchLiveQuote(sym);
+    if (quote) {
+      priceEl.textContent = `$${quote.price.toFixed(2)}`;
+      priceEl.style.color = quote.change >= 0 ? 'var(--green)' : 'var(--red)';
+    } else {
+      priceEl.textContent = '';
+    }
+  } catch(e) { priceEl.textContent = ''; }
+
+  // Load options chain
+  if (S.addMode === 'shares') return;
+  try {
+    const chain = await fetchOptionsChain(sym);
+    if (!chain || (!chain.puts.length && !chain.calls.length)) {
+      pickerEl.style.display = 'none';
+      // Show manual fields if no chain
+      if (!addManualMode) toggleManualAdd();
+      return;
+    }
+    addChainData = chain;
+    pickerEl.style.display = 'block';
+
+    // Render expiration tabs
+    const expsEl = $('addChainExps');
+    const exps = (chain.expirations || []).slice(0, 8);
+    expsEl.innerHTML = exps.map((exp, i) => {
+      const label = formatExpDate(exp);
+      const dte = calcDTE(exp);
+      return `<button class="chain-exp-btn${i===0?' active':''}" onclick="selectAddExp(${exp},this)">${label} <span style="opacity:0.6">(${dte}d)</span></button>`;
+    }).join('');
+
+    // Render strikes for first expiration
+    renderAddChainStrikes(chain);
+  } catch(e) {
+    pickerEl.style.display = 'none';
+  }
+}
+
+function selectAddExp(expTs, btn) {
+  // Update active button
+  $('addChainExps').querySelectorAll('.chain-exp-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+
+  const sym = $('addSymbol').value.trim().toUpperCase();
+  fetchOptionsChain(sym, expTs).then(chain => {
+    if (chain) {
+      addChainData = chain;
+      renderAddChainStrikes(chain);
+    }
+  });
+}
+
+function renderAddChainStrikes(chain) {
+  const isCsp = S.addMode === 'csp';
+  const options = isCsp ? (chain.puts || []) : (chain.calls || []);
+  const price = chain.price || 0;
+  const strikesEl = $('addChainStrikes');
+
+  // Filter to reasonable range around current price
+  const nearMoney = options.filter(o => {
+    const diff = Math.abs(o.strike - price) / price;
+    return diff < 0.15; // Within 15% of current price
+  }).sort((a,b) => b.strike - a.strike);
+
+  if (nearMoney.length === 0) {
+    strikesEl.innerHTML = '<div style="padding:16px;text-align:center;color:var(--text3);font-size:13px">No options found near current price</div>';
+    return;
+  }
+
+  strikesEl.innerHTML = `
+    <div class="chain-row" style="background:var(--input);font-size:11px;font-weight:600;color:var(--text3);cursor:default">
+      <div style="flex:1">Strike</div>
+      <div style="width:70px;text-align:right">Bid</div>
+      <div style="width:70px;text-align:right">Ask</div>
+      <div style="width:50px;text-align:right">Delta</div>
+      <div style="width:50px;text-align:right">IV</div>
+    </div>
+  ` + nearMoney.map(o => {
+    const bid = (o.bid || 0).toFixed(2);
+    const ask = (o.ask || 0).toFixed(2);
+    const mid = ((o.bid + o.ask) / 2).toFixed(2);
+    const delta = o.delta ? Math.abs(o.delta).toFixed(2) : (o.impliedVolatility ? '—' : '—');
+    const iv = o.impliedVolatility ? (o.impliedVolatility * 100).toFixed(0) + '%' : '—';
+    const otm = isCsp ? o.strike < price : o.strike > price;
+    const atm = Math.abs(o.strike - price) / price < 0.01;
+    return `<div class="chain-row" onclick="selectChainOption(${o.strike},${o.bid||0},${o.ask||0},'${o.expiration||''}',${o.delta||0},${o.impliedVolatility||0})" data-strike="${o.strike}">
+      <div style="flex:1;font-weight:600;${atm?'color:var(--blue)':otm?'':'color:var(--red)'}">$${o.strike}${atm?' ◄':''}</div>
+      <div style="width:70px;text-align:right;color:var(--green)">${bid}</div>
+      <div style="width:70px;text-align:right">${ask}</div>
+      <div style="width:50px;text-align:right;font-size:12px">${delta}</div>
+      <div style="width:50px;text-align:right;font-size:12px">${iv}</div>
+    </div>`;
+  }).join('');
+}
+
+function selectChainOption(strike, bid, ask, expiration, delta, iv) {
+  const mid = ((bid + ask) / 2);
+  addSelectedChainOption = { strike, bid, ask, mid, expiration, delta, iv };
+
+  // Highlight selected row
+  $('addChainStrikes').querySelectorAll('.chain-row').forEach(r => r.classList.remove('selected'));
+  const row = $('addChainStrikes').querySelector(`[data-strike="${strike}"]`);
+  if (row) row.classList.add('selected');
+
+  // Fill manual fields too
+  $('addStrike').value = strike;
+  $('addPremium').value = mid.toFixed(2);
+
+  // Show summary
+  const sym = $('addSymbol').value.trim().toUpperCase();
+  const isCsp = S.addMode === 'csp';
+  $('addSelectedSummary').style.display = 'block';
+  $('addSummaryText').textContent = `${sym} $${strike} ${isCsp?'Put':'Call'} · Premium $${mid.toFixed(2)} · ${delta ? 'Δ' + Math.abs(delta).toFixed(2) : ''}`;
+}
+
+function toggleManualAdd() {
+  addManualMode = !addManualMode;
+  const fields = S.addMode === 'shares' ? 'shareFields' : 'optFields';
+  if (addManualMode) {
+    show(fields);
+    $('addChainPicker').style.display = 'none';
+    $('manualToggleBtn').textContent = 'Pick from chain';
+  } else {
+    hide(fields);
+    if (addChainData) $('addChainPicker').style.display = 'block';
+    $('manualToggleBtn').textContent = 'Enter manually instead';
+  }
+}
+
+function savePosition(){
+  const sym=$('addSymbol').value.trim().toUpperCase();
+  if(!sym)return showToast('Enter symbol','error');
+  const p={id:Date.now().toString(),symbol:sym,type:S.addMode,contracts:parseInt($('addContracts').value)||1,openDate:new Date().toISOString()};
+  if(S.addMode==='shares') {
+    p.costBasis=parseFloat($('addCost').value)||0;
+  } else {
+    // Use chain selection or manual entry
+    if (addSelectedChainOption && !addManualMode) {
+      p.strike = addSelectedChainOption.strike;
+      p.premium = addSelectedChainOption.mid;
+      // Get expiration from active tab
+      const activeExp = $('addChainExps')?.querySelector('.chain-exp-btn.active');
+      if (activeExp) {
+        const expText = activeExp.textContent.trim().split('(')[0].trim();
+        p.expiration = expText;
+      }
+    } else {
+      p.strike=parseFloat($('addStrike').value)||0;
+      p.expiration=$('addExp').value;
+      p.premium=parseFloat($('addPremium').value)||0;
+    }
+    if(!p.strike)return showToast('Select a strike price','error');
+  }
+  S.positions.push(p);save();
+  closeModal('addModal');
+  // Reset state
+  addSelectedChainOption = null;
+  addChainData = null;
+  addManualMode = false;
+  $('addSelectedSummary').style.display = 'none';
+  $('addChainPicker').style.display = 'none';
+  renderHome();
+  showToast(`Added ${sym} ${p.strike?'$'+p.strike:''}${S.addMode==='csp'?'P':S.addMode==='cc'?'C':''} to portfolio!`,'success');
+}
+
+// Copy trade from signal to portfolio
+function copyTradeFromSignal(ticker, type, strike, exp, prem) {
+  const p = {
+    id: Date.now().toString(),
+    symbol: ticker,
+    type: type,
+    strike: parseFloat(strike) || 0,
+    expiration: exp,
+    premium: parseFloat(prem?.replace('$','')) || 0,
+    contracts: 1,
+    openDate: new Date().toISOString()
+  };
+  S.positions.push(p);
+  save();
+  renderHome();
+  showToast(`Copied ${ticker} $${strike}${type==='csp'?'P':'C'} to your portfolio!`, 'success');
+}
 function setMode(m){S.mode=m;$('cspBtn').classList.toggle('active',m==='csp');$('ccBtn').classList.toggle('active',m==='cc');
   // Reload options if we have a current ticker
   if(currentTicker && currentChain) loadOptionsChain(currentTicker);
@@ -6064,7 +6478,8 @@ function renderSignals(){
     html += `<div class="card-title" style="margin:16px 0 12px;display:flex;align-items:center;gap:8px"><span style="display:inline-block;width:8px;height:8px;background:var(--green);border-radius:50%;animation:pulse 2s infinite"></span>Open Positions (${openSigs.length})</div>`;
     openSigs.forEach((s) => {
       const time = s.timestamp ? getTimeAgo(s.timestamp) : s.time;
-      html += `<div class="signal-card" style="border-left:3px solid var(--${s.type==='csp'?'green':'blue'})"><div class="signal-header"><span class="signal-type ${s.type}">${s.type.toUpperCase()}</span><span class="signal-time">${time}</span></div><div class="signal-ticker">${s.ticker}</div><div class="signal-details">$${s.strike} ${s.type==='csp'?'Put':'Call'} · Exp ${s.exp}</div><div style="display:flex;gap:16px;font-size:13px"><span>Premium: <b style="color:var(--green)">${s.prem}</b></span><span>Delta: <b>${s.delta}</b></span></div></div>`;
+      const premVal = s.prem || '';
+      html += `<div class="signal-card" style="border-left:3px solid var(--${s.type==='csp'?'green':'blue'})"><div class="signal-header"><span class="signal-type ${s.type}">${s.type.toUpperCase()}</span><span class="signal-time">${time}</span></div><div class="signal-ticker">${s.ticker}</div><div class="signal-details">$${s.strike} ${s.type==='csp'?'Put':'Call'} · Exp ${s.exp}</div><div style="display:flex;gap:16px;font-size:13px;align-items:center"><span>Premium: <b style="color:var(--green)">${premVal}</b></span><span>Delta: <b>${s.delta||''}</b></span><button class="copy-trade-btn" onclick="event.stopPropagation();copyTradeFromSignal('${s.ticker}','${s.type}','${s.strike}','${s.exp}','${premVal}')">+ Copy Trade</button></div></div>`;
     });
   } else {
     html += `<div class="empty" style="padding:24px"><div class="empty-title">No Open Positions</div><div class="empty-text">New signals will appear here when posted</div></div>`;
