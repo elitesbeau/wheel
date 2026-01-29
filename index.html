@@ -17,8 +17,23 @@
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
   <style>
     *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-    :root{--bg:#f5f5f7;--card:#fff;--input:#f0f0f2;--text:#1d1d1f;--text2:#86868b;--text3:#aeaeb2;--border:#e5e5e7;--hero:#1d1d1f;--green:#34c759;--green-bg:rgba(52,199,89,.12);--red:#ff3b30;--red-bg:rgba(255,59,48,.12);--blue:#007aff;--blue-bg:rgba(0,122,255,.12);--orange:#ff9500;--orange-bg:rgba(255,149,0,.12);--purple:#af52de;--purple-bg:rgba(175,82,222,.12)}
-    [data-theme=dark]{--bg:#000;--card:#1c1c1e;--input:#2c2c2e;--text:#fff;--text2:#98989f;--text3:#636366;--border:#38383a;--hero:#1c1c1e}
+    /* === THEME: Default (Light) === */
+    :root{--bg:#f5f5f7;--card:#fff;--input:#f0f0f2;--text:#1d1d1f;--text2:#86868b;--text3:#aeaeb2;--border:#e5e5e7;--hero:#1d1d1f;--green:#34c759;--green-bg:rgba(52,199,89,.12);--red:#ff3b30;--red-bg:rgba(255,59,48,.12);--blue:#007aff;--blue-bg:rgba(0,122,255,.12);--orange:#ff9500;--orange-bg:rgba(255,149,0,.12);--purple:#af52de;--purple-bg:rgba(175,82,222,.12);--accent:#007aff;--accent-bg:rgba(0,122,255,.12);--glow:none;--card-shadow:0 1px 3px rgba(0,0,0,.06);--nav-bg:rgba(255,255,255,.92);--font-display:'Inter',sans-serif;--font-body:'Inter',sans-serif;--radius:12px;--hero-gradient:none}
+
+    /* === THEME: Dark (Original) === */
+    [data-theme=dark]{--bg:#000;--card:#1c1c1e;--input:#2c2c2e;--text:#fff;--text2:#98989f;--text3:#636366;--border:#38383a;--hero:#1c1c1e;--nav-bg:rgba(0,0,0,.92);--card-shadow:0 1px 3px rgba(0,0,0,.3)}
+
+    /* === THEME: Pro Trader (Webull/TradingView) === */
+    [data-theme=pro]{--bg:#0a0e17;--card:#131722;--input:#1e222d;--text:#d1d4dc;--text2:#787b86;--text3:#4c525e;--border:#2a2e39;--hero:#131722;--green:#26a69a;--green-bg:rgba(38,166,154,.15);--red:#ef5350;--red-bg:rgba(239,83,80,.15);--blue:#2962ff;--blue-bg:rgba(41,98,255,.15);--orange:#ff9800;--orange-bg:rgba(255,152,0,.15);--purple:#7c4dff;--purple-bg:rgba(124,77,255,.15);--accent:#2962ff;--accent-bg:rgba(41,98,255,.15);--nav-bg:rgba(10,14,23,.95);--card-shadow:0 2px 8px rgba(0,0,0,.4);--hero-gradient:linear-gradient(135deg,rgba(41,98,255,.08),rgba(38,166,154,.05))}
+
+    /* === THEME: Luxury Fintech (Bloomberg + Gold) === */
+    [data-theme=luxury]{--bg:#0c0c0f;--card:#16161a;--input:#1e1e24;--text:#e8e6e3;--text2:#9b9792;--text3:#6b6760;--border:#2a2925;--hero:#16161a;--green:#c9a962;--green-bg:rgba(201,169,98,.12);--red:#c45050;--red-bg:rgba(196,80,80,.12);--blue:#8b7355;--blue-bg:rgba(139,115,85,.12);--orange:#d4a055;--orange-bg:rgba(212,160,85,.12);--purple:#9b8ec4;--purple-bg:rgba(155,142,196,.12);--accent:#c9a962;--accent-bg:rgba(201,169,98,.12);--nav-bg:rgba(12,12,15,.95);--card-shadow:0 2px 12px rgba(0,0,0,.5),0 0 1px rgba(201,169,98,.1);--hero-gradient:linear-gradient(135deg,rgba(201,169,98,.06),rgba(139,115,85,.03))}
+
+    /* === THEME: 80s Retro (Synthwave) === */
+    [data-theme=retro]{--bg:#1a1025;--card:#241535;--input:#2e1d42;--text:#f0e6ff;--text2:#b89fda;--text3:#7c6399;--border:#3d2a5c;--hero:#241535;--green:#00ff87;--green-bg:rgba(0,255,135,.12);--red:#ff2d6f;--red-bg:rgba(255,45,111,.12);--blue:#00d4ff;--blue-bg:rgba(0,212,255,.12);--orange:#ff6b2b;--orange-bg:rgba(255,107,43,.12);--purple:#c77dff;--purple-bg:rgba(199,125,255,.15);--accent:#ff2d6f;--accent-bg:rgba(255,45,111,.12);--nav-bg:rgba(26,16,37,.95);--card-shadow:0 2px 12px rgba(199,125,255,.08),0 0 30px rgba(255,45,111,.03);--glow:0 0 20px rgba(199,125,255,.15);--hero-gradient:linear-gradient(135deg,rgba(255,45,111,.08),rgba(0,212,255,.05),rgba(199,125,255,.08))}
+
+    /* === THEME: Fun / Playful === */
+    [data-theme=fun]{--bg:#fef7f0;--card:#fff;--input:#fff5eb;--text:#2d1b69;--text2:#6b5b95;--text3:#9b8fc2;--border:#ede3f7;--hero:#2d1b69;--green:#10b981;--green-bg:rgba(16,185,129,.12);--red:#f43f5e;--red-bg:rgba(244,63,94,.12);--blue:#6366f1;--blue-bg:rgba(99,102,241,.12);--orange:#f59e0b;--orange-bg:rgba(245,158,11,.12);--purple:#a855f7;--purple-bg:rgba(168,85,247,.15);--accent:#6366f1;--accent-bg:rgba(99,102,241,.12);--nav-bg:rgba(254,247,240,.95);--card-shadow:0 2px 8px rgba(45,27,105,.06);--hero-gradient:linear-gradient(135deg,rgba(99,102,241,.06),rgba(168,85,247,.04))}
     body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
     .app{max-width:430px;margin:0 auto;padding:12px 0 90px}
     .hero{margin:0 16px 20px;background:var(--hero);border-radius:24px;padding:20px;position:relative;overflow:hidden}
@@ -100,7 +115,43 @@
     .nav-btn.active svg{stroke:var(--text)}.nav-btn.active span{color:var(--text);font-weight:600}
     .nav-btn:not(.active) svg{stroke:var(--text3)}.nav-btn:not(.active) span{color:var(--text3)}
     .tab{display:none}.tab.active{display:block}
-    .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px;margin:0 16px 16px}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius,16px);padding:20px;margin:0 16px 16px;box-shadow:var(--card-shadow,none)}
+
+    /* Pro: subtle gradient border on cards */
+    [data-theme=pro] .card{border-color:#2a2e39}
+    [data-theme=pro] .hero{background:linear-gradient(180deg,#131722 0%,#0a0e17 100%)}
+    [data-theme=pro] .signal-card{border-radius:4px}
+    [data-theme=pro] .btn{border-radius:4px;text-transform:uppercase;letter-spacing:0.5px;font-size:12px}
+
+    /* Luxury: gold accents, elegant borders */
+    [data-theme=luxury] .card{border-color:#2a2925;border-width:0.5px}
+    [data-theme=luxury] .hero{background:linear-gradient(135deg,#16161a 0%,#1e1a14 100%);border:0.5px solid rgba(201,169,98,.15)}
+    [data-theme=luxury] .btn{background:linear-gradient(135deg,#c9a962,#a8893e);color:#0c0c0f;font-weight:700;letter-spacing:0.5px}
+    [data-theme=luxury] .btn-outline{background:transparent;color:#c9a962;border-color:#c9a962}
+    [data-theme=luxury] .nav{border-top:0.5px solid rgba(201,169,98,.2)}
+    [data-theme=luxury] .toggle-btn.active{background:#c9a962;color:#0c0c0f}
+
+    /* Retro: neon glow, synthwave vibes */
+    [data-theme=retro] .card{border-color:#3d2a5c;box-shadow:var(--glow)}
+    [data-theme=retro] .hero{background:linear-gradient(180deg,#241535 0%,#1a1025 100%);box-shadow:0 0 40px rgba(199,125,255,.06)}
+    [data-theme=retro] .btn{background:linear-gradient(135deg,#ff2d6f,#c77dff);color:#fff;font-weight:700;text-shadow:0 0 10px rgba(255,45,111,.5)}
+    [data-theme=retro] .btn-outline{background:transparent;color:#c77dff;border-color:#c77dff;text-shadow:0 0 8px rgba(199,125,255,.4)}
+    [data-theme=retro] .signal-type.csp{background:rgba(0,255,135,.15);color:#00ff87;text-shadow:0 0 8px rgba(0,255,135,.4)}
+    [data-theme=retro] .signal-type.cc{background:rgba(0,212,255,.15);color:#00d4ff;text-shadow:0 0 8px rgba(0,212,255,.4)}
+    [data-theme=retro] .nav{border-top:1px solid #3d2a5c;box-shadow:0 -2px 20px rgba(199,125,255,.08)}
+    [data-theme=retro] .toggle-btn.active{background:#ff2d6f;color:#fff;box-shadow:0 0 12px rgba(255,45,111,.3)}
+    [data-theme=retro] .hero-value{text-shadow:0 0 20px rgba(199,125,255,.3)}
+    [data-theme=retro] .switch.on{background:#ff2d6f;box-shadow:0 0 10px rgba(255,45,111,.4)}
+
+    /* Fun: rounded, bouncy, colorful */
+    [data-theme=fun] .card{border-radius:20px;border-color:#ede3f7}
+    [data-theme=fun] .hero{background:linear-gradient(135deg,#2d1b69,#6366f1);border-radius:28px}
+    [data-theme=fun] .btn{border-radius:24px;background:linear-gradient(135deg,#6366f1,#a855f7);font-weight:700}
+    [data-theme=fun] .btn-outline{border-radius:24px;border-color:#6366f1;color:#6366f1}
+    [data-theme=fun] .signal-card{border-radius:16px}
+    [data-theme=fun] .nav{border-radius:24px 24px 0 0}
+    [data-theme=fun] .toggle-btn.active{background:#6366f1;border-radius:20px}
+    [data-theme=fun] .switch.on{background:linear-gradient(135deg,#6366f1,#a855f7)}
     .card-title{font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:16px}
     .form-group{margin-bottom:16px}
     .form-label{font-size:13px;font-weight:500;color:var(--text2);margin-bottom:8px;display:block}
@@ -609,7 +660,7 @@
       <div class="card"><div class="card-title">Account</div><div class="form-group"><label class="form-label">Display Name</label><input type="text" class="form-input" id="userName" placeholder="Your name"></div><div class="form-group"><label class="form-label">Email</label><input type="email" class="form-input" id="userEmail" placeholder="email@example.com"></div><div class="form-group"><label class="form-label">Phone (for SMS alerts)</label><input type="tel" class="form-input" id="userPhone" placeholder="+1 555 123 4567"></div><button class="btn btn-outline" onclick="saveProfile()">Save Profile</button></div>
       <div class="card" id="alertPrefsCard" style="display:none"><div class="card-title">Alert Notifications</div><p style="font-size:13px;color:var(--text2);margin-bottom:16px">Get notified instantly when new signals are posted</p><div class="setting-row"><span>Discord Alerts</span><button class="switch" id="discordSwitch" onclick="toggleDiscordAlerts()"><div class="switch-knob"></div></button></div><div class="setting-row"><span>SMS Alerts</span><button class="switch" id="smsSwitch" onclick="toggleSmsAlerts()"><div class="switch-knob"></div></button></div><p style="font-size:11px;color:var(--text3);margin-top:12px">SMS alerts require phone number above</p></div>
       <div class="card"><div class="card-title">Brokerage (Optional)</div><div style="padding:12px;background:var(--green-bg);border-radius:12px;margin-bottom:16px;font-size:13px;color:var(--green)"><span class="live-dot"></span><b>Live pricing works without login!</b><br><span style="opacity:0.8">Connect Alpaca only to sync your actual positions.</span></div><div id="brokerStatus"></div><div class="form-group"><label class="form-label">Alpaca API Key</label><input type="text" class="form-input" id="apiKeyInput" placeholder="PK..."></div><div class="form-group"><label class="form-label">Secret Key</label><input type="password" class="form-input" id="secretKeyInput" placeholder="••••••••"></div><div class="form-group"><label class="form-label">Account Size ($)</label><input type="number" class="form-input" id="accSizeInput" value="25000"></div><button class="btn" onclick="connectBroker()">Connect</button></div>
-      <div class="card"><div class="card-title">Preferences</div><div class="setting-row"><span>Dark Mode</span><button class="switch" id="themeSwitch" onclick="toggleTheme()"><div class="switch-knob"></div></button></div><div class="setting-row"><span>Notifications</span><button class="switch" id="notifSwitch" onclick="toggleNotif()"><div class="switch-knob"></div></button></div></div>
+      <div class="card"><div class="card-title">Preferences</div><div class="setting-row"><span>Theme: <span id="themeLabel" style="font-weight:600">Light</span></span><button class="switch" id="themeSwitch" onclick="toggleTheme()"><div class="switch-knob"></div></button></div><div class="setting-row"><span>Notifications</span><button class="switch" id="notifSwitch" onclick="toggleNotif()"><div class="switch-knob"></div></button></div></div>
       <div class="card" id="proCard"><div style="text-align:center"><div style="font-size:18px;font-weight:700;margin-bottom:8px">Upgrade to Premium</div><div style="font-size:13px;color:var(--text2);margin-bottom:20px">Unlock live signals & more</div><button class="btn" onclick="openPremium()">Get Premium · $9.99/mo</button></div></div>
       <div style="padding:16px;margin-bottom:100px">
         <button class="btn" onclick="confirmSignOut()" style="width:100%;background:transparent;border:2px solid var(--red);color:var(--red)">Sign Out</button>
@@ -2374,8 +2425,22 @@ function load(){try{const d=localStorage.getItem('meV6');if(d)Object.assign(S,JS
 function save(){try{localStorage.setItem('meV6',JSON.stringify(S))}catch(e){}}
 function checkLegal(){if(!S.legalOk)openModal('legalModal')}
 function acceptLegal(){S.legalOk=true;save();closeModal('legalModal')}
-function toggleTheme(){S.theme=S.theme==='light'?'dark':'light';applyTheme();save()}
-function applyTheme(){document.documentElement.setAttribute('data-theme',S.theme);['themeSwitch','qThemeSwitch'].forEach(id=>$(id)?.classList.toggle('on',S.theme==='dark'))}
+const THEMES = ['light','dark','pro','luxury','retro','fun'];
+const THEME_NAMES = {light:'Light',dark:'Dark',pro:'Pro Trader',luxury:'Luxury',retro:'80s Retro',fun:'Fun'};
+
+function toggleTheme(){
+  const idx = THEMES.indexOf(S.theme);
+  S.theme = THEMES[(idx + 1) % THEMES.length];
+  applyTheme();save();
+  showToast(`Theme: ${THEME_NAMES[S.theme]}`,'success');
+}
+function applyTheme(){
+  document.documentElement.setAttribute('data-theme',S.theme);
+  ['themeSwitch','qThemeSwitch'].forEach(id=>$(id)?.classList.toggle('on',S.theme!=='light'));
+  // Update theme label if exists
+  const label = $('themeLabel');
+  if (label) label.textContent = THEME_NAMES[S.theme] || S.theme;
+}
 function nav(t){document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.nav-btn').forEach(x=>x.classList.remove('active'));$(`${t}Tab`)?.classList.add('active');document.querySelector(`.nav-btn[data-tab="${t}"]`)?.classList.add('active');if(t==='home')renderHome();if(t==='watch')renderWatch();if(t==='alerts')renderAlerts();if(t==='signals')renderSignals();if(t==='profile')renderProfile()}
 function goCalc(m){nav('calc');setMode(m)}
 function openModal(id){$(id)?.classList.add('show')}
