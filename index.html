@@ -1742,6 +1742,18 @@
 
   <div class="toast" id="toast"></div>
 
+  <!-- Wheel Recap Modal -->
+  <div class="modal-bg" id="wheelRecapModal" onclick="closeModal('wheelRecapModal')">
+    <div class="modal" onclick="event.stopPropagation()" style="max-width:440px;max-height:90vh;overflow-y:auto">
+      <div class="modal-handle"></div>
+      <div class="modal-header">
+        <span class="modal-title">Wheel Complete</span>
+        <button class="modal-close" onclick="closeModal('wheelRecapModal')"><svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+      </div>
+      <div id="wheelRecapContent" style="padding:0 20px 20px"></div>
+    </div>
+  </div>
+
 <script>
 const S={theme:'light',mode:'csp',addMode:'csp',apiKey:'',secretKey:'',accSize:25000,feePerContract:0.65,positions:[],history:[],selPosId:null,user:{name:'',email:''},isPremium:false,legalOk:false,notifOn:false,emailAlerts:false,alertEmail:'',alertsPopupDismissed:false,watchlist:['AAPL','NVDA','TSLA','SPY','AMD','MSFT'],incomeGoal:500,incomeGoalHistory:[],dteThreshold:7,alertSettings:{dte:true,earnings:true,browser:false},achievements:[],leaderboardOptIn:false,leaderboardName:''};
 const names={AAPL:'Apple Inc.',NVDA:'NVIDIA',TSLA:'Tesla',MSFT:'Microsoft',AMD:'AMD',SPY:'S&P 500 ETF',QQQ:'Nasdaq 100 ETF',AMZN:'Amazon',GOOGL:'Alphabet',META:'Meta Platforms',RKLB:'Rocket Lab',PLTR:'Palantir',SOFI:'SoFi',COIN:'Coinbase',HOOD:'Robinhood',NET:'Cloudflare',SNOW:'Snowflake',CRWD:'CrowdStrike',DDOG:'Datadog',ZS:'Zscaler'};
@@ -2832,13 +2844,15 @@ async function sendSmsNotifications(post) {
       if (sub.active && sub.phone && sub.carrier) {
         const smsEmail = sub.phone.replace(/\D/g, '') + '@' + sub.carrier;
         try {
+          // For SMS: put signal text in subject (many gateways display it)
+          // Keep message minimal — EmailJS template wraps it with boilerplate
           await emailjs.send(serviceId, templateId, {
             to_email: smsEmail,
             to_name: '',
-            subject: 'Market Elites Alert',
+            subject: msg,
             message: msg,
-            from_name: 'Market Elites',
-            reply_to: 'noreply@marketelites.com'
+            from_name: '',
+            reply_to: ''
           });
         } catch (e) {
           console.warn('SMS send error for', uid, e);
@@ -3599,11 +3613,8 @@ function renderWheelPositions() {
   const countEl = $('wheelCount');
   if (countEl) countEl.textContent = active.length;
 
-  if (!active.length) {
-    c.innerHTML = '<p style="color:var(--text3);font-size:13px;text-align:center;padding:16px">No assigned positions. When a CSP gets assigned, shares appear here.</p>';
-    return;
-  }
-
+  c.innerHTML = '';
+  if (active.length) {
   c.innerHTML = active.map(w => {
     const totalCCPrem = w.ccHistory.reduce((s, cc) => s + (cc.premiumTotal || 0), 0);
     const totalPremium = (w.totalPremiumCollected || 0) + totalCCPrem;
@@ -3691,7 +3702,7 @@ function renderWheelPositions() {
       save();
     }).catch(() => {});
   });
-}
+  } // end if (active.length)
 
   // Completed wheels — full lifecycle log
   const completed = positions.filter(w => w.status === 'completed');
@@ -3731,16 +3742,24 @@ function renderWheelPositions() {
         <div style="padding:4px;background:var(--input);border-radius:4px"><div style="color:var(--text3)">Total P&L</div><b style="color:${pnlColor(finalPnl)}">${fmtPnl(finalPnl)}</b></div>
       </div>`;
 
-      return `<div style="border-left:3px solid ${finalPnl >= 0 ? 'var(--green)' : 'var(--red)'};padding:12px;margin-bottom:8px;background:var(--input);border-radius:0 8px 8px 0;opacity:0.85">
+      return `<div style="border-left:3px solid ${finalPnl >= 0 ? 'var(--green)' : 'var(--red)'};padding:12px;margin-bottom:8px;background:var(--input);border-radius:0 8px 8px 0">
         <div style="display:flex;justify-content:space-between;align-items:center">
           <div style="font-weight:700;font-size:14px">${w.symbol} <span style="font-size:11px;font-weight:400;color:var(--text3)">Wheel Complete</span></div>
-          <span style="font-size:12px;font-weight:700;color:${pnlColor(finalPnl)}">${fmtPnl(finalPnl)}</span>
+          <span style="font-size:14px;font-weight:800;color:${pnlColor(finalPnl)}">${fmtPnl(finalPnl)}</span>
         </div>
         <div style="font-size:11px;color:var(--text3)">${assignDate} → ${completeDate} · ${w.ccHistory.length} CC${w.ccHistory.length!==1?'s':''} sold</div>
         ${timeline}${summary}
-        <div style="margin-top:6px;text-align:right"><button onclick="deleteWheelPosition('${w.id}')" style="font-size:10px;padding:3px 8px;background:transparent;border:1px solid var(--text3);color:var(--text3);border-radius:4px;cursor:pointer">Remove</button></div>
+        <div style="display:flex;gap:6px;margin-top:8px">
+          <button onclick="showWheelRecap('${w.id}')" style="flex:1;font-size:11px;padding:5px 10px;background:var(--blue);color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:600">View Full Recap</button>
+          <button onclick="shareWheelWin('${w.id}')" style="flex:1;font-size:11px;padding:5px 10px;background:var(--green);color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:600">Share Win</button>
+          <button onclick="deleteWheelPosition('${w.id}')" style="font-size:11px;padding:5px 10px;background:transparent;border:1px solid var(--text3);color:var(--text3);border-radius:6px;cursor:pointer" title="Delete">✕</button>
+        </div>
       </div>`;
     }).join('');
+  }
+
+  if (!c.innerHTML) {
+    c.innerHTML = '<p style="color:var(--text3);font-size:13px;text-align:center;padding:16px">No wheel positions yet. When a CSP gets assigned, shares appear here.</p>';
   }
 }
 
@@ -3755,6 +3774,263 @@ function deleteWheelPosition(wheelId) {
   renderSignals();
   renderHome();
   showToast('Wheel position deleted', '');
+}
+
+// Show full wheel lifecycle recap modal
+function showWheelRecap(wheelId) {
+  const w = (S.wheelPositions || []).find(x => x.id === wheelId);
+  if (!w) return;
+
+  const totalCCPrem = w.ccHistory.reduce((s, cc) => s + (cc.premiumTotal || 0), 0);
+  const cspPrem = w.totalPremiumCollected || 0;
+  const totalPremium = cspPrem + totalCCPrem;
+  const stockPnl = ((w.callStrike || w.assignPrice) - w.assignPrice) * w.shares;
+  const finalPnl = w.finalPnl || (stockPnl + totalPremium);
+  const fmtPnl = v => v >= 0 ? `+$${v.toFixed(0)}` : `-$${Math.abs(v).toFixed(0)}`;
+  const pnlColor = v => v >= 0 ? 'var(--green)' : 'var(--red)';
+  const assignDate = w.assignedAt ? new Date(w.assignedAt) : new Date();
+  const completeDate = w.completedAt ? new Date(w.completedAt) : new Date();
+  const daysHeld = Math.max(1, Math.round((completeDate - assignDate) / 86400000));
+  const fmtDate = d => d.toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
+
+  let html = `
+    <div style="text-align:center;padding:20px 0 12px">
+      <div style="font-size:40px;margin-bottom:8px">${finalPnl >= 0 ? '🎉' : '📊'}</div>
+      <div style="font-size:22px;font-weight:800;margin-bottom:4px">${w.symbol} Wheel Complete</div>
+      <div style="font-size:36px;font-weight:800;color:${pnlColor(finalPnl)}">${fmtPnl(finalPnl)}</div>
+      <div style="font-size:13px;color:var(--text3);margin-top:4px">${fmtDate(assignDate)} → ${fmtDate(completeDate)} · ${daysHeld} day${daysHeld!==1?'s':''}</div>
+    </div>
+    <div style="font-size:13px;font-weight:700;margin:16px 0 8px;color:var(--text2)">How This Wheel Played Out</div>
+    <div style="border-left:3px solid var(--border);margin-left:8px;padding-left:16px">
+      <div style="position:relative;margin-bottom:16px">
+        <div style="position:absolute;left:-25px;top:2px;width:12px;height:12px;border-radius:50%;background:var(--green)"></div>
+        <div style="font-size:12px;font-weight:700;color:var(--green)">STEP 1 · Sold Cash-Secured Put</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:2px">Collected premium upfront by agreeing to buy shares if the stock drops</div>
+        <div style="margin-top:6px;padding:8px;background:var(--input);border-radius:8px;font-size:12px">
+          <div>${w.symbol} $${w.assignPrice} Put</div>
+          <div style="color:var(--green);font-weight:600;margin-top:4px">Premium: +$${cspPrem.toFixed(0)}</div>
+        </div>
+      </div>
+      <div style="position:relative;margin-bottom:16px">
+        <div style="position:absolute;left:-25px;top:2px;width:12px;height:12px;border-radius:50%;background:var(--orange)"></div>
+        <div style="font-size:12px;font-weight:700;color:var(--orange)">STEP 2 · Got Assigned Shares</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:2px">Stock dropped below strike — now you own shares at the strike price</div>
+        <div style="margin-top:6px;padding:8px;background:var(--input);border-radius:8px;font-size:12px">
+          <div>${w.shares} shares at $${w.assignPrice.toFixed(2)} = $${(w.shares * w.assignPrice).toLocaleString()} invested</div>
+          <div style="color:var(--text3);margin-top:2px;font-size:11px">${fmtDate(assignDate)}</div>
+        </div>
+      </div>`;
+
+  if (w.ccHistory.length > 0) {
+    html += `<div style="position:relative;margin-bottom:16px">
+        <div style="position:absolute;left:-25px;top:2px;width:12px;height:12px;border-radius:50%;background:var(--blue)"></div>
+        <div style="font-size:12px;font-weight:700;color:var(--blue)">STEP 3 · Sold Covered Calls (${w.ccHistory.length})</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:2px">Earned extra income by selling call options against your shares</div>
+        <div style="margin-top:6px">`;
+    w.ccHistory.forEach((cc, i) => {
+      const outcome = cc.outcome === 'winner' ? 'Expired Worthless (WIN)' : cc.status === 'closed' ? 'Closed' : 'Active';
+      const outcomeColor = cc.outcome === 'winner' ? 'var(--green)' : 'var(--text3)';
+      html += `<div style="padding:8px;background:var(--input);border-radius:8px;font-size:12px;margin-bottom:4px">
+          <div style="display:flex;justify-content:space-between">
+            <span>CC #${i+1}: $${cc.strike} Call · ${cc.exp}</span>
+            <span style="color:${outcomeColor};font-size:11px">${outcome}</span>
+          </div>
+          <div style="color:var(--green);font-weight:600;margin-top:2px">+$${(cc.premiumTotal||0).toFixed(0)}</div>
+        </div>`;
+    });
+    html += `<div style="text-align:right;font-size:12px;font-weight:600;color:var(--green);padding-top:4px">Total CC Premium: +$${totalCCPrem.toFixed(0)}</div></div></div>`;
+  }
+
+  const stepNum = w.ccHistory.length > 0 ? '4' : '3';
+  if (w.callStrike) {
+    html += `<div style="position:relative;margin-bottom:8px">
+        <div style="position:absolute;left:-25px;top:2px;width:12px;height:12px;border-radius:50%;background:var(--purple,#9C27B0)"></div>
+        <div style="font-size:12px;font-weight:700;color:var(--purple,#9C27B0)">STEP ${stepNum} · Shares Called Away</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:2px">Stock rose above your call strike — shares automatically sold</div>
+        <div style="margin-top:6px;padding:8px;background:var(--input);border-radius:8px;font-size:12px">
+          <div>${w.shares} shares sold at $${w.callStrike.toFixed(2)} = $${(w.shares * w.callStrike).toLocaleString()}</div>
+          <div style="color:${pnlColor(stockPnl)};font-weight:600;margin-top:2px">Stock P&L: ${fmtPnl(stockPnl)} ($${w.assignPrice.toFixed(2)} → $${w.callStrike.toFixed(2)})</div>
+          <div style="color:var(--text3);margin-top:2px;font-size:11px">${fmtDate(completeDate)}</div>
+        </div>
+      </div>`;
+  }
+  html += `</div>`;
+
+  // Math breakdown
+  html += `
+    <div style="margin-top:20px;padding:16px;background:var(--input);border-radius:12px">
+      <div style="font-size:13px;font-weight:700;margin-bottom:12px;text-align:center">Profit Breakdown</div>
+      <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--border)">
+        <span style="color:var(--text3)">CSP Premium Collected</span>
+        <span style="color:var(--green);font-weight:600">+$${cspPrem.toFixed(0)}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--border)">
+        <span style="color:var(--text3)">CC Premiums (${w.ccHistory.length} sold)</span>
+        <span style="color:var(--green);font-weight:600">+$${totalCCPrem.toFixed(0)}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--border)">
+        <span style="color:var(--text3)">Stock P&L ($${w.assignPrice.toFixed(2)} → $${(w.callStrike||w.assignPrice).toFixed(2)})</span>
+        <span style="color:${pnlColor(stockPnl)};font-weight:600">${fmtPnl(stockPnl)}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:15px;font-weight:800;padding-top:4px">
+        <span>Total Profit</span>
+        <span style="color:${pnlColor(finalPnl)}">${fmtPnl(finalPnl)}</span>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:16px">
+      <button class="btn btn-outline" onclick="closeModal('wheelRecapModal')" style="flex:1">Close</button>
+      <button class="btn" onclick="shareWheelWin('${w.id}')" style="flex:1;background:var(--blue)">Share Win</button>
+    </div>`;
+
+  $('wheelRecapContent').innerHTML = html;
+  openModal('wheelRecapModal');
+}
+
+// Generate shareable image for completed wheel
+function shareWheelWin(wheelId) {
+  const w = (S.wheelPositions || []).find(x => x.id === wheelId);
+  if (!w) return;
+
+  const canvas = document.createElement('canvas');
+  canvas.width = 600;
+  canvas.height = 420;
+  const ctx = canvas.getContext('2d');
+
+  // Dark gradient background
+  const grad = ctx.createLinearGradient(0, 0, 600, 420);
+  grad.addColorStop(0, '#0f1419');
+  grad.addColorStop(1, '#1a2332');
+  ctx.fillStyle = grad;
+  ctx.beginPath();
+  ctx.roundRect(0, 0, 600, 420, 16);
+  ctx.fill();
+
+  // Subtle border
+  ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.roundRect(0, 0, 600, 420, 16);
+  ctx.stroke();
+
+  // Brand
+  ctx.fillStyle = 'rgba(255,255,255,0.5)';
+  ctx.font = '700 14px Inter, system-ui, sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText('MARKET ELITES', 32, 40);
+
+  ctx.fillStyle = 'rgba(255,255,255,0.25)';
+  ctx.font = '500 12px Inter, system-ui, sans-serif';
+  ctx.textAlign = 'right';
+  ctx.fillText('WHEEL STRATEGY COMPLETE', 568, 40);
+  ctx.textAlign = 'left';
+
+  // Ticker
+  ctx.fillStyle = '#ffffff';
+  ctx.font = '800 48px Inter, system-ui, sans-serif';
+  ctx.fillText(w.symbol, 32, 100);
+
+  // P&L calc
+  const totalCCPrem = w.ccHistory.reduce((s, cc) => s + (cc.premiumTotal || 0), 0);
+  const cspPrem = w.totalPremiumCollected || 0;
+  const totalPremium = cspPrem + totalCCPrem;
+  const stockPnl = ((w.callStrike || w.assignPrice) - w.assignPrice) * w.shares;
+  const finalPnl = w.finalPnl || (stockPnl + totalPremium);
+  const fmtPnl = v => v >= 0 ? `+$${v.toFixed(0)}` : `-$${Math.abs(v).toFixed(0)}`;
+
+  // Big P&L
+  ctx.fillStyle = finalPnl >= 0 ? '#00C853' : '#FF1744';
+  ctx.font = '800 56px Inter, system-ui, sans-serif';
+  ctx.fillText(fmtPnl(finalPnl), 32, 170);
+
+  // Breakdown rows
+  const breakdown = [
+    { label: 'CSP Premium', value: `+$${cspPrem.toFixed(0)}`, color: '#00C853' },
+    { label: `CC Premiums (${w.ccHistory.length})`, value: `+$${totalCCPrem.toFixed(0)}`, color: '#00C853' },
+    { label: 'Stock P&L', value: fmtPnl(stockPnl), color: stockPnl >= 0 ? '#00C853' : '#FF1744' }
+  ];
+
+  ctx.font = '500 15px Inter, system-ui, sans-serif';
+  let y = 220;
+  breakdown.forEach(item => {
+    ctx.fillStyle = 'rgba(255,255,255,0.45)';
+    ctx.textAlign = 'left';
+    ctx.fillText(item.label, 32, y);
+    ctx.fillStyle = item.color;
+    ctx.textAlign = 'right';
+    ctx.fillText(item.value, 568, y);
+    y += 32;
+  });
+
+  // Divider
+  ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+  ctx.beginPath();
+  ctx.moveTo(32, y + 4);
+  ctx.lineTo(568, y + 4);
+  ctx.stroke();
+
+  // Duration line
+  y += 30;
+  const assignDate = w.assignedAt ? new Date(w.assignedAt) : new Date();
+  const completeDate = w.completedAt ? new Date(w.completedAt) : new Date();
+  const days = Math.max(1, Math.round((completeDate - assignDate) / 86400000));
+  const fmtDate = d => d.toLocaleDateString('en-US', {month:'short', day:'numeric'});
+
+  ctx.fillStyle = 'rgba(255,255,255,0.35)';
+  ctx.font = '500 13px Inter, system-ui, sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText(`${fmtDate(assignDate)} → ${fmtDate(completeDate)} · ${days} days · ${w.ccHistory.length} covered call${w.ccHistory.length!==1?'s':''} sold`, 32, y);
+
+  // Total line
+  y += 30;
+  ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+  ctx.beginPath();
+  ctx.moveTo(32, y - 14);
+  ctx.lineTo(568, y - 14);
+  ctx.stroke();
+
+  ctx.fillStyle = 'rgba(255,255,255,0.5)';
+  ctx.font = '600 14px Inter, system-ui, sans-serif';
+  ctx.fillText('Total Profit', 32, y + 4);
+  ctx.fillStyle = finalPnl >= 0 ? '#00C853' : '#FF1744';
+  ctx.font = '800 18px Inter, system-ui, sans-serif';
+  ctx.textAlign = 'right';
+  ctx.fillText(fmtPnl(finalPnl), 568, y + 4);
+  ctx.textAlign = 'left';
+
+  // Watermark
+  ctx.fillStyle = 'rgba(255,255,255,0.15)';
+  ctx.font = '400 11px Inter, system-ui, sans-serif';
+  ctx.textAlign = 'right';
+  ctx.fillText('elitesbeau.github.io', 568, 405);
+
+  canvas.toBlob(blob => {
+    if (navigator.share && navigator.canShare) {
+      try {
+        const file = new File([blob], `${w.symbol}-wheel-win.png`, { type: 'image/png' });
+        if (navigator.canShare({ files: [file] })) {
+          navigator.share({
+            title: `${w.symbol} Wheel Complete: ${fmtPnl(finalPnl)}`,
+            text: `Just completed a wheel strategy on ${w.symbol} for ${fmtPnl(finalPnl)} profit!`,
+            files: [file]
+          }).catch(() => downloadShareImage(blob, w.symbol));
+          return;
+        }
+      } catch(e) {}
+    }
+    downloadShareImage(blob, w.symbol);
+  }, 'image/png');
+}
+
+function downloadShareImage(blob, symbol) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${symbol}-wheel-win.png`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('Image downloaded! Share it on social media', 'success');
 }
 
 // Sell a covered call against assigned shares
@@ -4011,13 +4287,39 @@ function calledAwayWheel(wheelId) {
     if (!callStrike) return showToast('Enter the call strike', 'error');
 
     // Stock P&L = (sell price - buy price) × shares
+    // Bought at assignPrice, sold at callStrike
     const stockPnl = (callStrike - w.assignPrice) * w.shares;
     // Total premiums = CSP premium + all CC premiums
     const totalPremium = (w.totalPremiumCollected || 0) + totalCCPrem;
     // Final P&L = stock gain/loss + all premiums collected
     const finalPnl = stockPnl + totalPremium;
 
-    // Book the called away PnL
+    const assignDate = w.assignedAt ? new Date(w.assignedAt) : new Date();
+    const completeDate = new Date();
+    const daysHeld = Math.max(1, Math.round((completeDate - assignDate) / 86400000));
+
+    // Build wheel summary for Firebase (so users can see it)
+    const wheelSummary = {
+      assignPrice: w.assignPrice,
+      cspPremium: w.totalPremiumCollected || 0,
+      ccPremium: totalCCPrem,
+      totalPremium: totalPremium,
+      stockPnl: stockPnl,
+      callStrike: callStrike,
+      finalPnl: finalPnl,
+      shares: w.shares,
+      ccCount: w.ccHistory.length,
+      daysHeld: daysHeld,
+      assignedAt: w.assignedAt,
+      completedAt: Date.now(),
+      ccHistory: w.ccHistory.map(cc => ({
+        strike: cc.strike, exp: cc.exp,
+        premiumTotal: cc.premiumTotal || 0,
+        outcome: cc.outcome || cc.status
+      }))
+    };
+
+    // Book the called away PnL to trade history
     S.history = S.history || [];
     S.history.unshift({
       id: 'called-' + Date.now(),
@@ -4032,16 +4334,7 @@ function calledAwayWheel(wheelId) {
       grossPnl: finalPnl,
       fees: 0,
       outcome: 'called_away',
-      wheelSummary: {
-        assignPrice: w.assignPrice,
-        cspPremium: w.totalPremiumCollected || 0,
-        ccPremium: totalCCPrem,
-        totalPremium: totalPremium,
-        stockPnl: stockPnl,
-        callStrike: callStrike,
-        shares: w.shares,
-        ccCount: w.ccHistory.length
-      }
+      wheelSummary: wheelSummary
     });
 
     // Mark wheel position as completed
@@ -4050,19 +4343,34 @@ function calledAwayWheel(wheelId) {
     w.callStrike = callStrike;
     w.finalPnl = finalPnl;
 
-    // Update ALL linked posts to 'called' (CSP + all CC posts)
+    // Update ALL linked posts to 'called' + save wheel summary to CSP post
     const linkedPosts = (S.adminPosts || []).filter(p => p.wheelId === wheelId);
     linkedPosts.forEach(lp => {
       if (lp.status !== 'called' && lp.status !== 'winner') {
         lp.status = 'called';
         lp.calledAt = Date.now();
-        (async () => {
-          if (await initFirebase() && lp.id) {
-            firebase.database().ref('posts/' + lp.id).update({ status: 'called', calledAt: Date.now() }).catch(e => console.warn(e));
-          }
-        })();
+      }
+      // Save wheelSummary on CSP post so users can see the full recap
+      if (lp.type === 'csp') {
+        lp.wheelComplete = true;
+        lp.wheelSummary = wheelSummary;
       }
     });
+
+    // Sync to Firebase
+    (async () => {
+      if (await initFirebase()) {
+        for (const lp of linkedPosts) {
+          if (!lp.id) continue;
+          const updates = { status: lp.status || 'called', calledAt: Date.now() };
+          if (lp.type === 'csp') {
+            updates.wheelComplete = true;
+            updates.wheelSummary = wheelSummary;
+          }
+          firebase.database().ref('posts/' + lp.id).update(updates).catch(e => console.warn(e));
+        }
+      }
+    })();
 
     // Sync ccHistory entries to closed
     w.ccHistory.forEach(cc => { cc.status = 'closed'; });
@@ -4073,9 +4381,8 @@ function calledAwayWheel(wheelId) {
     renderSignals();
     renderHome();
 
-    const stockStr = stockPnl >= 0 ? `+$${stockPnl.toFixed(0)}` : `-$${Math.abs(stockPnl).toFixed(0)}`;
-    const pnlStr = finalPnl >= 0 ? `+$${finalPnl.toFixed(0)}` : `-$${Math.abs(finalPnl).toFixed(0)}`;
-    showToast(`${w.symbol} wheel complete! Stock: ${stockStr} + Premiums: +$${totalPremium.toFixed(0)} = ${pnlStr}`, finalPnl >= 0 ? 'success' : '');
+    // Show the full recap modal instead of just a toast
+    showWheelRecap(w.id);
 
     // Notify users
     sendAssignmentNotification({ ticker: w.symbol, strike: callStrike }, 'called').catch(e => console.warn(e));
@@ -8292,21 +8599,38 @@ function renderAlertsFeed() {
         ${assignBtn}
       </div>`;
     } else if (p.kind === 'signal' && p.status === 'called') {
+      const ws = p.wheelSummary;
+      const fmtPnl = v => v >= 0 ? `+$${v.toFixed(0)}` : `-$${Math.abs(v).toFixed(0)}`;
+      if (ws) {
+        return `<div class="pos-card" style="border-left:3px solid ${(ws.finalPnl||0) >= 0 ? 'var(--green)' : 'var(--red)'};padding:14px" onclick="nav('signals')">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <span class="pos-badge" style="background:${(ws.finalPnl||0) >= 0 ? 'var(--green-bg)' : 'var(--red-bg,rgba(255,23,68,0.1))'};color:${(ws.finalPnl||0) >= 0 ? 'var(--green)' : 'var(--red)'}">WHEEL COMPLETE</span>
+            <span style="font-size:11px;color:var(--text3)">${getTimeAgo(p.closedAt || p.timestamp)}</span>
+          </div>
+          <div style="font-size:14px;font-weight:700;margin-top:6px">${p.ticker} <span style="font-size:18px;font-weight:800;color:${(ws.finalPnl||0) >= 0 ? 'var(--green)' : 'var(--red)'}">${fmtPnl(ws.finalPnl||0)}</span></div>
+          <div style="display:flex;gap:12px;font-size:11px;margin-top:6px;color:var(--text3)">
+            <span>Premiums: <b style="color:var(--green)">+$${(ws.totalPremium||0).toFixed(0)}</b></span>
+            <span>Stock: <b style="color:${(ws.stockPnl||0) >= 0 ? 'var(--green)' : 'var(--red)'}">${fmtPnl(ws.stockPnl||0)}</b></span>
+            <span>${ws.daysHeld||'?'}d · ${ws.ccCount||0} CCs</span>
+          </div>
+        </div>`;
+      }
       return `<div class="pos-card" style="border-left:3px solid var(--blue);padding:14px" onclick="nav('signals')">
         <div style="display:flex;justify-content:space-between;align-items:center">
           <span class="pos-badge" style="background:var(--blue-bg,rgba(0,122,255,0.1));color:var(--blue)">CALLED AWAY</span>
           <span style="font-size:11px;color:var(--text3)">${getTimeAgo(p.closedAt || p.timestamp)}</span>
         </div>
         <div style="font-size:14px;font-weight:700;margin-top:6px">${p.ticker} — shares called away</div>
-        <div style="font-size:12px;color:var(--text2);margin-top:2px">Back to selling puts</div>
+        <div style="font-size:12px;color:var(--text2);margin-top:2px">Wheel complete! Back to selling puts</div>
       </div>`;
     } else if (p.kind === 'signal' && p.status === 'winner') {
       return `<div class="pos-card" style="border-left:3px solid var(--green);padding:14px" onclick="nav('signals')">
         <div style="display:flex;justify-content:space-between;align-items:center">
-          <span class="pos-badge" style="background:var(--green-bg);color:var(--green)">WIN</span>
+          <span class="pos-badge" style="background:var(--green-bg);color:var(--green)">WIN 🎉</span>
           <span style="font-size:11px;color:var(--text3)">${getTimeAgo(p.closedAt || p.timestamp)}</span>
         </div>
         <div style="font-size:14px;font-weight:700;margin-top:6px">${p.ticker} $${p.strike} ${(p.type||'').toUpperCase()} closed for profit</div>
+        <div style="font-size:12px;color:var(--green);margin-top:2px">Premium kept — option expired worthless</div>
       </div>`;
     }
     return '';
@@ -9160,10 +9484,51 @@ function renderSignals(){
     html += `<div class="empty" style="padding:24px"><div class="empty-title">No Open Positions</div><div class="empty-text">New signals will appear here when posted</div></div>`;
   }
 
-  // CLOSED POSITIONS section
-  if (closedSigs.length > 0) {
-    html += `<div class="card-title" style="margin:24px 0 12px">📊 Position History (${closedSigs.length})</div>`;
-    closedSigs.slice(0, 15).forEach((s) => {
+  // COMPLETED WHEELS section — full lifecycle recap for users
+  const completedWheelSigs = closedSigs.filter(s => s.wheelComplete && s.wheelSummary);
+  const otherClosedSigs = closedSigs.filter(s => !s.wheelComplete);
+
+  if (completedWheelSigs.length > 0) {
+    html += `<div class="card-title" style="margin:24px 0 12px;display:flex;align-items:center;gap:8px">🏆 Completed Wheels (${completedWheelSigs.length})</div>`;
+    completedWheelSigs.slice(0, 10).forEach(s => {
+      const ws = s.wheelSummary;
+      const fmtPnl = v => v >= 0 ? `+$${v.toFixed(0)}` : `-$${Math.abs(v).toFixed(0)}`;
+      const pnlColor = v => v >= 0 ? 'var(--green)' : 'var(--red)';
+      const assignDate = ws.assignedAt ? new Date(ws.assignedAt).toLocaleDateString('en-US',{month:'short',day:'numeric'}) : '';
+      const completeDate = ws.completedAt ? new Date(ws.completedAt).toLocaleDateString('en-US',{month:'short',day:'numeric'}) : '';
+
+      let timeline = `<div style="font-size:11px;color:var(--text3);margin-top:10px;border-left:2px solid var(--border);padding-left:10px">`;
+      timeline += `<div style="margin-bottom:4px"><span style="color:var(--green);font-weight:600">CSP</span> Sold $${ws.assignPrice} Put · <span style="color:var(--green)">+$${(ws.cspPremium||0).toFixed(0)}</span></div>`;
+      timeline += `<div style="margin-bottom:4px"><span style="color:var(--orange);font-weight:600">ASSIGNED</span> ${ws.shares} shares at $${ws.assignPrice.toFixed(2)} · ${assignDate}</div>`;
+      if (ws.ccHistory) {
+        ws.ccHistory.forEach((cc, i) => {
+          const outcome = cc.outcome === 'winner' ? ' WIN' : '';
+          timeline += `<div style="margin-bottom:4px"><span style="color:var(--blue);font-weight:600">CC #${i+1}</span> $${cc.strike} Call · ${cc.exp} · <span style="color:var(--green)">+$${(cc.premiumTotal||0).toFixed(0)}</span>${outcome ? '<span style="color:var(--green)">'+outcome+'</span>' : ''}</div>`;
+        });
+      }
+      timeline += `<div style="margin-bottom:4px"><span style="color:var(--purple,#9C27B0);font-weight:600">CALLED</span> Shares sold at $${ws.callStrike.toFixed(2)} · ${completeDate}</div>`;
+      timeline += `</div>`;
+
+      html += `<div class="signal-card" style="border-left:3px solid ${(ws.finalPnl||0) >= 0 ? 'var(--green)' : 'var(--red)'}">
+        <div class="signal-header">
+          <span class="signal-type" style="background:${(ws.finalPnl||0) >= 0 ? 'var(--green-bg)' : 'var(--red-bg,rgba(255,23,68,0.1))'};color:${pnlColor(ws.finalPnl||0)}">WHEEL COMPLETE</span>
+          <span class="signal-time" style="margin-left:auto">${ws.daysHeld||'?'} days</span>
+        </div>
+        <div class="signal-ticker">${s.ticker}</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;margin-top:8px;font-size:11px;text-align:center">
+          <div style="padding:6px;background:var(--input);border-radius:6px"><div style="color:var(--text3)">Premiums</div><b style="color:var(--green)">+$${(ws.totalPremium||0).toFixed(0)}</b></div>
+          <div style="padding:6px;background:var(--input);border-radius:6px"><div style="color:var(--text3)">Stock</div><b style="color:${pnlColor(ws.stockPnl||0)}">${fmtPnl(ws.stockPnl||0)}</b></div>
+          <div style="padding:6px;background:var(--input);border-radius:6px"><div style="color:var(--text3)">Total P&L</div><b style="color:${pnlColor(ws.finalPnl||0)}">${fmtPnl(ws.finalPnl||0)}</b></div>
+        </div>
+        ${timeline}
+      </div>`;
+    });
+  }
+
+  // OTHER CLOSED POSITIONS section
+  if (otherClosedSigs.length > 0) {
+    html += `<div class="card-title" style="margin:24px 0 12px">📊 Position History (${otherClosedSigs.length})</div>`;
+    otherClosedSigs.slice(0, 15).forEach((s) => {
       let statusBadge = '';
       if (s.status === 'winner') statusBadge = '<span class="status-badge winner">WIN 🎉</span>';
       else if (s.status === 'rolled') statusBadge = '<span class="status-badge rolled">ROLLED</span>';
