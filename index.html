@@ -243,7 +243,7 @@
     [data-theme=pro] .quick-icon.purple{background:rgba(124,77,255,.12);border-color:rgba(124,77,255,.25)}
     [data-theme=pro] .quick-icon.orange{background:rgba(255,152,0,.12);border-color:rgba(255,152,0,.25)}
     /* Luxury theme quick icons */
-    [data-theme=luxury] .quick-icon.blue,.quick-icon.green,.quick-icon.purple,.quick-icon.orange{border-color:rgba(201,169,98,.15)}
+    [data-theme=luxury] .quick-icon.blue,[data-theme=luxury] .quick-icon.green,[data-theme=luxury] .quick-icon.purple,[data-theme=luxury] .quick-icon.orange{border-color:rgba(201,169,98,.15)}
     [data-theme=luxury] .quick-icon{background:rgba(201,169,98,.06)}
     [data-theme=luxury] .quick-icon svg{stroke:#c9a962 !important}
     /* Retro theme quick icons */
@@ -412,7 +412,13 @@
     [data-theme=luxury] .form-label{text-transform:uppercase;letter-spacing:1.5px;font-size:10px;color:#9b9792;font-weight:400}
     [data-theme=luxury] .tx-list{border-radius:2px;border-width:0.5px}
     [data-theme=luxury] .quick-icon{border-radius:2px}
-    [data-theme=luxury] .hero-btn-icon{border-radius:2px;border-color:rgba(201,169,98,.2)}
+    [data-theme=luxury] .icon-btn{background:rgba(201,169,98,.08);border:1px solid rgba(201,169,98,.15)}
+    [data-theme=luxury] .icon-btn svg{stroke:#c9a962}
+    [data-theme=luxury] .avatar-btn{border-color:rgba(201,169,98,.3);background:linear-gradient(135deg,#c9a962,#8b7355)}
+    [data-theme=luxury] .status{background:rgba(201,169,98,.08);border:1px solid rgba(201,169,98,.12)}
+    [data-theme=luxury] .status-dot{background:#c9a962}
+    [data-theme=luxury] .hero-btn-icon{border-radius:2px;border-color:rgba(201,169,98,.25);background:rgba(201,169,98,.08)}
+    [data-theme=luxury] .hero-btn-icon svg{stroke:#c9a962}
     [data-theme=luxury] .hero-btn span{letter-spacing:1px;color:rgba(201,169,98,.6)}
     [data-theme=luxury] .empty{border-radius:2px;border-width:0.5px}
     [data-theme=luxury] .modal{border-radius:4px}
@@ -428,6 +434,12 @@
     [data-theme=luxury] .copy-trade-btn:hover{box-shadow:0 4px 16px rgba(201,169,98,.3)}
     [data-theme=luxury] .chip-btn{border-radius:2px;letter-spacing:1px;transition:all .3s ease}
     [data-theme=luxury] .chain-exp-btn{border-radius:2px;transition:all .3s ease}
+    [data-theme=luxury] .auth-btn.primary{background:linear-gradient(135deg,#c9a962,#a8893e);color:#0c0c0f}
+    [data-theme=luxury] .auth-btn.google{background:#1e1e24;border-color:#2a2925;border-radius:2px}
+    [data-theme=luxury] .auth-btn.secondary{background:#1e1e24;border-color:#2a2925;border-radius:2px}
+    [data-theme=luxury] .auth-container{background:#0c0c0f}
+    [data-theme=luxury] .auth-welcome{font-family:'Playfair Display',Georgia,serif;font-weight:400}
+    [data-theme=luxury] .float-input input{border-radius:2px;border-color:#2a2925}
 
     /* ============================================
        80s RETRO — Synthwave / Outrun
@@ -539,7 +551,11 @@
     [data-theme=fun] .toggle-btn.active{background:linear-gradient(135deg,#6366f1,#a855f7);box-shadow:0 2px 8px rgba(99,102,241,.25)}
     [data-theme=fun] .form-input{border-radius:16px;border:2px solid #ede3f7;padding:14px 16px}
     [data-theme=fun] .form-input:focus{border-color:#6366f1;box-shadow:0 0 0 3px rgba(99,102,241,.15)}
-    [data-theme=fun] .quick-icon{border-radius:16px}
+    [data-theme=fun] .quick-icon{border-radius:16px;border-width:2px}
+    [data-theme=fun] .quick-icon.blue{background:rgba(99,102,241,.15);border-color:rgba(99,102,241,.25)}
+    [data-theme=fun] .quick-icon.green{background:rgba(16,185,129,.15);border-color:rgba(16,185,129,.25)}
+    [data-theme=fun] .quick-icon.purple{background:rgba(168,85,247,.15);border-color:rgba(168,85,247,.25)}
+    [data-theme=fun] .quick-icon.orange{background:rgba(245,158,11,.15);border-color:rgba(245,158,11,.25)}
     [data-theme=fun] .tx-list{border-radius:20px;border-color:#ede3f7}
     [data-theme=fun] .tx-icon{border-radius:14px}
     [data-theme=fun] .empty{border-radius:20px;border-color:#ede3f7}
@@ -2153,51 +2169,55 @@ async function fetchLiveQuote(symbol) {
     }
   }
 
-  // Fallback: Yahoo Finance via CORS proxy (try multiple proxies)
+  // Fallback: Yahoo Finance via CORS proxy (race all proxies for speed)
   const yahooUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1d&range=1d`;
-  const yahooUrl2 = `https://query2.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1d&range=1d`;
   const quoteProxies = [
     u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
     u => `https://corsproxy.io/?${encodeURIComponent(u)}`,
     u => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`
   ];
 
-  for (const targetUrl of [yahooUrl, yahooUrl2]) {
-    for (const makeProxy of quoteProxies) {
-      try {
-        const proxyUrl = makeProxy(targetUrl);
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 6000);
-        const r = await fetch(proxyUrl, { signal: controller.signal });
-        clearTimeout(timeout);
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        const text = await r.text();
-        if (text.startsWith('<') || text.startsWith('<!')) throw new Error('HTML response');
-        const data = JSON.parse(text);
-        const result = data.chart?.result?.[0];
-        if (!result) throw new Error('No data');
-        const meta = result.meta;
-        const price = meta.regularMarketPrice || 0;
-        const prevClose = meta.previousClose || meta.chartPreviousClose || price;
-        const change = price - prevClose;
-        const changePercent = prevClose > 0 ? ((change / prevClose) * 100).toFixed(2) : '0.00';
-        const quote = {
-          symbol: meta.symbol,
-          price: price,
-          prevClose: prevClose,
-          change: change,
-          changePercent: changePercent,
-          high: meta.regularMarketDayHigh,
-          low: meta.regularMarketDayLow,
-          volume: meta.regularMarketVolume
-        };
-        priceCache[cacheKey] = { data: quote, time: Date.now() };
-        return quote;
-      } catch (e) {
-        console.warn('Quote proxy failed:', e.message);
-        continue;
-      }
+  // Race all proxies — first valid response wins
+  const proxyAttempts = quoteProxies.map(async makeProxy => {
+    const proxyUrl = makeProxy(yahooUrl);
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8000);
+    try {
+      const r = await fetch(proxyUrl, { signal: controller.signal });
+      clearTimeout(timeout);
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      const text = await r.text();
+      if (text.startsWith('<') || text.startsWith('<!')) throw new Error('HTML response');
+      const data = JSON.parse(text);
+      const result = data.chart?.result?.[0];
+      if (!result) throw new Error('No data');
+      const meta = result.meta;
+      const price = meta.regularMarketPrice || 0;
+      const prevClose = meta.previousClose || meta.chartPreviousClose || price;
+      const change = price - prevClose;
+      const changePercent = prevClose > 0 ? ((change / prevClose) * 100).toFixed(2) : '0.00';
+      return {
+        symbol: meta.symbol,
+        price: price,
+        prevClose: prevClose,
+        change: change,
+        changePercent: changePercent,
+        high: meta.regularMarketDayHigh,
+        low: meta.regularMarketDayLow,
+        volume: meta.regularMarketVolume
+      };
+    } catch (e) {
+      clearTimeout(timeout);
+      throw e;
     }
+  });
+
+  try {
+    const quote = await Promise.any(proxyAttempts);
+    priceCache[cacheKey] = { data: quote, time: Date.now() };
+    return quote;
+  } catch (e) {
+    // All proxies failed
   }
 
   console.error('All quote sources failed for', symbol);
@@ -8635,9 +8655,11 @@ async function renderWatch(){
   c.innerHTML='<div class="tx-list">'+watchlist.map(sym=>{const clr=getTickerColor(sym);return`<div class="tx-item" id="watch-${sym}"><div class="pos-logo"><img src="${logo(sym)}" onerror="this.outerHTML='<span class=pos-logo-text style=background:${clr}>${sym.slice(0,2)}</span>'"></div><div class="tx-info"><div class="tx-title">${sym}</div><div class="tx-sub">${names[sym]||sym}</div></div><div style="text-align:right"><div style="font-size:15px;font-weight:700;color:var(--text3)">Loading...</div><div style="font-size:12px;color:var(--text3)">—</div></div></div>`}).join('')+'</div><button class="btn btn-outline mt-4" onclick="openAddWatch()">+ Add to Watchlist</button>';
 
   // Fetch live prices — update each item as it resolves (no waiting for all)
+  const resolved = new Set();
   watchlist.forEach(async (sym) => {
     try {
       const q = await fetchLiveQuote(sym);
+      resolved.add(sym);
       const el = $(`watch-${sym}`);
       if (!el) return;
       const chg = q ? (parseFloat(q.changePercent) || 0) : 0;
@@ -8649,8 +8671,19 @@ async function renderWatch(){
       } else {
         el.innerHTML = `<div class="pos-logo"><img src="${logo(sym)}" onerror="this.outerHTML='<span class=pos-logo-text style=background:${clr}>${sym.slice(0,2)}</span>'"></div><div class="tx-info"><div class="tx-title">${sym}</div><div class="tx-sub">${names[sym]||sym}</div></div><div style="text-align:right"><div style="font-size:13px;color:var(--text3)">Unavailable</div></div><button style="background:none;border:none;padding:8px;cursor:pointer;color:var(--text3)" onclick="removeFromWatch('${sym}')">×</button>`;
       }
-    } catch(e) { console.warn('Watch quote error:', sym, e); }
+    } catch(e) { console.warn('Watch quote error:', sym, e); resolved.add(sym); }
   });
+
+  // Safety timeout: mark any still-loading tickers as unavailable after 12s
+  setTimeout(() => {
+    watchlist.forEach(sym => {
+      if (resolved.has(sym)) return;
+      const el = $(`watch-${sym}`);
+      if (!el) return;
+      const clr = getTickerColor(sym);
+      el.innerHTML = `<div class="pos-logo"><img src="${logo(sym)}" onerror="this.outerHTML='<span class=pos-logo-text style=background:${clr}>${sym.slice(0,2)}</span>'"></div><div class="tx-info"><div class="tx-title">${sym}</div><div class="tx-sub">${names[sym]||sym}</div></div><div style="text-align:right"><div style="font-size:13px;color:var(--text3)">Unavailable</div></div><button style="background:none;border:none;padding:8px;cursor:pointer;color:var(--text3)" onclick="removeFromWatch('${sym}')">×</button>`;
+    });
+  }, 12000);
 
   // Update status to show live data is working
   $('statusPill').className='status live';
