@@ -1372,8 +1372,8 @@
           <div class="profile-stat"><div class="profile-stat-val" id="pPremium">$0</div><div class="profile-stat-label">Premium</div></div>
         </div>
       </div>
-      <div class="card"><div class="card-title">Account</div><div class="form-group"><label class="form-label">Display Name</label><input type="text" class="form-input" id="userName" placeholder="Your name"></div><div class="form-group"><label class="form-label">Email</label><input type="email" class="form-input" id="userEmail" placeholder="email@example.com"></div><div class="form-group"><label class="form-label">Phone (for SMS alerts)</label><input type="tel" class="form-input" id="userPhone" placeholder="+1 555 123 4567"></div><button class="btn btn-outline" onclick="saveProfile()">Save Profile</button></div>
-      <div class="card" id="alertPrefsCard" style="display:none"><div class="card-title">Alert Notifications</div><p style="font-size:13px;color:var(--text2);margin-bottom:16px">Get notified instantly when new signals are posted</p><div class="setting-row"><span>Discord Alerts</span><button class="switch" id="discordSwitch" onclick="toggleDiscordAlerts()"><div class="switch-knob"></div></button></div><div class="setting-row"><span>SMS Alerts</span><button class="switch" id="smsSwitch" onclick="toggleSmsAlerts()"><div class="switch-knob"></div></button></div><p style="font-size:11px;color:var(--text3);margin-top:12px">SMS alerts require phone number above</p></div>
+      <div class="card"><div class="card-title">Account</div><div class="form-group"><label class="form-label">Display Name</label><input type="text" class="form-input" id="userName" placeholder="Your name"></div><div class="form-group"><label class="form-label">Email</label><input type="email" class="form-input" id="userEmail" placeholder="email@example.com"></div><div class="form-group"><label class="form-label">Phone (for SMS alerts)</label><input type="tel" class="form-input" id="userPhone" placeholder="5551234567"></div><div class="form-group"><label class="form-label">Mobile Carrier</label><select class="form-input" id="userCarrier"><option value="">Select carrier...</option><option value="txt.att.net">AT&T</option><option value="tmomail.net">T-Mobile</option><option value="vtext.com">Verizon</option><option value="messaging.sprintpcs.com">Sprint</option><option value="email.uscc.net">US Cellular</option><option value="sms.cricketwireless.net">Cricket</option><option value="mymetropcs.com">Metro by T-Mobile</option><option value="sms.myboostmobile.com">Boost Mobile</option></select><p style="font-size:11px;color:var(--text3);margin-top:4px">Required for free SMS alerts via email-to-text</p></div><button class="btn btn-outline" onclick="saveProfile()">Save Profile</button></div>
+      <div class="card" id="alertPrefsCard" style="display:none"><div class="card-title">Alert Notifications</div><p style="font-size:13px;color:var(--text2);margin-bottom:16px">Get notified instantly when new signals are posted</p><div class="setting-row"><span>Discord Alerts</span><button class="switch" id="discordSwitch" onclick="toggleDiscordAlerts()"><div class="switch-knob"></div></button></div><div class="setting-row"><span>SMS Alerts</span><button class="switch" id="smsSwitch" onclick="toggleSmsAlerts()"><div class="switch-knob"></div></button></div><p style="font-size:11px;color:var(--text3);margin-top:12px">SMS alerts require phone number + carrier selection in Account above</p></div>
       <div class="card"><div class="card-title">Brokerage (Optional)</div><div style="padding:12px;background:var(--green-bg);border-radius:12px;margin-bottom:16px;font-size:13px;color:var(--green)"><span class="live-dot"></span><b>Live pricing works without login!</b><br><span style="opacity:0.8">Connect Alpaca only to sync your actual positions.</span></div><div id="brokerStatus"></div><div class="form-group"><label class="form-label">Alpaca API Key</label><input type="text" class="form-input" id="apiKeyInput" placeholder="PK..."></div><div class="form-group"><label class="form-label">Secret Key</label><input type="password" class="form-input" id="secretKeyInput" placeholder="••••••••"></div><div class="form-group"><label class="form-label">Account Size ($)</label><input type="number" class="form-input" id="accSizeInput" value="25000"></div><div class="form-group"><label class="form-label">Fee Per Contract ($)</label><input type="number" class="form-input" id="feeInput" value="0.65" step="0.01" min="0" placeholder="0.65"><p style="font-size:11px;color:var(--text3);margin-top:4px">Per contract, per leg. Common: $0.65 (most brokers), $0 (Robinhood)</p></div><button class="btn" onclick="connectBroker()">Connect</button></div>
       <div class="card"><div class="card-title">Preferences</div><div class="form-group"><label class="form-label">Theme</label><select class="form-input" id="themeSelect" onchange="setTheme(this.value)" style="cursor:pointer"><option value="light">Light</option><option value="dark">Dark</option><option value="pro">Pro Trader</option><option value="luxury">Luxury</option><option value="retro">80s Retro</option><option value="fun">Fun</option><option value="clean">Minimal</option></select></div><div class="setting-row"><span>Notifications</span><button class="switch" id="notifSwitch" onclick="toggleNotif()"><div class="switch-knob"></div></button></div></div>
       <div class="card" id="proCard"><div style="text-align:center"><div style="font-size:18px;font-weight:700;margin-bottom:8px">Upgrade to Premium</div><div style="font-size:13px;color:var(--text2);margin-bottom:20px">Unlock live signals & more</div><button class="btn" onclick="openPremium()">Get Premium · $9.99/mo</button></div></div>
@@ -1925,7 +1925,8 @@ async function handleSignup() {
       name: name,
       email: email,
       isPremium: false,
-      createdAt: Date.now()
+      createdAt: Date.now(),
+      lastLogin: Date.now()
     });
 
     S.user.name = name;
@@ -1972,6 +1973,7 @@ async function handleGoogleSignIn() {
         email: user.email,
         isPremium: false,
         createdAt: Date.now(),
+        lastLogin: Date.now(),
         provider: 'google'
       });
     }
@@ -2017,6 +2019,7 @@ async function handleAppleSignIn() {
         email: user.email || '',
         isPremium: false,
         createdAt: Date.now(),
+        lastLogin: Date.now(),
         provider: 'apple'
       });
     }
@@ -2047,8 +2050,8 @@ function completeAuth(user) {
   hideAuthScreen();
   checkLegal();
   renderHome(); // Fix: render home after login
-  // Track last login in Firebase
-  (async () => { try { if (await initFirebase()) firebase.database().ref('users/' + user.uid).update({ lastLogin: Date.now() }); } catch(e) {} })();
+  // Track last login in Firebase (Firebase is already initialized since auth just succeeded)
+  firebase.database().ref('users/' + user.uid).update({ lastLogin: Date.now() }).catch(e => console.warn('lastLogin update:', e));
 }
 
 async function loadUserData(uid) {
@@ -2555,6 +2558,7 @@ async function savePostToFirebase(post) {
   }
   sendDiscordNotification(post).catch(e => console.warn('Discord notify error:', e));
   sendEmailNotifications(post).catch(e => console.warn('Email notify error:', e));
+  sendSmsNotifications(post).catch(e => console.warn('SMS notify error:', e));
 }
 
 // Send notification to Discord webhook
@@ -2789,6 +2793,53 @@ async function sendEmailNotifications(post) {
   }
 }
 
+// Send SMS notifications via email-to-SMS gateway
+async function sendSmsNotifications(post) {
+  const publicKey = localStorage.getItem('emailjsPublicKey');
+  const serviceId = localStorage.getItem('emailjsServiceId');
+  const templateId = localStorage.getItem('emailjsTemplateId');
+  if (!publicKey || !serviceId || !templateId) return;
+  if (!await initFirebase()) return;
+  try {
+    const snapshot = await firebase.database().ref('smsSubscribers').once('value');
+    const subs = snapshot.val() || {};
+    // Build short SMS message (160 char limit)
+    let msg = '';
+    if (post.kind === 'signal') {
+      msg = `ME Signal: ${post.type.toUpperCase()} ${post.ticker} $${post.strike} ${post.type==='csp'?'Put':'Call'} Exp ${post.exp} Prem ${post.prem}`;
+    } else if (post.kind === 'winner') {
+      msg = `ME Winner! ${post.ticker} $${post.strike} closed for profit!`;
+    } else if (post.kind === 'assigned') {
+      msg = `ME: ${post.ticker} $${post.strike} CSP assigned - 100 shares acquired`;
+    } else if (post.kind === 'called') {
+      msg = `ME: ${post.ticker} $${post.strike} CC called away - wheel complete`;
+    } else if (post.kind === 'announcement') {
+      msg = `ME: ${(post.title || post.message || '').slice(0, 140)}`;
+    } else if (post.kind === 'roll') {
+      msg = `ME Roll: ${post.original} -> ${post.newPos}`;
+    } else {
+      return; // Unknown kind, skip SMS
+    }
+    for (const [uid, sub] of Object.entries(subs)) {
+      if (sub.active && sub.phone && sub.carrier) {
+        const smsEmail = sub.phone.replace(/\D/g, '') + '@' + sub.carrier;
+        try {
+          await emailjs.send(serviceId, templateId, {
+            to_email: smsEmail,
+            subject: '',
+            message: msg,
+            from_name: 'Market Elites'
+          });
+        } catch (e) {
+          console.warn('SMS send error for', uid, e);
+        }
+      }
+    }
+  } catch (e) {
+    console.error('SMS notification error:', e);
+  }
+}
+
 // Toggle email alerts for user
 function toggleEmailAlerts() {
   S.emailAlerts = !S.emailAlerts;
@@ -2810,16 +2861,30 @@ function toggleDiscordAlerts() {
   showToast(S.discordAlerts ? 'Discord alerts enabled' : 'Discord alerts disabled', S.discordAlerts ? 'success' : '');
 }
 
-function toggleSmsAlerts() {
-  const phone = $('userPhone')?.value.trim() || S.phone;
+async function toggleSmsAlerts() {
+  const phone = S.user.phone || $('userPhone')?.value.trim();
+  const carrier = S.user.carrier || $('userCarrier')?.value;
   if (!phone) {
     showToast('Add your phone number in Account first', 'error');
+    return;
+  }
+  if (!carrier) {
+    showToast('Select your mobile carrier in Account first', 'error');
     return;
   }
   S.smsAlerts = !S.smsAlerts;
   const sw = $('smsSwitch');
   if (sw) sw.classList.toggle('on', S.smsAlerts);
   save();
+  // Save/remove SMS subscription in Firebase
+  if (await initFirebase() && S.firebaseUid) {
+    const ref = firebase.database().ref('smsSubscribers/' + S.firebaseUid);
+    if (S.smsAlerts) {
+      ref.set({ phone: phone.replace(/\D/g, ''), carrier, active: true }).catch(() => {});
+    } else {
+      ref.remove().catch(() => {});
+    }
+  }
   showToast(S.smsAlerts ? 'SMS alerts enabled' : 'SMS alerts disabled', S.smsAlerts ? 'success' : '');
 }
 
@@ -7760,17 +7825,36 @@ async function renderAdminUsers() {
       const lastLogin = u.lastLogin ? timeAgo(u.lastLogin) : 'Never';
       const prov = u.provider ? `<span style="font-size:10px;background:var(--input);padding:1px 6px;border-radius:3px;margin-left:4px">${u.provider}</span>` : '';
       const premium = u.isPremium ? '<span style="font-size:10px;background:var(--green-bg);color:var(--green);padding:1px 6px;border-radius:3px;margin-left:4px;font-weight:600">PRO</span>' : '';
-      return `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);font-size:13px">
-        <div>
+      const proBtn = u.isPremium
+        ? `<button onclick="toggleUserPremium('${u.uid}',false)" style="font-size:10px;padding:3px 8px;border-radius:4px;border:1px solid var(--red);background:transparent;color:var(--red);cursor:pointer;white-space:nowrap">Revoke PRO</button>`
+        : `<button onclick="toggleUserPremium('${u.uid}',true)" style="font-size:10px;padding:3px 8px;border-radius:4px;border:1px solid var(--green);background:var(--green-bg);color:var(--green);cursor:pointer;white-space:nowrap">Grant PRO</button>`;
+      return `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);font-size:13px;gap:8px">
+        <div style="flex:1;min-width:0">
           <div style="font-weight:600">${u.name || 'User'}${prov}${premium}</div>
           <div style="font-size:11px;color:var(--text3)">${u.email || 'No email'}</div>
         </div>
-        <div style="text-align:right;font-size:11px;color:var(--text3)">
-          <div>Joined ${date}</div><div>Last active ${lastLogin}</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          ${proBtn}
+          <div style="text-align:right;font-size:11px;color:var(--text3);white-space:nowrap">
+            <div>Joined ${date}</div><div>Last active ${lastLogin}</div>
+          </div>
         </div>
       </div>`;
     }).join('');
   } catch (e) { console.warn('Load users error:', e); el.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:12px">Failed to load users</div>'; }
+}
+
+async function toggleUserPremium(uid, grant) {
+  if (!isAdmin()) return;
+  try {
+    const updates = grant ? { isPremium: true, premiumSince: Date.now() } : { isPremium: false, premiumSince: null };
+    await firebase.database().ref('users/' + uid).update(updates);
+    showToast(grant ? 'Premium granted!' : 'Premium revoked', grant ? 'success' : '');
+    renderAdminUsers();
+  } catch (e) {
+    console.error('Toggle premium error:', e);
+    showToast('Failed to update premium status', 'error');
+  }
 }
 
 async function notifyNewSignup(name, email, provider) {
@@ -8856,6 +8940,7 @@ function renderProfile(){
   $('userName').value=S.user.name||'';
   $('userEmail').value=S.user.email||'';
   $('userPhone').value=S.user.phone||'';
+  if($('userCarrier'))$('userCarrier').value=S.user.carrier||'';
   $('profileName').textContent=S.user.name||'Set up your profile';
   $('profileEmail').textContent=S.user.email||'Tap to edit';
   const init=S.user.name?S.user.name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2):'?';
@@ -8900,7 +8985,7 @@ function renderProfile(){
   if(S.isPremium){show('proBadge');hide('proCard');$('alertPrefsCard').style.display='block';}
   else{$('alertPrefsCard').style.display='none';}
 }
-function saveProfile(){S.user.name=$('userName').value.trim();S.user.email=$('userEmail').value.trim();S.user.phone=$('userPhone')?.value.trim()||'';save();renderProfile();showToast('Saved!','success')}
+function saveProfile(){S.user.name=$('userName').value.trim();S.user.email=$('userEmail').value.trim();S.user.phone=$('userPhone')?.value.trim()||'';S.user.carrier=$('userCarrier')?.value||'';save();renderProfile();showToast('Saved!','success')}
 
 function handleAvatarUpload(event) {
   const file = event.target.files[0];
