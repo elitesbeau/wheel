@@ -3299,16 +3299,23 @@ async function deletePost(postId) {
     const post = S.adminPosts[idx];
     const firebaseId = post.id;
 
-    // If this post has a linked wheel position, remove it too
-    if (post.wheelId && S.wheelPositions) {
-      S.wheelPositions = S.wheelPositions.filter(w => w.id !== post.wheelId);
+    // CC post deletion: remove from wheel's ccHistory, but DON'T delete the wheel position
+    if (post.type === 'cc' && post.wheelId && S.wheelPositions) {
+      const wheel = S.wheelPositions.find(w => w.id === post.wheelId);
+      if (wheel) {
+        // Find matching CC in history by timestamp or strike
+        const ccIdx = wheel.ccHistory.findIndex(cc =>
+          cc.strike === post.strike && Math.abs((cc.soldAt || 0) - (post.timestamp || 0)) < 5000
+        );
+        if (ccIdx !== -1) wheel.ccHistory.splice(ccIdx, 1);
+      }
     }
-    // Also remove any wheel positions that link back to this post
-    if (post.id && S.wheelPositions) {
-      S.wheelPositions = S.wheelPositions.filter(w => w.cspSignalId !== post.id);
-    }
-    // Clean up orphaned CC posts that share the same wheelId (e.g. when deleting a CSP)
-    if (post.wheelId) {
+    // CSP post deletion: remove the wheel position and all linked CC posts
+    else if (post.type === 'csp' && post.wheelId) {
+      if (S.wheelPositions) {
+        S.wheelPositions = S.wheelPositions.filter(w => w.id !== post.wheelId);
+      }
+      // Clean up orphaned CC posts that share the same wheelId
       const orphanedCCs = S.adminPosts.filter(p => p !== post && p.wheelId === post.wheelId);
       orphanedCCs.forEach(cc => {
         const ccFirebaseId = cc.id;
@@ -3318,6 +3325,10 @@ async function deletePost(postId) {
       // Recalculate idx after filtering
       idx = S.adminPosts.findIndex(p => p === post);
       if (idx === -1) { _deleting = false; return; }
+    }
+    // Also remove any wheel positions that link back to this post via cspSignalId
+    if (post.id && post.type === 'csp' && S.wheelPositions) {
+      S.wheelPositions = S.wheelPositions.filter(w => w.cspSignalId !== post.id);
     }
 
     // Remove from local array first (instant UI update)
@@ -3375,6 +3386,21 @@ function renderWheelPositions() {
         <div><span style="color:var(--text3)">CCs Sold:</span> <b>${ccCount}</b></div>
         <div><span style="color:var(--text3)">Total Premium:</span> <b style="color:var(--green)">+$${totalPremium.toFixed(0)}</b></div>
       </div>
+      ${(() => {
+        const activeCC = w.ccHistory.find(cc => cc.status === 'open');
+        if (activeCC) {
+          return `<div style="padding:8px;background:var(--blue-bg,rgba(0,122,255,0.08));border-radius:8px;margin-bottom:8px;border-left:3px solid var(--blue)">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <div>
+                <div style="font-size:11px;font-weight:600;color:var(--blue)">ACTIVE CC</div>
+                <div style="font-size:12px;margin-top:2px">$${activeCC.strike} Call · Exp ${activeCC.exp} · <span style="color:var(--green)">+$${activeCC.premiumTotal.toFixed(0)}</span></div>
+              </div>
+              <button onclick="event.stopPropagation();closeCCOnWheel('${w.id}','${activeCC.id}')" style="font-size:10px;padding:4px 10px;background:var(--text3);color:#fff;border:none;border-radius:6px;cursor:pointer">Close CC</button>
+            </div>
+          </div>`;
+        }
+        return '';
+      })()}
       <div style="padding:8px;background:var(--card);border-radius:8px;margin-bottom:8px;text-align:center">
         <span style="font-size:11px;color:var(--text3)">Net Wheel P&L:</span>
         <b style="font-size:16px;color:${netColor};margin-left:6px">${fmtPnl(netPnl)}</b>
@@ -3491,6 +3517,35 @@ function sellCCOnWheel(wheelId) {
       });
     });
   });
+}
+
+// Close an active CC (expired worthless or bought back)
+function closeCCOnWheel(wheelId, ccId) {
+  const w = (S.wheelPositions || []).find(x => x.id === wheelId);
+  if (!w) return;
+  const cc = w.ccHistory.find(c => c.id === ccId);
+  if (!cc) return;
+
+  cc.status = 'closed';
+  cc.closedAt = Date.now();
+
+  // Also update the linked CC signal post to 'winner' (expired worthless = win for seller)
+  const ccPost = (S.adminPosts || []).find(p => p.wheelId === wheelId && p.type === 'cc' && p.strike === cc.strike && p.status === 'open');
+  if (ccPost) {
+    ccPost.status = 'winner';
+    ccPost.closedAt = Date.now();
+    (async () => {
+      if (await initFirebase() && ccPost.id) {
+        firebase.database().ref('posts/' + ccPost.id).update({ status: 'winner', closedAt: Date.now() }).catch(e => console.warn(e));
+      }
+    })();
+  }
+
+  save();
+  renderWheelPositions();
+  renderAdminPosts();
+  renderSignals();
+  showToast(`CC $${cc.strike} closed · Premium kept: +$${cc.premiumTotal.toFixed(0)}`, 'success');
 }
 
 // Called away — shares sold at CC strike, complete the wheel
