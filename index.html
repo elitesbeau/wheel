@@ -3682,74 +3682,214 @@ function renderWheelPositions() {
 }
 
 // Sell a covered call against assigned shares
-function sellCCOnWheel(wheelId) {
+let ccChainData = null;
+let ccWheelId = null;
+
+async function sellCCOnWheel(wheelId) {
   const w = (S.wheelPositions || []).find(x => x.id === wheelId);
   if (!w) return;
+  ccWheelId = wheelId;
+  ccChainData = null;
 
-  showPrompt(`Sell CC on ${w.symbol} (${w.shares} shares). Strike price?`, '', (strikeStr) => {
-    const ccStrike = parseFloat(strikeStr);
-    if (!ccStrike) return showToast('Enter a valid strike', 'error');
+  // Build inline CC sell modal
+  const contracts = w.contracts || Math.floor(w.shares / 100);
+  const modal = document.createElement('div');
+  modal.className = 'modal-bg';
+  modal.id = 'ccSellModal';
+  modal.onclick = (e) => { if (e.target === modal) closeCCSellModal(); };
+  modal.innerHTML = `<div class="modal" onclick="event.stopPropagation()" style="max-height:85vh;overflow-y:auto">
+    <div class="modal-handle"></div>
+    <div class="modal-header"><span class="modal-title">Sell CC — ${w.symbol}</span><button class="modal-close" onclick="closeCCSellModal()"><svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+    <div style="padding:0 16px 16px">
+      <div style="display:flex;gap:12px;margin-bottom:12px;font-size:12px;color:var(--text2)">
+        <span>${w.shares} shares at $${w.assignPrice.toFixed(2)}</span>
+        <span>${contracts} contract${contracts>1?'s':''}</span>
+        <span id="ccTickerPrice" style="margin-left:auto;font-weight:600"></span>
+      </div>
+      <div id="ccChainLoading" style="text-align:center;padding:16px;color:var(--text3);font-size:13px">Loading options chain...</div>
+      <div id="ccChainPicker" style="display:none;margin-bottom:12px">
+        <div id="ccChainExps" style="display:flex;gap:4px;overflow-x:auto;padding-bottom:6px;margin-bottom:6px;-webkit-overflow-scrolling:touch"></div>
+        <div id="ccChainStrikes" style="max-height:250px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;font-size:12px"></div>
+      </div>
+      <div style="display:flex;gap:6px;margin-bottom:8px">
+        <div class="form-group" style="flex:1;margin-bottom:0"><label class="form-label" style="font-size:10px">Strike</label><input type="number" class="form-input" id="ccStrike" placeholder="Strike" style="padding:8px 10px"></div>
+        <div class="form-group" style="flex:1;margin-bottom:0"><label class="form-label" style="font-size:10px">Expiration</label><select class="form-input" id="ccExp" style="padding:8px 10px">${getExpDateOptions()}</select></div>
+        <div class="form-group" style="flex:1;margin-bottom:0"><label class="form-label" style="font-size:10px">Premium/share</label><input type="text" class="form-input" id="ccPrem" placeholder="$1.50" style="padding:8px 10px" oninput="updateCCTotal()"></div>
+      </div>
+      <div id="ccTotalLine" style="font-size:13px;color:var(--text2);margin-bottom:10px;padding:6px 8px;background:var(--input);border-radius:6px;display:none">
+        Collecting: <b style="color:var(--green)" id="ccTotalAmt">$0</b>
+      </div>
+      <div class="form-group" style="margin-bottom:10px"><input type="text" class="form-input" id="ccNotes" placeholder="Notes (optional)" style="padding:8px 12px;font-size:13px"></div>
+      <button class="btn" onclick="confirmSellCC()" style="width:100%">Sell Covered Call</button>
+    </div>
+  </div>`;
+  document.body.appendChild(modal);
+  setTimeout(() => modal.classList.add('active'), 10);
 
-    showPrompt('Expiration? (e.g. Feb 14)', '', (exp) => {
-      if (!exp) return showToast('Enter expiration', 'error');
+  // Fetch quote + chain
+  try {
+    const quote = await fetchLiveQuote(w.symbol);
+    if (quote) {
+      const color = quote.change >= 0 ? 'var(--green)' : 'var(--red)';
+      $('ccTickerPrice').innerHTML = `$${quote.price.toFixed(2)} <span style="color:${color}">${quote.change >= 0?'+':''}${quote.change.toFixed(2)}</span>`;
+    }
+  } catch(e) {}
 
-      showPrompt('Premium per share? (e.g. 1.50)', '', (premStr) => {
-        const premPerShare = parseFloat(premStr);
-        if (!premPerShare) return showToast('Enter premium', 'error');
+  try {
+    const chain = await fetchOptionsChain(w.symbol);
+    $('ccChainLoading').style.display = 'none';
+    if (chain && chain.calls.length) {
+      ccChainData = chain;
+      $('ccChainPicker').style.display = 'block';
+      const exps = (chain.expirations || []).slice(0, 6);
+      $('ccChainExps').innerHTML = exps.map((exp, i) =>
+        `<button class="chain-exp-btn${i===0?' active':''}" onclick="selectCCExp(${exp},this)">${formatExpDate(exp)} (${calcDTE(exp)}d)</button>`
+      ).join('');
+      renderCCChain(chain);
+    } else {
+      $('ccChainLoading').innerHTML = '<span style="color:var(--orange);font-size:12px">Chain unavailable — enter details manually</span>';
+    }
+  } catch(e) {
+    $('ccChainLoading').innerHTML = '<span style="color:var(--orange);font-size:12px">Chain fetch failed — enter manually</span>';
+  }
+}
 
-        const contracts = w.contracts || Math.floor(w.shares / 100);
-        const totalPrem = premPerShare * 100 * contracts;
-
-        // Add to CC history
-        const ccEntry = {
-          id: Date.now().toString(),
-          strike: ccStrike,
-          exp: exp,
-          premiumPerShare: premPerShare,
-          premiumTotal: totalPrem,
-          contracts: contracts,
-          soldAt: Date.now(),
-          status: 'open'
-        };
-        w.ccHistory.push(ccEntry);
-
-        // Post as a CC signal so users see it in the feed
-        const ccSignal = {
-          id: 'cc-' + Date.now(),
-          type: 'cc',
-          ticker: w.symbol,
-          strike: ccStrike,
-          exp: exp,
-          prem: '$' + premPerShare.toFixed(2),
-          notes: `Selling CC against ${w.shares} assigned shares (bought at $${w.assignPrice.toFixed(2)})`,
-          time: 'Just now',
-          timestamp: Date.now(),
-          kind: 'signal',
-          status: 'open',
-          wheelId: w.id
-        };
-        // Add to local state so it shows immediately
-        if (!S.adminPosts) S.adminPosts = [];
-        S.adminPosts.unshift(ccSignal);
-
-        // Save locally FIRST (before any Firebase calls)
-        save();
-
-        // Sync to Firebase (fire-and-forget)
-        savePostToFirebase(ccSignal).catch(e => console.warn('CC signal save error:', e));
-
-        // Calculate total premiums for display
-        const totalCCPrem = w.ccHistory.reduce((s, cc) => s + (cc.premiumTotal || 0), 0);
-        const totalPremium = (w.totalPremiumCollected || 0) + totalCCPrem;
-
-        renderWheelPositions();
-        renderAdminPosts();
-        renderSignals();
-        renderHome();
-        showToast(`Sold ${contracts} CC at $${ccStrike} for $${totalPrem.toFixed(0)} · Total premiums collected: $${totalPremium.toFixed(0)}`, 'success');
-      });
-    });
+function selectCCExp(expTs, btn) {
+  $('ccChainExps').querySelectorAll('.chain-exp-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const w = (S.wheelPositions || []).find(x => x.id === ccWheelId);
+  if (!w) return;
+  fetchOptionsChain(w.symbol, expTs).then(chain => {
+    if (chain) { ccChainData = chain; renderCCChain(chain); }
   });
+}
+
+function renderCCChain(chain) {
+  const options = chain.calls || [];
+  const price = chain.price || 0;
+  // CC: show 2 below + 40 above (OTM calls)
+  const below = options.filter(o => o.strike <= price).sort((a,b) => b.strike - a.strike).slice(0, 2);
+  const above = options.filter(o => o.strike > price).sort((a,b) => a.strike - b.strike).slice(0, 40);
+  const near = [...below, ...above].sort((a,b) => b.strike - a.strike);
+
+  $('ccChainStrikes').innerHTML = `
+    <div class="chain-row" style="background:var(--input);font-size:10px;font-weight:600;color:var(--text3);cursor:default;padding:6px 8px">
+      <div style="flex:1">Strike</div><div style="width:50px;text-align:right">Bid</div><div style="width:50px;text-align:right">Ask</div><div style="width:35px;text-align:right">DTE</div>
+    </div>
+  ` + near.map(o => {
+    const atm = Math.abs(o.strike - price) / price < 0.01;
+    return `<div class="chain-row" style="padding:6px 8px;font-size:12px" onclick="pickCCOption(${o.strike},${o.bid||0},${o.ask||0})">
+      <div style="flex:1;font-weight:600;${atm?'color:var(--blue)':''}">$${o.strike}${atm?' ◄':''}</div>
+      <div style="width:50px;text-align:right;color:var(--green)">${(o.bid||0).toFixed(2)}</div>
+      <div style="width:50px;text-align:right">${(o.ask||0).toFixed(2)}</div>
+      <div style="width:35px;text-align:right;font-size:11px">${o.dte||'—'}</div>
+    </div>`;
+  }).join('');
+}
+
+function pickCCOption(strike, bid, ask) {
+  const mid = ((bid + ask) / 2).toFixed(2);
+  $('ccStrike').value = strike;
+  $('ccPrem').value = '$' + mid;
+  // Set expiration from active tab
+  const activeExp = $('ccChainExps')?.querySelector('.chain-exp-btn.active');
+  if (activeExp) {
+    const expVal = activeExp.textContent.split('(')[0].trim();
+    const sel = $('ccExp');
+    sel.value = expVal;
+    if (!sel.value) {
+      const opt = document.createElement('option');
+      opt.value = expVal; opt.textContent = expVal;
+      sel.insertBefore(opt, sel.firstChild.nextSibling);
+      sel.value = expVal;
+    }
+  }
+  $('ccChainStrikes').querySelectorAll('.chain-row').forEach(r => r.classList.remove('selected'));
+  event.currentTarget.classList.add('selected');
+  updateCCTotal();
+  showToast(`Selected $${strike} Call · Premium $${mid}`, 'success');
+}
+
+function updateCCTotal() {
+  const w = (S.wheelPositions || []).find(x => x.id === ccWheelId);
+  if (!w) return;
+  const premStr = ($('ccPrem')?.value || '').replace(/[$,]/g, '');
+  const prem = parseFloat(premStr);
+  const contracts = w.contracts || Math.floor(w.shares / 100);
+  const line = $('ccTotalLine');
+  if (prem > 0) {
+    const total = prem * 100 * contracts;
+    $('ccTotalAmt').textContent = '$' + total.toFixed(0);
+    line.style.display = 'block';
+  } else {
+    line.style.display = 'none';
+  }
+}
+
+function closeCCSellModal() {
+  const m = $('ccSellModal');
+  if (m) { m.classList.remove('active'); setTimeout(() => m.remove(), 200); }
+  ccWheelId = null;
+  ccChainData = null;
+}
+
+function confirmSellCC() {
+  const w = (S.wheelPositions || []).find(x => x.id === ccWheelId);
+  if (!w) return;
+
+  const ccStrike = parseFloat($('ccStrike')?.value);
+  const exp = $('ccExp')?.value.trim();
+  const premStr = ($('ccPrem')?.value || '').replace(/[$,]/g, '');
+  const premPerShare = parseFloat(premStr);
+  const notes = $('ccNotes')?.value.trim() || '';
+
+  if (!ccStrike) return showToast('Select or enter a strike', 'error');
+  if (!exp) return showToast('Select an expiration', 'error');
+  if (!premPerShare) return showToast('Enter premium per share', 'error');
+
+  const contracts = w.contracts || Math.floor(w.shares / 100);
+  const totalPrem = premPerShare * 100 * contracts;
+
+  const ccEntry = {
+    id: Date.now().toString(),
+    strike: ccStrike,
+    exp: exp,
+    premiumPerShare: premPerShare,
+    premiumTotal: totalPrem,
+    contracts: contracts,
+    soldAt: Date.now(),
+    status: 'open'
+  };
+  w.ccHistory.push(ccEntry);
+
+  const ccSignal = {
+    id: 'cc-' + Date.now(),
+    type: 'cc',
+    ticker: w.symbol,
+    strike: ccStrike,
+    exp: exp,
+    prem: '$' + premPerShare.toFixed(2) + ' ($' + totalPrem.toFixed(0) + ' total)',
+    notes: notes || `Selling CC against ${w.shares} assigned shares (bought at $${w.assignPrice.toFixed(2)})`,
+    time: 'Just now',
+    timestamp: Date.now(),
+    kind: 'signal',
+    status: 'open',
+    wheelId: w.id
+  };
+  if (!S.adminPosts) S.adminPosts = [];
+  S.adminPosts.unshift(ccSignal);
+  save();
+  savePostToFirebase(ccSignal).catch(e => console.warn('CC signal save error:', e));
+
+  const totalCCPrem = w.ccHistory.reduce((s, cc) => s + (cc.premiumTotal || 0), 0);
+  const totalPremium = (w.totalPremiumCollected || 0) + totalCCPrem;
+
+  closeCCSellModal();
+  renderWheelPositions();
+  renderAdminPosts();
+  renderSignals();
+  renderHome();
+  showToast(`Sold ${contracts} CC at $${ccStrike} for $${totalPrem.toFixed(0)} · Total premiums: $${totalPremium.toFixed(0)}`, 'success');
 }
 
 // Close an active CC (expired worthless or bought back)
