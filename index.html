@@ -7803,7 +7803,7 @@ function renderPositions(container){
     c.innerHTML='<div class="empty"><div class="empty-icon"><svg viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div><div class="empty-title">No Positions</div><div class="empty-text">Add positions or sync from Alpaca</div><button class="empty-btn" onclick="openAdd()">+ Add Position</button></div>';
     return;
   }
-  c.innerHTML=positions.map(p=>{const expD=parseExpDate(p.expiration);const dte=expD?Math.ceil((expD-new Date())/864e5):null;const premCollected=(p.premium||0)*(p.contracts||1)*100;const clr=getTickerColor(p.symbol);const isShares=p.type==='shares';const dteBadge=getPositionAlertBadges(p);const dteValColor=dte!==null&&dte<=0?'color:var(--red)':dte!==null&&dte<=3?'color:var(--red)':dte!==null&&dte<=7?'color:var(--orange)':'';return`<div class="pos-card" onclick="viewPos('${p.id}')"><div class="pos-top"><div class="pos-left"><div class="pos-logo"><span class="pos-logo-text" style="background:${clr}">${p.symbol.slice(0,2)}</span></div><div class="pos-info"><div class="pos-symbol">${p.symbol}${p.strike?' $'+p.strike+(p.type==='csp'?'P':'C'):''}${dteBadge}</div><div class="pos-name">${names[p.symbol]||p.symbol}${p.expiration?' · Exp '+p.expiration:''}</div></div></div><span class="pos-badge ${p.type}">${(p.type||'').toUpperCase()}</span></div><div class="pos-stats"><div><div class="pos-stat-val pos">+$${premCollected.toFixed(0)}</div><div class="pos-stat-label">Premium</div></div><div><div class="pos-stat-val">${p.contracts||1}</div><div class="pos-stat-label">${isShares?'Shares':'Contracts'}</div></div><div style="text-align:right"><div class="pos-stat-val" style="${dteValColor}">${dte!==null&&dte>=0?dte:'—'}</div><div class="pos-stat-label">DTE</div></div></div></div>`}).join('');
+  c.innerHTML=positions.map(p=>{const expD=parseExpDate(p.expiration);const dte=expD?Math.ceil((expD-new Date())/864e5):null;const premCollected=(p.premium||0)*(p.contracts||1)*100;const clr=getTickerColor(p.symbol);const isShares=p.type==='shares';const dteBadge=getPositionAlertBadges(p);const dteValColor=dte!==null&&dte<=0?'color:var(--red)':dte!==null&&dte<=3?'color:var(--red)':dte!==null&&dte<=7?'color:var(--orange)':'';const rollBadge=p.rollCount?` <span style="font-size:10px;background:var(--blue-bg,rgba(59,130,246,0.1));color:var(--blue,#3b82f6);padding:2px 6px;border-radius:4px;font-weight:600">Roll #${p.rollCount}</span>`:'';const rollFrom=p.rolledFromStrike?`<span style="font-size:11px;color:var(--text3)"> · from $${p.rolledFromStrike}</span>`:'';return`<div class="pos-card" onclick="viewPos('${p.id}')"><div class="pos-top"><div class="pos-left"><div class="pos-logo"><span class="pos-logo-text" style="background:${clr}">${p.symbol.slice(0,2)}</span></div><div class="pos-info"><div class="pos-symbol">${p.symbol}${p.strike?' $'+p.strike+(p.type==='csp'?'P':'C'):''}${rollBadge}${dteBadge}</div><div class="pos-name">${names[p.symbol]||p.symbol}${p.expiration?' · Exp '+p.expiration:''}${rollFrom}</div></div></div><span class="pos-badge ${p.type}">${(p.type||'').toUpperCase()}</span></div><div class="pos-stats"><div><div class="pos-stat-val pos">+$${premCollected.toFixed(0)}</div><div class="pos-stat-label">Premium</div></div><div><div class="pos-stat-val">${p.contracts||1}</div><div class="pos-stat-label">${isShares?'Shares':'Contracts'}</div></div><div style="text-align:right"><div class="pos-stat-val" style="${dteValColor}">${dte!==null&&dte>=0?dte:'—'}</div><div class="pos-stat-label">DTE</div></div></div></div>`}).join('');
 }
 function renderHistory(container){
   const c = container || $('historyContainer');
@@ -7814,7 +7814,7 @@ function renderHistory(container){
     c.innerHTML='<div style="text-align:center;padding:32px;color:var(--text2);font-size:14px;background:var(--card);border:1px solid var(--border);border-radius:16px">Closed trades appear here</div>';
     return;
   }
-  c.innerHTML='<div class="tx-list">'+history.slice(0,10).map((t,i)=>`<div class="tx-item" style="position:relative"><div class="tx-icon ${t.type}"><svg viewBox="0 0 24 24">${t.type==='csp'?'<circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12l4 4 4-4"/>':'<circle cx="12" cy="12" r="10"/><path d="M12 16V8M8 12l4-4 4 4"/>'}</svg></div><div class="tx-info"><div class="tx-title">${t.symbol} $${t.strike||''}${t.type==='csp'?'P':'C'}</div><div class="tx-sub">${new Date(t.closeDate||Date.now()).toLocaleDateString()}</div></div><div class="tx-amount ${(t.pnl||0)>=0?'pos':'neg'}">${(t.pnl||0)>=0?'+':'-'}$${Math.abs(t.pnl||0).toFixed(0)}</div><button onclick="event.stopPropagation();deleteTrade(${i})" style="position:absolute;top:4px;right:4px;background:none;border:none;color:var(--text3);font-size:10px;cursor:pointer;padding:4px 6px;opacity:0.5">✕</button></div>`).join('')+'</div>';
+  c.innerHTML='<div class="tx-list">'+history.slice(0,10).map((t,i)=>{const rollTag=t.outcome==='rolled'?` <span style="font-size:10px;background:var(--blue-bg,rgba(59,130,246,0.1));color:var(--blue,#3b82f6);padding:1px 5px;border-radius:3px">→ $${t.rolledToStrike||'?'}</span>`:'';const typeLabel=t.type==='wheel'?'W':t.type==='csp'?'P':'C';return`<div class="tx-item" style="position:relative"><div class="tx-icon ${t.type}"><svg viewBox="0 0 24 24">${t.type==='csp'||t.type==='wheel'?'<circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12l4 4 4-4"/>':'<circle cx="12" cy="12" r="10"/><path d="M12 16V8M8 12l4-4 4 4"/>'}</svg></div><div class="tx-info"><div class="tx-title">${t.symbol} $${t.strike||''}${typeLabel}${rollTag}</div><div class="tx-sub">${new Date(t.closeDate||Date.now()).toLocaleDateString()}${t.outcome==='rolled'?' · Rolled':''}${t.outcome==='called_away'?' · Called Away':''}</div></div><div class="tx-amount ${(t.pnl||0)>=0?'pos':'neg'}">${(t.pnl||0)>=0?'+':'-'}$${Math.abs(t.pnl||0).toFixed(0)}</div><button onclick="event.stopPropagation();deleteTrade(${i})" style="position:absolute;top:4px;right:4px;background:none;border:none;color:var(--text3);font-size:10px;cursor:pointer;padding:4px 6px;opacity:0.5">✕</button></div>`}).join('')+'</div>';
 }
 function deleteTrade(idx) {
   if (!S.history || !S.history[idx]) return;
@@ -7825,7 +7825,7 @@ function deleteTrade(idx) {
     showToast('Trade deleted', 'success');
   });
 }
-function viewPos(id){const p=S.positions.find(x=>x.id===id);if(!p)return;S.selPosId=id;$('posTitle').textContent=p.symbol;$('posContent').innerHTML=`<div class="stats-grid"><div class="stat-box"><div class="stat-val">${p.type.toUpperCase()}</div><div class="stat-label">Type</div></div><div class="stat-box"><div class="stat-val">${p.contracts||1}</div><div class="stat-label">Contracts</div></div>${p.strike?`<div class="stat-box"><div class="stat-val">$${p.strike}</div><div class="stat-label">Strike</div></div>`:''}<div class="stat-box"><div class="stat-val green">$${((p.premium||0)*(p.contracts||1)*100).toFixed(0)}</div><div class="stat-label">Premium</div></div></div>`;openModal('posModal')}
+function viewPos(id){const p=S.positions.find(x=>x.id===id);if(!p)return;S.selPosId=id;$('posTitle').textContent=p.symbol;const rollInfo=p.rollCount?`<div style="background:var(--blue-bg,rgba(59,130,246,0.1));border-radius:8px;padding:8px 12px;margin-bottom:12px;font-size:12px;color:var(--blue,#3b82f6)"><b>Roll #${p.rollCount}</b>${p.rolledFromStrike?' · Rolled from $'+p.rolledFromStrike:''}<br><span style="font-size:11px;opacity:0.8">Total premium across rolls: $${((p.totalPremiumCollected||0)*(p.contracts||1)*100).toFixed(0)}</span></div>`:'';$('posContent').innerHTML=rollInfo+`<div class="stats-grid"><div class="stat-box"><div class="stat-val">${p.type.toUpperCase()}</div><div class="stat-label">Type</div></div><div class="stat-box"><div class="stat-val">${p.contracts||1}</div><div class="stat-label">Contracts</div></div>${p.strike?`<div class="stat-box"><div class="stat-val">$${p.strike}</div><div class="stat-label">Strike</div></div>`:''}<div class="stat-box"><div class="stat-val green">$${((p.premium||0)*(p.contracts||1)*100).toFixed(0)}</div><div class="stat-label">Premium</div></div></div>`;openModal('posModal')}
 function removePosition(){
   if(!S.selPosId)return;
   S.positions=S.positions.filter(x=>x.id!==S.selPosId);
@@ -9015,9 +9015,14 @@ function startInlineRoll(suggestedStrike, label) {
 
   rollDiv.innerHTML = `
     <div style="font-size:12px;font-weight:600;color:var(--blue);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">${label}</div>
-    <div style="font-size:13px;color:var(--text2);margin-bottom:14px">Rolling ${p.symbol} $${p.strike}${typeName[0]} to new position</div>
+    <div style="font-size:13px;color:var(--text2);margin-bottom:14px">Rolling ${p.symbol} $${p.strike}${typeName[0]} (sold at $${(p.premium||0).toFixed(2)}/share)</div>
     <div style="display:flex;flex-direction:column;gap:12px">
-      <div>
+      <div style="background:var(--input);border-radius:10px;padding:12px">
+        <label style="font-size:12px;font-weight:600;color:var(--red);display:block;margin-bottom:4px">Cost to Buy Back Current Position</label>
+        <div style="font-size:11px;color:var(--text3);margin-bottom:4px">What you paid per share to close the old contract</div>
+        <input type="number" id="rollBuybackCost" placeholder="e.g. 3.00" step="0.01" style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:16px;font-weight:600">
+      </div>
+      <div style="border-top:1px solid var(--border);padding-top:12px">
         <label style="font-size:12px;font-weight:600;color:var(--text2);display:block;margin-bottom:4px">New Strike Price</label>
         <input type="number" id="rollNewStrike" value="${suggestedStrike}" step="0.5" style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:var(--input);color:var(--text);font-size:16px;font-weight:600">
       </div>
@@ -9027,7 +9032,7 @@ function startInlineRoll(suggestedStrike, label) {
       </div>
       <div>
         <label style="font-size:12px;font-weight:600;color:var(--text2);display:block;margin-bottom:4px">New Premium Collected</label>
-        <div style="font-size:11px;color:var(--text3);margin-bottom:4px">Premium per share on the new contract you're selling</div>
+        <div style="font-size:11px;color:var(--text3);margin-bottom:4px">Premium per share on the new contract</div>
         <input type="number" id="rollNewPremium" placeholder="e.g. 1.50" step="0.01" style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:var(--input);color:var(--text);font-size:16px;font-weight:600">
       </div>
       <div style="display:flex;gap:8px;margin-top:4px">
@@ -9041,27 +9046,34 @@ function confirmInlineRoll() {
   const p = S.positions.find(x => x.id === S.selPosId);
   if (!p) return;
 
+  const buybackCost = parseFloat($('rollBuybackCost')?.value);
   const newStrike = parseFloat($('rollNewStrike').value);
   const newExp = $('rollNewExp').value.trim();
-  const netCredit = parseFloat($('rollNewPremium').value);
+  const newPremium = parseFloat($('rollNewPremium').value);
 
+  if (isNaN(buybackCost) || buybackCost < 0) return showToast('Enter the cost to buy back per share', 'error');
   if (!newStrike) return showToast('Enter a valid strike', 'error');
-  if (!newExp) return showToast('Enter new expiration', 'error');
-  if (isNaN(netCredit)) return showToast('Enter the new premium per share', 'error');
+  if (!newExp) return showToast('Select new expiration', 'error');
+  if (isNaN(newPremium)) return showToast('Enter the new premium per share', 'error');
 
   const contracts = p.contracts || 1;
   const oldPremPerShare = p.premium || 0;
-  const totalOldPrem = oldPremPerShare * contracts * 100;
-  const rollCreditTotal = netCredit * contracts * 100;
 
-  // Move old position to history as 'rolled'
+  // P&L on old position = (premium collected - buyback cost) × contracts × 100
+  const pnlPerShare = oldPremPerShare - buybackCost;
+  const grossPnl = pnlPerShare * contracts * 100;
+  const fees = (S.feePerContract || 0) * contracts * 2; // open + close fees
+  const pnl = grossPnl - fees;
+
+  // Move old position to history with REAL P&L
   S.history.unshift({
     ...p,
     closeDate: new Date().toISOString(),
-    pnl: 0, // No realized P&L on the roll itself — premium carries forward
-    grossPnl: 0,
-    fees: 0,
+    pnl: pnl,
+    grossPnl: grossPnl,
+    fees: fees,
     outcome: 'rolled',
+    buybackCost: buybackCost,
     rolledToStrike: newStrike,
     rolledToExp: newExp
   });
@@ -9075,13 +9087,14 @@ function confirmInlineRoll() {
     symbol: p.symbol,
     type: p.type,
     strike: newStrike,
-    premium: netCredit, // Net credit of the roll
+    premium: newPremium,
     contracts: contracts,
     expiration: newExp,
     openDate: new Date().toISOString(),
     rolledFrom: p.id,
+    rolledFromStrike: p.strike,
     rollCount: (p.rollCount || 0) + 1,
-    totalPremiumCollected: oldPremPerShare + netCredit // Track cumulative premium across rolls
+    totalPremiumCollected: (p.totalPremiumCollected || oldPremPerShare) + newPremium
   };
   S.positions.push(newPos);
 
@@ -9089,9 +9102,9 @@ function confirmInlineRoll() {
   closeModal('posModal');
   renderHome();
 
-  const creditStr = netCredit >= 0 ? `+$${rollCreditTotal.toFixed(0)} credit` : `-$${Math.abs(rollCreditTotal).toFixed(0)} debit`;
-  const totalPrem = (oldPremPerShare + netCredit) * contracts * 100;
-  showToast(`Rolled ${p.symbol} $${p.strike} → $${newStrike} · ${creditStr} · Total premium: $${totalPrem.toFixed(0)}`, 'success');
+  const pnlStr = pnl >= 0 ? `+$${pnl.toFixed(0)}` : `-$${Math.abs(pnl).toFixed(0)}`;
+  const newPremTotal = newPremium * contracts * 100;
+  showToast(`Rolled ${p.symbol} $${p.strike} → $${newStrike} · Old P&L: ${pnlStr} · New premium: +$${newPremTotal.toFixed(0)}`, 'success');
 }
 
 // ====================================
