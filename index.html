@@ -2394,6 +2394,9 @@ const ADMIN_UIDS = new Set([
   'EG4Qi2PZVdPfh3PT0SXl0GKQC972'
 ]);
 
+// EmailJS defaults (hardcoded so alerts work without admin config)
+const EMAILJS_DEFAULTS = { publicKey: 'IuC7s7RY-Y2OOQtNw', serviceId: 'service_4vdqrrj', templateId: 'template_k2xol6b' };
+
 // Secret admin access - tap copyright 5 times quickly
 let adminTapCount = 0;
 let adminTapTimer = null;
@@ -2723,15 +2726,15 @@ function loadAdminSettings() {
   const stripeLink = localStorage.getItem('stripePaymentLink');
   if (stripeLink && $('stripePaymentLink')) $('stripePaymentLink').value = stripeLink;
 
-  // Load EmailJS settings
-  const publicKey = localStorage.getItem('emailjsPublicKey');
-  const serviceId = localStorage.getItem('emailjsServiceId');
-  const templateId = localStorage.getItem('emailjsTemplateId');
-  if (publicKey && $('emailjsPublicKey')) $('emailjsPublicKey').value = publicKey;
-  if (serviceId && $('emailjsServiceId')) $('emailjsServiceId').value = serviceId;
-  if (templateId && $('emailjsTemplateId')) $('emailjsTemplateId').value = templateId;
+  // Load EmailJS settings (with hardcoded defaults)
+  const publicKey = localStorage.getItem('emailjsPublicKey') || EMAILJS_DEFAULTS.publicKey;
+  const serviceId = localStorage.getItem('emailjsServiceId') || EMAILJS_DEFAULTS.serviceId;
+  const templateId = localStorage.getItem('emailjsTemplateId') || EMAILJS_DEFAULTS.templateId;
+  if ($('emailjsPublicKey')) $('emailjsPublicKey').value = publicKey;
+  if ($('emailjsServiceId')) $('emailjsServiceId').value = serviceId;
+  if ($('emailjsTemplateId')) $('emailjsTemplateId').value = templateId;
 
-  // Initialize EmailJS if configured
+  // Initialize EmailJS
   if (publicKey && typeof emailjs !== 'undefined') {
     emailjs.init(publicKey);
   }
@@ -2740,9 +2743,9 @@ function loadAdminSettings() {
 
 // Send email notifications to subscribed users
 async function sendEmailNotifications(post) {
-  const publicKey = localStorage.getItem('emailjsPublicKey');
-  const serviceId = localStorage.getItem('emailjsServiceId');
-  const templateId = localStorage.getItem('emailjsTemplateId');
+  const publicKey = localStorage.getItem('emailjsPublicKey') || EMAILJS_DEFAULTS.publicKey;
+  const serviceId = localStorage.getItem('emailjsServiceId') || EMAILJS_DEFAULTS.serviceId;
+  const templateId = localStorage.getItem('emailjsTemplateId') || EMAILJS_DEFAULTS.templateId;
 
   if (!publicKey || !serviceId || !templateId) return;
 
@@ -2800,9 +2803,9 @@ async function sendEmailNotifications(post) {
 
 // Send SMS notifications via email-to-SMS gateway
 async function sendSmsNotifications(post) {
-  const publicKey = localStorage.getItem('emailjsPublicKey');
-  const serviceId = localStorage.getItem('emailjsServiceId');
-  const templateId = localStorage.getItem('emailjsTemplateId');
+  const publicKey = localStorage.getItem('emailjsPublicKey') || EMAILJS_DEFAULTS.publicKey;
+  const serviceId = localStorage.getItem('emailjsServiceId') || EMAILJS_DEFAULTS.serviceId;
+  const templateId = localStorage.getItem('emailjsTemplateId') || EMAILJS_DEFAULTS.templateId;
   if (!publicKey || !serviceId || !templateId) return;
   if (!await initFirebase()) return;
   try {
@@ -10037,6 +10040,8 @@ function initApp() {
   }
   updateStatus();
   initAdminAccess();
+  // Initialize EmailJS with defaults on startup
+  if (typeof emailjs !== 'undefined') { emailjs.init(localStorage.getItem('emailjsPublicKey') || EMAILJS_DEFAULTS.publicKey); }
   listenToFirebasePosts();
   listenForWinners();
   initDarkEffects();
