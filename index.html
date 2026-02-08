@@ -2729,8 +2729,10 @@ async function loadPostsFromFirebase(skipRender) {
     snapshot.forEach(child => {
       posts.unshift({ id: child.key, ...child.val() });
     });
-    if (posts.length > 0 || !S.adminPosts || S.adminPosts.length === 0) {
-      S.adminPosts = posts;
+    // Filter out locally deleted posts that Firebase hasn't processed yet
+    const filtered = posts.filter(p => !_deletedPostIds.has(p.id));
+    if (filtered.length > 0 || !S.adminPosts || S.adminPosts.length === 0) {
+      S.adminPosts = filtered;
       save();
     }
     if (!skipRender) {
@@ -2818,9 +2820,14 @@ async function listenToFirebasePosts() {
       });
 
       // Always use Firebase as source of truth when it returns data
+      // Filter out locally deleted posts (prevents re-add before Firebase propagates)
       if (posts.length > 0) {
-        S.adminPosts = posts;
+        S.adminPosts = posts.filter(p => !_deletedPostIds.has(p.id));
         save();
+        // Clean up _deletedPostIds once Firebase confirms the post is actually gone
+        _deletedPostIds.forEach(id => {
+          if (!posts.find(p => p.id === id)) _deletedPostIds.delete(id);
+        });
       }
 
       // Auto-sync copied positions when signal status changes
@@ -3287,6 +3294,7 @@ async function postRoll() {
 }
 
 let _deleting = false;
+const _deletedPostIds = new Set(); // Prevent Firebase listener from re-adding deleted posts
 async function deletePost(postId) {
   if (_deleting || !S.adminPosts) return;
   _deleting = true;
@@ -3339,8 +3347,11 @@ async function deletePost(postId) {
     renderWheelPositions();
     showToast('Post deleted', '');
 
-    // Delete from Firebase in background (don't block UI)
-    if (firebaseId) deletePostFromFirebase(firebaseId).catch(e => console.warn('Firebase delete:', e));
+    // Delete from Firebase — AWAIT so listener doesn't re-add it
+    if (firebaseId) {
+      _deletedPostIds.add(firebaseId);
+      await deletePostFromFirebase(firebaseId).catch(e => console.warn('Firebase delete:', e));
+    }
   } finally {
     _deleting = false;
   }
@@ -3731,7 +3742,7 @@ function adminAction(action, idx) {
     else if (action === 'assigned') markPostAssigned(postId, post);
     else if (action === 'roll') markPostRolled(postId, post);
     else if (action === 'called') markPostCalled(postId, post);
-    else if (action === 'delete') { deletePost(postId); setTimeout(() => openAdmin(), 200); }
+    else if (action === 'delete') { deletePost(postId).then(() => openAdmin()); }
   } catch(e) {
     alert('Admin action error: ' + e.message);
     console.error('[adminAction] error:', e);
