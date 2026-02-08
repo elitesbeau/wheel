@@ -7626,7 +7626,7 @@ function renderPositions(container){
     c.innerHTML='<div class="empty"><div class="empty-icon"><svg viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div><div class="empty-title">No Positions</div><div class="empty-text">Add positions or sync from Alpaca</div><button class="empty-btn" onclick="openAdd()">+ Add Position</button></div>';
     return;
   }
-  c.innerHTML=positions.map(p=>{const dte=p.expiration?Math.ceil((new Date(p.expiration)-new Date())/864e5):null;const premCollected=(p.premium||0)*(p.contracts||1)*100;const clr=getTickerColor(p.symbol);const isShares=p.type==='shares';const dteBadge=getPositionAlertBadges(p);return`<div class="pos-card" onclick="viewPos('${p.id}')"><div class="pos-top"><div class="pos-left"><div class="pos-logo"><span class="pos-logo-text" style="background:${clr}">${p.symbol.slice(0,2)}</span></div><div class="pos-info"><div class="pos-symbol">${p.symbol}${p.strike?' $'+p.strike+(p.type==='csp'?'P':'C'):''}${dteBadge}</div><div class="pos-name">${names[p.symbol]||p.symbol}${p.expiration?' · Exp '+p.expiration:''}</div></div></div><span class="pos-badge ${p.type}">${(p.type||'').toUpperCase()}</span></div><div class="pos-stats"><div><div class="pos-stat-val pos">+$${premCollected.toFixed(0)}</div><div class="pos-stat-label">Premium</div></div><div><div class="pos-stat-val">${p.contracts||1}</div><div class="pos-stat-label">${isShares?'Shares':'Contracts'}</div></div><div style="text-align:right"><div class="pos-stat-val">${dte!==null?dte:'—'}</div><div class="pos-stat-label">${dte!==null?'DTE':'Hold'}</div></div></div></div>`}).join('');
+  c.innerHTML=positions.map(p=>{const expD=parseExpDate(p.expiration);const dte=expD?Math.ceil((expD-new Date())/864e5):null;const premCollected=(p.premium||0)*(p.contracts||1)*100;const clr=getTickerColor(p.symbol);const isShares=p.type==='shares';const dteBadge=getPositionAlertBadges(p);return`<div class="pos-card" onclick="viewPos('${p.id}')"><div class="pos-top"><div class="pos-left"><div class="pos-logo"><span class="pos-logo-text" style="background:${clr}">${p.symbol.slice(0,2)}</span></div><div class="pos-info"><div class="pos-symbol">${p.symbol}${p.strike?' $'+p.strike+(p.type==='csp'?'P':'C'):''}${dteBadge}</div><div class="pos-name">${names[p.symbol]||p.symbol}${p.expiration?' · Exp '+p.expiration:''}</div></div></div><span class="pos-badge ${p.type}">${(p.type||'').toUpperCase()}</span></div><div class="pos-stats"><div><div class="pos-stat-val pos">+$${premCollected.toFixed(0)}</div><div class="pos-stat-label">Premium</div></div><div><div class="pos-stat-val">${p.contracts||1}</div><div class="pos-stat-label">${isShares?'Shares':'Contracts'}</div></div><div style="text-align:right"><div class="pos-stat-val">${dte!==null&&dte>=0?dte:'—'}</div><div class="pos-stat-label">${dte!==null&&dte>=0?'DTE':'—'}</div></div></div></div>`}).join('');
 }
 function renderHistory(container){
   const c = container || $('historyContainer');
@@ -8756,7 +8756,8 @@ function getPositionAlertBadges(p) {
   const dte = Math.ceil((expDate - new Date()) / 864e5);
   if (dte <= 0) return '<span class="dte-warn danger">EXPIRED</span>';
   if (dte <= 3) return '<span class="dte-warn danger">' + dte + 'D</span>';
-  if (dte <= (S.dteThreshold || 7)) return '<span class="dte-warn caution">' + dte + 'D</span>';
+  const threshold = Math.min(S.dteThreshold || 7, 14);
+  if (dte <= threshold) return '<span class="dte-warn caution">' + dte + 'D</span>';
   return '';
 }
 
