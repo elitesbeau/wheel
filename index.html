@@ -1019,7 +1019,7 @@
         <button class="auth-btn secondary" onclick="handleGuestLogin()">Continue as Guest</button>
       </div>
       <div class="auth-terms">
-        By continuing, you agree to Market Elites'<br><a href="#">Terms of Use</a> and <a href="#">Privacy Policy</a>.
+        By continuing, you agree to Market Elites'<br><a href="#" onclick="openModal('legalModal');return false">Terms of Use</a> and <a href="#" onclick="openModal('privacyModal');return false">Privacy Policy</a>.
       </div>
       <div class="auth-switch">Don't have an account? <a href="#" onclick="showAuthTab('signup');return false">Sign up</a></div>
     </div>
@@ -1076,7 +1076,7 @@
         </button>
       </div>
       <div class="auth-terms">
-        By creating an account, you agree to Market Elites'<br><a href="#" onclick="openModal('legalModal');return false">Terms of Use</a> and <a href="#" onclick="openModal('legalModal');return false">Privacy Policy</a>.
+        By creating an account, you agree to Market Elites'<br><a href="#" onclick="openModal('legalModal');return false">Terms of Use</a> and <a href="#" onclick="openModal('privacyModal');return false">Privacy Policy</a>.
       </div>
       <div class="auth-switch">Already have an account? <a href="#" onclick="showAuthTab('login');return false">Sign in</a></div>
     </div>
@@ -1123,17 +1123,108 @@
       <div class="modal-header"><span class="modal-title">Terms & Risk Disclosure</span></div>
       <div class="legal-content">
         <h3>⚠️ Risk Disclosure</h3>
-        <p>Options trading involves substantial risk of loss. You could lose more than your initial investment.</p>
+        <p>Options trading involves substantial risk of loss. You could lose more than your initial investment. Past performance does not guarantee future results. The wheel strategy, while considered conservative among options strategies, still carries significant risk including the risk of being assigned shares that decline in value.</p>
         <h3>📋 Not Financial Advice</h3>
-        <p>Market Elites is for educational purposes only. Nothing herein constitutes investment advice.</p>
-        <h3>🔐 Data Privacy</h3>
-        <p>Your data is stored locally. API keys are never transmitted to our servers.</p>
+        <p>Market Elites is for educational and informational purposes only. Nothing on this platform constitutes investment advice, financial advice, trading advice, or any other sort of advice. You should not treat any of the platform's content as such. Market Elites does not recommend that any securities, options, or strategies are suitable for any particular person. You are solely responsible for your own trading decisions.</p>
+        <h3>📊 Signals & Alerts</h3>
+        <p>Trade signals shared on this platform represent the opinions of their authors and are not recommendations to buy or sell. You should conduct your own research and consult with a licensed financial advisor before making any investment decisions. Signal performance displayed may not reflect actual fills or results.</p>
       </div>
       <div class="legal-checkbox">
         <input type="checkbox" id="legalAgree" onchange="document.getElementById('legalBtn').disabled=!this.checked">
         <label for="legalAgree">I understand the risks and agree to these terms.</label>
       </div>
       <button class="btn" id="legalBtn" onclick="acceptLegal()" disabled>Accept & Continue</button>
+    </div>
+  </div>
+
+  <div class="modal-bg" id="privacyModal" onclick="closeModal('privacyModal')">
+    <div class="modal" onclick="event.stopPropagation()" style="max-height:90vh">
+      <div class="modal-header"><span class="modal-title">Privacy Policy</span><button class="modal-close" onclick="closeModal('privacyModal')">×</button></div>
+      <div class="legal-content">
+        <p><strong>Last updated:</strong> February 8, 2026</p>
+
+        <h3>1. Information We Collect</h3>
+        <p><strong>Account Information:</strong> When you create an account, we collect your name, email address, and authentication provider (Google, Apple, or email). This is stored securely in Firebase.</p>
+        <p><strong>Usage Data:</strong> We track basic usage information such as login timestamps to improve the platform experience.</p>
+        <p><strong>Locally Stored Data:</strong> Your portfolio positions, trade history, settings, and preferences are stored in your browser's local storage. API keys you enter (Groq, Twelve Data, Alpaca) are stored only in your browser and are never transmitted to our servers.</p>
+
+        <h3>2. How We Use Your Information</h3>
+        <p>We use your information to:</p>
+        <ul style="margin:8px 0;padding-left:20px">
+          <li>Provide and maintain the platform</li>
+          <li>Send trade signals and alerts (if you opt in)</li>
+          <li>Display leaderboard rankings (if you opt in)</li>
+          <li>Improve platform features and user experience</li>
+        </ul>
+
+        <h3>3. Data Sharing</h3>
+        <p>We do not sell, trade, or rent your personal information to third parties. We may share data with:</p>
+        <ul style="margin:8px 0;padding-left:20px">
+          <li><strong>Firebase (Google):</strong> Authentication and database services</li>
+          <li><strong>Discord:</strong> Signal notifications (admin-configured webhook only)</li>
+        </ul>
+
+        <h3>4. Data Security</h3>
+        <p>We use Firebase Authentication and Firebase Realtime Database with security rules to protect your data. However, no method of electronic storage is 100% secure, and we cannot guarantee absolute security.</p>
+
+        <h3>5. Your Rights</h3>
+        <p>You may request deletion of your account and associated data by contacting us. You can clear locally stored data at any time by clearing your browser storage.</p>
+
+        <h3>6. Cookies & Local Storage</h3>
+        <p>We use browser local storage to save your preferences, positions, and settings. We do not use tracking cookies or third-party analytics.</p>
+
+        <h3>7. Changes to This Policy</h3>
+        <p>We may update this Privacy Policy from time to time. Continued use of the platform after changes constitutes acceptance of the updated policy.</p>
+
+        <h3>8. Contact</h3>
+        <p>For privacy-related questions, reach out through the platform or our Discord community.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-bg" id="disclaimerModal" onclick="closeModal('disclaimerModal')">
+    <div class="modal" onclick="event.stopPropagation()" style="max-height:90vh">
+      <div class="modal-header"><span class="modal-title">Disclaimer</span><button class="modal-close" onclick="closeModal('disclaimerModal')">×</button></div>
+      <div class="legal-content">
+        <p><strong>Last updated:</strong> February 8, 2026</p>
+
+        <h3>1. Not Financial Advice</h3>
+        <p>Market Elites ("the Platform") is an educational and informational tool for options traders. <strong>Nothing on this platform constitutes financial advice, investment advice, or a recommendation to buy or sell any security.</strong> All content, including trade signals, educational materials, and AI-generated responses, is provided for informational purposes only.</p>
+
+        <h3>2. Risk of Loss</h3>
+        <p>Options trading involves substantial risk and is not appropriate for all investors. You can lose your entire investment and potentially more. Specific risks include but are not limited to:</p>
+        <ul style="margin:8px 0;padding-left:20px">
+          <li>Assignment risk on cash-secured puts resulting in holding declining stocks</li>
+          <li>Opportunity cost of capital secured for put positions</li>
+          <li>Early assignment on covered calls limiting upside potential</li>
+          <li>Market gaps and overnight moves exceeding strike prices</li>
+          <li>Liquidity risk in options markets</li>
+        </ul>
+
+        <h3>3. No Guarantees</h3>
+        <p>Past performance of any trade signals, strategies, or educational content does not guarantee future results. Win rates, premium collected, and P&L figures shown on the platform reflect individual tracking and may not represent actual brokerage results. Fills, timing, and execution may differ from displayed information.</p>
+
+        <h3>4. Your Responsibility</h3>
+        <p>You are solely responsible for your own investment decisions. Before trading options, you should:</p>
+        <ul style="margin:8px 0;padding-left:20px">
+          <li>Understand the risks of options trading</li>
+          <li>Consult with a licensed financial advisor</li>
+          <li>Only trade with money you can afford to lose</li>
+          <li>Conduct your own due diligence on any trade</li>
+        </ul>
+
+        <h3>5. AI Chatbot Disclaimer</h3>
+        <p>The AI assistant ("Wheely") provides general educational information about options strategies. Its responses are generated by artificial intelligence and should not be relied upon as financial advice. AI responses may contain errors or inaccuracies.</p>
+
+        <h3>6. Third-Party Services</h3>
+        <p>The Platform integrates with third-party services (brokers, data providers, APIs). We are not responsible for the accuracy of third-party data, outages, or any losses resulting from third-party service failures. Stock quotes and options data may be delayed or inaccurate.</p>
+
+        <h3>7. Limitation of Liability</h3>
+        <p>To the fullest extent permitted by law, Market Elites and its operators shall not be liable for any direct, indirect, incidental, consequential, or punitive damages arising from your use of the platform or reliance on any information provided herein.</p>
+
+        <h3>8. Changes</h3>
+        <p>We reserve the right to modify this disclaimer at any time. Your continued use of the platform constitutes acceptance of any changes.</p>
+      </div>
     </div>
   </div>
 
@@ -1192,7 +1283,7 @@
       </div>
       <div class="section"><div class="section-header"><span class="section-title">Active Positions</span><button class="section-link" onclick="openEarnings()">Earnings</button></div><div id="positionsContainer"></div></div>
       <div class="section"><div class="section-header"><span class="section-title">Recent Trades</span><button class="section-link" onclick="openAnalytics()">Analytics</button></div><div id="historyContainer"></div></div>
-      <div class="footer"><a href="#" onclick="openModal('legalModal');return false">Terms</a>•<a href="#" onclick="openModal('legalModal');return false">Privacy</a>•<a href="#" onclick="openModal('legalModal');return false">Disclaimer</a><p style="margin-top:8px" onclick="secretAdminTap()">© 2026 Market Elites. Not financial advice.</p></div>
+      <div class="footer"><a href="#" onclick="openModal('legalModal');return false">Terms</a>•<a href="#" onclick="openModal('privacyModal');return false">Privacy</a>•<a href="#" onclick="openModal('disclaimerModal');return false">Disclaimer</a><p style="margin-top:8px" onclick="secretAdminTap()">© 2026 Market Elites. Not financial advice.</p></div>
     </div>
 
     <div class="tab" id="calcTab">
@@ -1978,6 +2069,8 @@ function checkAuthState() {
             hideAuthScreen();
             checkLegal();
             renderHome();
+            // Track last active on session restore
+            firebase.database().ref('users/' + user.uid).update({ lastLogin: Date.now() }).catch(() => {});
           }
         });
       }
@@ -2830,8 +2923,7 @@ async function listenToFirebasePosts() {
                 p.content || 'New announcement posted'
               );
             }
-            // Discord webhook (fires for anyone with a webhook configured)
-            sendDiscordNotification(p);
+            // Discord handled by notifyPost() on creation — not here (avoids double-send)
           }
         });
       }
