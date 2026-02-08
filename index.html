@@ -3307,6 +3307,18 @@ async function deletePost(postId) {
     if (post.id && S.wheelPositions) {
       S.wheelPositions = S.wheelPositions.filter(w => w.cspSignalId !== post.id);
     }
+    // Clean up orphaned CC posts that share the same wheelId (e.g. when deleting a CSP)
+    if (post.wheelId) {
+      const orphanedCCs = S.adminPosts.filter(p => p !== post && p.wheelId === post.wheelId);
+      orphanedCCs.forEach(cc => {
+        const ccFirebaseId = cc.id;
+        if (ccFirebaseId) deletePostFromFirebase(ccFirebaseId).catch(e => console.warn('Firebase CC cleanup:', e));
+      });
+      S.adminPosts = S.adminPosts.filter(p => p === post || p.wheelId !== post.wheelId);
+      // Recalculate idx after filtering
+      idx = S.adminPosts.findIndex(p => p === post);
+      if (idx === -1) { _deleting = false; return; }
+    }
 
     // Remove from local array first (instant UI update)
     S.adminPosts.splice(idx, 1);
@@ -3534,18 +3546,22 @@ function calledAwayWheel(wheelId) {
     w.callStrike = callStrike;
     w.finalPnl = finalPnl;
 
-    // Update linked post status to 'called'
-    const linkedPost = (S.adminPosts || []).find(p => p.wheelId === wheelId);
-    if (linkedPost && linkedPost.status !== 'called') {
-      linkedPost.status = 'called';
-      linkedPost.calledAt = Date.now();
-      // Firebase update fire-and-forget
-      (async () => {
-        if (await initFirebase() && linkedPost.id) {
-          firebase.database().ref('posts/' + linkedPost.id).update({ status: 'called', calledAt: Date.now() }).catch(e => console.warn(e));
-        }
-      })();
-    }
+    // Update ALL linked posts to 'called' (CSP + all CC posts)
+    const linkedPosts = (S.adminPosts || []).filter(p => p.wheelId === wheelId);
+    linkedPosts.forEach(lp => {
+      if (lp.status !== 'called' && lp.status !== 'winner') {
+        lp.status = 'called';
+        lp.calledAt = Date.now();
+        (async () => {
+          if (await initFirebase() && lp.id) {
+            firebase.database().ref('posts/' + lp.id).update({ status: 'called', calledAt: Date.now() }).catch(e => console.warn(e));
+          }
+        })();
+      }
+    });
+
+    // Sync ccHistory entries to closed
+    w.ccHistory.forEach(cc => { cc.status = 'closed'; });
 
     save();
     renderWheelPositions();
@@ -3614,18 +3630,26 @@ function renderAdminPosts() {
       const wId = p.wheelId;
       const wPos = (S.wheelPositions || []).find(x => x.id === wId);
       let wheelInfo = '';
-      if (wPos) {
+      if (wPos && wPos.status === 'holding') {
         const totalCCPrem = wPos.ccHistory.reduce((s, cc) => s + (cc.premiumTotal || 0), 0);
         const adjBasis = wPos.costBasis - (totalCCPrem / wPos.shares);
         wheelInfo = `<div style="font-size:11px;color:var(--text3);margin:4px 0 6px;padding:6px;background:var(--input);border-radius:6px">
           <b>${wPos.shares}</b> shares · Cost basis: <b>$${adjBasis.toFixed(2)}</b> · CCs sold: <b>${wPos.ccHistory.length}</b>${totalCCPrem > 0 ? ` · CC income: <span style="color:var(--green)">$${totalCCPrem.toFixed(0)}</span>` : ''}
         </div>`;
+        actions = `${wheelInfo}<div class="post-actions">
+          <button type="button" class="post-action-btn" onclick="sellCCOnWheel('${wId}')" style="background:var(--blue);color:#fff">📝 Sell CC</button>
+          <button type="button" class="post-action-btn called" onclick="calledAwayWheel('${wId}')">📤 Called Away</button>
+          <button type="button" class="post-action-btn delete" onclick="adminAction('delete',${pidx})">✕</button>
+        </div>`;
+      } else if (wPos && wPos.status === 'completed') {
+        const pnlStr = wPos.finalPnl >= 0 ? `+$${wPos.finalPnl.toFixed(0)}` : `-$${Math.abs(wPos.finalPnl).toFixed(0)}`;
+        wheelInfo = `<div style="font-size:11px;color:var(--text3);margin:4px 0 6px;padding:6px;background:var(--input);border-radius:6px">
+          Wheel complete · P&L: <b style="color:${wPos.finalPnl>=0?'var(--green)':'var(--red)'}">${pnlStr}</b>
+        </div>`;
+        actions = `${wheelInfo}<div class="post-actions"><button type="button" class="post-action-btn delete" onclick="adminAction('delete',${pidx})">✕</button></div>`;
+      } else {
+        actions = `<div class="post-actions"><button type="button" class="post-action-btn delete" onclick="adminAction('delete',${pidx})">✕</button></div>`;
       }
-      actions = `${wheelInfo}<div class="post-actions">
-        <button type="button" class="post-action-btn" onclick="sellCCOnWheel('${wId}')" style="background:var(--blue);color:#fff">📝 Sell CC</button>
-        <button type="button" class="post-action-btn called" onclick="calledAwayWheel('${wId}')">📤 Called Away</button>
-        <button type="button" class="post-action-btn delete" onclick="adminAction('delete',${pidx})">✕</button>
-      </div>`;
     } else {
       actions = `<div class="post-actions"><button type="button" class="post-action-btn delete" onclick="adminAction('delete',${pidx})">Delete</button></div>`;
     }
@@ -3920,7 +3944,7 @@ function markPostCalled(postId, postRef) {
   // Check if this CC is linked to a wheel position
   const wheelPos = post.wheelId ? (S.wheelPositions || []).find(w => w.id === post.wheelId) : null;
 
-  if (wheelPos) {
+  if (wheelPos && wheelPos.status === 'holding') {
     calledAwayWheel(wheelPos.id);
     post.status = 'called';
     post.calledAt = Date.now();
@@ -3932,6 +3956,11 @@ function markPostCalled(postId, postRef) {
       }
     })();
     setTimeout(() => openAdmin(), 300);
+    return;
+  }
+
+  if (wheelPos && wheelPos.status === 'completed') {
+    showToast('This wheel is already completed', '');
     return;
   }
 
@@ -7633,7 +7662,7 @@ function renderPositions(container){
     c.innerHTML='<div class="empty"><div class="empty-icon"><svg viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div><div class="empty-title">No Positions</div><div class="empty-text">Add positions or sync from Alpaca</div><button class="empty-btn" onclick="openAdd()">+ Add Position</button></div>';
     return;
   }
-  c.innerHTML=positions.map(p=>{const expD=parseExpDate(p.expiration);const dte=expD?Math.ceil((expD-new Date())/864e5):null;const premCollected=(p.premium||0)*(p.contracts||1)*100;const clr=getTickerColor(p.symbol);const isShares=p.type==='shares';const dteBadge=getPositionAlertBadges(p);return`<div class="pos-card" onclick="viewPos('${p.id}')"><div class="pos-top"><div class="pos-left"><div class="pos-logo"><span class="pos-logo-text" style="background:${clr}">${p.symbol.slice(0,2)}</span></div><div class="pos-info"><div class="pos-symbol">${p.symbol}${p.strike?' $'+p.strike+(p.type==='csp'?'P':'C'):''}${dteBadge}</div><div class="pos-name">${names[p.symbol]||p.symbol}${p.expiration?' · Exp '+p.expiration:''}</div></div></div><span class="pos-badge ${p.type}">${(p.type||'').toUpperCase()}</span></div><div class="pos-stats"><div><div class="pos-stat-val pos">+$${premCollected.toFixed(0)}</div><div class="pos-stat-label">Premium</div></div><div><div class="pos-stat-val">${p.contracts||1}</div><div class="pos-stat-label">${isShares?'Shares':'Contracts'}</div></div><div style="text-align:right"><div class="pos-stat-val">${dte!==null&&dte>=0?dte:'—'}</div><div class="pos-stat-label">DTE</div></div></div></div>`}).join('');
+  c.innerHTML=positions.map(p=>{const expD=parseExpDate(p.expiration);const dte=expD?Math.ceil((expD-new Date())/864e5):null;const premCollected=(p.premium||0)*(p.contracts||1)*100;const clr=getTickerColor(p.symbol);const isShares=p.type==='shares';const dteBadge=getPositionAlertBadges(p);const dteValColor=dte!==null&&dte<=0?'color:var(--red)':dte!==null&&dte<=3?'color:var(--red)':dte!==null&&dte<=7?'color:var(--orange)':'';return`<div class="pos-card" onclick="viewPos('${p.id}')"><div class="pos-top"><div class="pos-left"><div class="pos-logo"><span class="pos-logo-text" style="background:${clr}">${p.symbol.slice(0,2)}</span></div><div class="pos-info"><div class="pos-symbol">${p.symbol}${p.strike?' $'+p.strike+(p.type==='csp'?'P':'C'):''}${dteBadge}</div><div class="pos-name">${names[p.symbol]||p.symbol}${p.expiration?' · Exp '+p.expiration:''}</div></div></div><span class="pos-badge ${p.type}">${(p.type||'').toUpperCase()}</span></div><div class="pos-stats"><div><div class="pos-stat-val pos">+$${premCollected.toFixed(0)}</div><div class="pos-stat-label">Premium</div></div><div><div class="pos-stat-val">${p.contracts||1}</div><div class="pos-stat-label">${isShares?'Shares':'Contracts'}</div></div><div style="text-align:right"><div class="pos-stat-val" style="${dteValColor}">${dte!==null&&dte>=0?dte:'—'}</div><div class="pos-stat-label">DTE</div></div></div></div>`}).join('');
 }
 function renderHistory(container){
   const c = container || $('historyContainer');
@@ -8375,7 +8404,15 @@ function renderSignals(){
 
   // Separate open vs closed positions
   // "assigned" signals are NOT closed — they're active wheel positions shown in Assigned Shares section
-  const openSigs = sigs.filter(p => !p.status || p.status === 'open');
+  // Also exclude CC posts whose linked wheel is already completed
+  const openSigs = sigs.filter(p => {
+    if (p.status && p.status !== 'open') return false;
+    if (p.wheelId) {
+      const linkedWheel = (S.wheelPositions || []).find(w => w.id === p.wheelId);
+      if (linkedWheel && linkedWheel.status === 'completed') return false;
+    }
+    return true;
+  });
   const closedSigs = sigs.filter(p => p.status && p.status !== 'open' && p.status !== 'assigned');
 
   let html = '';
@@ -8757,13 +8794,13 @@ function parseExpDate(exp) {
 }
 
 function getPositionAlertBadges(p) {
+  // Only show badge for truly expired or about to expire (≤3 days)
   if (!p.expiration || p.type === 'shares') return '';
   const expDate = parseExpDate(p.expiration);
   if (!expDate) return '';
   const dte = Math.ceil((expDate - new Date()) / 864e5);
   if (dte <= 0) return '<span class="dte-warn danger">EXPIRED</span>';
   if (dte <= 3) return '<span class="dte-warn danger">' + dte + 'D</span>';
-  if (dte <= 7) return '<span class="dte-warn caution">' + dte + 'D</span>';
   return '';
 }
 
