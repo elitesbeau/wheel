@@ -4025,7 +4025,7 @@ function markPostAssigned(postId, postRef) {
         const netStr = netPnl >= 0 ? `+$${netPnl.toFixed(0)}` : `-$${Math.abs(netPnl).toFixed(0)}`;
         showToast(`${post.ticker} assigned! ${shares} shares at $${costBasis.toFixed(2)} · Stock: ${stockStr} · Premium: +$${totalPremDollars.toFixed(0)} · Net: ${netStr}`, '');
         setTimeout(() => openAdmin(), 300);
-        (async () => { try { if (await initFirebase() && post.id) { firebase.database().ref('posts/' + post.id).update({ status: 'assigned', assignedAt: Date.now(), assignmentPrice: currentPrice, assignedContracts: contracts, wheelId: wheelPos.id }).catch(e => console.warn(e)); } sendAssignmentNotification(post, 'assigned').catch(e => console.warn(e)); } catch(e) {} })();
+        (async () => { try { if (await initFirebase() && post.id) { firebase.database().ref('posts/' + post.id).update({ status: 'assigned', assignedAt: Date.now(), assignmentPrice: currentPrice, assignedContracts: contracts, wheelId: wheelPos.id }).catch(e => console.warn('Firebase assignment sync:', e)); } sendAssignmentNotification(post, 'assigned').catch(e => console.warn(e)); } catch(e) { console.warn('Assignment sync error:', e); } })();
       });
     });
   });
@@ -9131,7 +9131,7 @@ async function loadEarnings() {
           }
         }
       }
-    } catch (e) { /* skip */ }
+    } catch (e) { console.warn('Earnings fetch:', e.message); }
   }
 
   // If FMP demo fails (common), generate estimated dates
@@ -9413,7 +9413,7 @@ async function saveToLeaderboard() {
         ts: Date.now()
       });
     }
-  } catch (e) { /* silently fail */ }
+  } catch (e) { console.warn('Leaderboard sync:', e.message); }
 }
 
 function renderLeaderboard() {
