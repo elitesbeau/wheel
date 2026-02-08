@@ -3333,17 +3333,16 @@ function renderAdminChain(chain) {
   const options = isCsp ? (chain.puts || []) : (chain.calls || []);
   const price = chain.price || 0;
 
-  // For CSPs: show 1 above current price + 25 below (OTM puts)
-  // For CCs: show 1 below current price + 25 above (OTM calls)
-  const withBid = options.filter(o => o.bid > 0 || o.lastPrice > 0);
+  // For CSPs: show 2 above current price + 40 below (deep OTM puts)
+  // For CCs: show 2 below current price + 40 above (deep OTM calls)
   let near;
   if (isCsp) {
-    const above = withBid.filter(o => o.strike >= price).sort((a,b) => a.strike - b.strike).slice(0, 1);
-    const below = withBid.filter(o => o.strike < price).sort((a,b) => b.strike - a.strike).slice(0, 25);
+    const above = options.filter(o => o.strike >= price).sort((a,b) => a.strike - b.strike).slice(0, 2);
+    const below = options.filter(o => o.strike < price).sort((a,b) => b.strike - a.strike).slice(0, 40);
     near = [...above, ...below].sort((a,b) => b.strike - a.strike);
   } else {
-    const below = withBid.filter(o => o.strike <= price).sort((a,b) => b.strike - a.strike).slice(0, 1);
-    const above = withBid.filter(o => o.strike > price).sort((a,b) => a.strike - b.strike).slice(0, 25);
+    const below = options.filter(o => o.strike <= price).sort((a,b) => b.strike - a.strike).slice(0, 2);
+    const above = options.filter(o => o.strike > price).sort((a,b) => a.strike - b.strike).slice(0, 40);
     near = [...below, ...above].sort((a,b) => b.strike - a.strike);
   }
 
@@ -8250,11 +8249,10 @@ function renderAddChainStrikes(chain) {
   const price = chain.price || 0;
   const strikesEl = $('addChainStrikes');
 
-  // Show 25 closest strikes (ITM + OTM)
+  // Show 40 closest strikes (ITM + OTM, include $0 bid deep OTM)
   const nearMoney = options
-    .filter(o => o.bid > 0 || o.lastPrice > 0)
     .sort((a, b) => Math.abs(a.strike - price) - Math.abs(b.strike - price))
-    .slice(0, 25)
+    .slice(0, 40)
     .sort((a,b) => b.strike - a.strike);
 
   if (nearMoney.length === 0) {
