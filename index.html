@@ -4010,11 +4010,21 @@ function renderAdminPosts() {
   const c = $('adminPostsList');
   if (!c) return;
   const posts = S.adminPosts || [];
-  if (!posts.length) {
-    c.innerHTML = '<p style="color:var(--text3);font-size:13px;text-align:center;padding:16px">No posts yet</p>';
+  // Filter out posts linked to completed wheels (wheel is done, no actions needed)
+  const activePosts = posts.filter(p => {
+    if (p.wheelId) {
+      const linkedWheel = (S.wheelPositions || []).find(w => w.id === p.wheelId);
+      if (linkedWheel && linkedWheel.status === 'completed') return false;
+    }
+    // Also hide called/closed CC/CSP posts (already in history)
+    if (p.kind === 'signal' && (p.status === 'called' || p.status === 'winner' || p.status === 'closed')) return false;
+    return true;
+  });
+  if (!activePosts.length) {
+    c.innerHTML = '<p style="color:var(--text3);font-size:13px;text-align:center;padding:16px">No active posts</p>';
     return;
   }
-  c.innerHTML = posts.slice(0, 15).map((p, i) => {
+  c.innerHTML = activePosts.slice(0, 15).map((p, i) => {
     let label = '', showActions = false, statusBadge = '';
     const status = p.status || 'open';
 
@@ -4035,7 +4045,7 @@ function renderAdminPosts() {
 
     // Different actions based on signal type and status
     let actions = '';
-    // Use index as reliable identifier since Firebase IDs can cause matching issues
+    // Use index into original S.adminPosts array (not filtered activePosts)
     const pidx = posts.indexOf(p);
     if (showActions && status === 'open') {
       if (p.type === 'csp') {
