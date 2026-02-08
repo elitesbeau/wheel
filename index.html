@@ -7289,9 +7289,10 @@ function openAnalytics(){
 
   let html = `
     <div style="background:linear-gradient(135deg,var(--green),#059669);border-radius:16px;padding:24px;text-align:center;margin-bottom:16px;color:#fff">
-      <div style="font-size:13px;opacity:0.9">Total Premium Collected</div>
+      <div style="font-size:13px;opacity:0.9">Total Premium</div>
       <div style="font-size:36px;font-weight:800;margin:4px 0">$${totalPrem.toFixed(0)}</div>
-      <div style="font-size:13px;opacity:0.8">${positions.length} open · ${history.length} closed</div>
+      <div style="font-size:13px;opacity:0.8">$${closedPrem.toFixed(0)} realized · $${openPrem.toFixed(0)} pending</div>
+      <div style="font-size:12px;opacity:0.6;margin-top:2px">${positions.length} open · ${history.length} closed</div>
     </div>
 
     <div class="stats-grid" style="margin-bottom:16px">
@@ -7637,16 +7638,17 @@ function renderHome(){
   // Render balance (computed from starting balance + all trade PnL)
   const computedBal = getComputedBalance();
   balanceEl.textContent = computedBal.toLocaleString();
-  const openPrem = (S.positions || []).reduce((s,p) => s + (p.premium||0) * (p.contracts||1) * 100, 0);
-  const histPnl = (S.history || []).reduce((s,t) => s + (t.pnl || 0), 0);
-  const totalChange = openPrem + histPnl;
+  const pendingPrem = (S.positions || []).reduce((s,p) => s + (p.premium||0) * (p.contracts||1) * 100, 0);
+  const realizedPnl = (S.history || []).reduce((s,t) => s + (t.pnl || 0), 0);
+  const totalChange = pendingPrem + realizedPnl;
   const base = S.startingBalance || 25000;
   const pct = base > 0 ? (totalChange / base * 100).toFixed(1) : 0;
   const changeEl = $('balanceChange');
   if (changeEl) {
     const arrow = totalChange >= 0 ? '↑' : '↓';
     const sign = totalChange >= 0 ? '+' : '';
-    changeEl.textContent = `${arrow} ${sign}$${Math.abs(totalChange).toFixed(0)} (${pct}%)`;
+    changeEl.innerHTML = `${arrow} ${sign}$${Math.abs(totalChange).toFixed(0)} (${pct}%)` +
+      (pendingPrem > 0 ? `<span style="display:block;font-size:10px;font-weight:500;opacity:0.8;margin-top:2px">$${realizedPnl.toFixed(0)} realized · $${pendingPrem.toFixed(0)} pending</span>` : '');
     changeEl.style.color = totalChange >= 0 ? 'var(--green)' : 'var(--red)';
     changeEl.style.background = totalChange >= 0 ? 'var(--green-bg)' : 'var(--red-bg,rgba(255,23,68,0.1))';
   }
@@ -8656,10 +8658,11 @@ function renderProfile(){
   $('brokerStatus').innerHTML=ok?'<div style="padding:12px;background:var(--green-bg);border-radius:12px;margin-bottom:16px;font-weight:600;color:var(--green)"><span class="live-dot"></span>Connected</div>':'<div style="padding:12px;background:var(--orange-bg);border-radius:12px;margin-bottom:16px;font-size:13px;color:var(--orange)">Not connected</div>';
   const wins=S.history.filter(t=>(t.pnl||0)>=0).length;
   const total=S.history.length;
-  const prem=S.positions.reduce((s,p)=>s+(p.premium||0)*(p.contracts||1)*100,0)+S.history.reduce((s,t)=>s+(t.premium||0)*(t.contracts||1)*100,0);
+  const realPrem=S.history.reduce((s,t)=>s+(t.premium||0)*(t.contracts||1)*100,0);
+  const pendPrem=S.positions.reduce((s,p)=>s+(p.premium||0)*(p.contracts||1)*100,0);
   $('pTrades').textContent=total;
   $('pWinRate').textContent=total?Math.round(wins/total*100)+'%':'0%';
-  $('pPremium').textContent='$'+prem.toFixed(0);
+  $('pPremium').innerHTML='$'+realPrem.toFixed(0)+(pendPrem>0?' <span style="font-size:11px;opacity:0.6">(+$'+pendPrem.toFixed(0)+' pending)</span>':'');
   // Sync notification switches to current state
   ['notifSwitch','qNotifSwitch'].forEach(id=>$(id)?.classList.toggle('on',!!S.notifOn));
   const emailSw = $('emailAlertSwitch');
@@ -8940,7 +8943,7 @@ function showRollSuggestions() {
   let html = '<div style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Roll Suggestions</div>';
 
   // Roll Out (same strike, later date)
-  html += `<div class="roll-card" onclick="rollToCalc('${p.symbol}','${p.type}',${p.strike})">
+  html += `<div class="roll-card" onclick="startInlineRoll(${p.strike},'Roll Out')">
     <div class="roll-label">Roll Out</div>
     <div class="roll-desc">${p.symbol} $${p.strike}${typeName[0]} → Next Expiration</div>
     <div class="roll-detail">Same strike, more time = more premium. Best when still OTM.</div>
@@ -8948,7 +8951,7 @@ function showRollSuggestions() {
 
   // Roll Out & Down/Up
   const adj = p.type === 'csp' ? Math.max(p.strike - 5, 0) : p.strike + 5;
-  html += `<div class="roll-card" onclick="rollToCalc('${p.symbol}','${p.type}',${adj})">
+  html += `<div class="roll-card" onclick="startInlineRoll(${adj},'Roll Out & ${dir === 'down' ? 'Down' : 'Up'}')">
     <div class="roll-label">Roll Out & ${dir === 'down' ? 'Down' : 'Up'}</div>
     <div class="roll-desc">${p.symbol} $${p.strike}${typeName[0]} → $${adj}${typeName[0]}</div>
     <div class="roll-detail">Lower risk — move strike further OTM. May reduce credit.</div>
@@ -8956,7 +8959,7 @@ function showRollSuggestions() {
 
   // Roll Out & Up/Down (aggressive)
   const adjAgg = p.type === 'csp' ? p.strike + 5 : Math.max(p.strike - 5, 0);
-  html += `<div class="roll-card" onclick="rollToCalc('${p.symbol}','${p.type}',${adjAgg})">
+  html += `<div class="roll-card" onclick="startInlineRoll(${adjAgg},'Roll Out & ${dirOpp === 'down' ? 'Down' : 'Up'}')">
     <div class="roll-label">Roll Out & ${dirOpp === 'down' ? 'Down' : 'Up'} (Aggressive)</div>
     <div class="roll-desc">${p.symbol} $${p.strike}${typeName[0]} → $${adjAgg}${typeName[0]}</div>
     <div class="roll-detail">Higher premium — strike closer to ATM. More assignment risk.</div>
@@ -8970,13 +8973,90 @@ function showRollSuggestions() {
   rollDiv.style.display = 'block';
 }
 
-function rollToCalc(sym, type, strike) {
+function startInlineRoll(suggestedStrike, label) {
+  const p = S.positions.find(x => x.id === S.selPosId);
+  if (!p) return;
+  const typeName = p.type === 'csp' ? 'Put' : 'Call';
+  const rollDiv = $('rollSuggestions');
+
+  rollDiv.innerHTML = `
+    <div style="font-size:12px;font-weight:600;color:var(--blue);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">${label}</div>
+    <div style="font-size:13px;color:var(--text2);margin-bottom:12px">${p.symbol} $${p.strike}${typeName[0]} → New Position</div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div>
+        <label style="font-size:11px;font-weight:600;color:var(--text3);display:block;margin-bottom:4px">New Strike</label>
+        <input type="number" id="rollNewStrike" value="${suggestedStrike}" step="0.5" style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:var(--input);color:var(--text);font-size:16px;font-weight:600">
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:600;color:var(--text3);display:block;margin-bottom:4px">New Expiration</label>
+        <input type="text" id="rollNewExp" placeholder="e.g. Feb 21" style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:var(--input);color:var(--text);font-size:14px">
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:600;color:var(--text3);display:block;margin-bottom:4px">Net Credit Per Share (negative if debit roll)</label>
+        <input type="number" id="rollNewPremium" placeholder="e.g. 1.50" step="0.01" style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:var(--input);color:var(--text);font-size:16px;font-weight:600">
+      </div>
+      <div style="display:flex;gap:8px;margin-top:4px">
+        <button class="btn" onclick="confirmInlineRoll()" style="flex:1;padding:12px;font-size:14px">Confirm Roll</button>
+        <button class="btn btn-outline" onclick="showRollSuggestions()" style="flex:1;padding:12px;font-size:14px">Back</button>
+      </div>
+    </div>`;
+}
+
+function confirmInlineRoll() {
+  const p = S.positions.find(x => x.id === S.selPosId);
+  if (!p) return;
+
+  const newStrike = parseFloat($('rollNewStrike').value);
+  const newExp = $('rollNewExp').value.trim();
+  const netCredit = parseFloat($('rollNewPremium').value);
+
+  if (!newStrike) return showToast('Enter a valid strike', 'error');
+  if (!newExp) return showToast('Enter new expiration', 'error');
+  if (isNaN(netCredit)) return showToast('Enter net credit (can be negative for debit rolls)', 'error');
+
+  const contracts = p.contracts || 1;
+  const oldPremPerShare = p.premium || 0;
+  const totalOldPrem = oldPremPerShare * contracts * 100;
+  const rollCreditTotal = netCredit * contracts * 100;
+
+  // Move old position to history as 'rolled'
+  S.history.unshift({
+    ...p,
+    closeDate: new Date().toISOString(),
+    pnl: 0, // No realized P&L on the roll itself — premium carries forward
+    grossPnl: 0,
+    fees: 0,
+    outcome: 'rolled',
+    rolledToStrike: newStrike,
+    rolledToExp: newExp
+  });
+
+  // Remove old position
+  S.positions = S.positions.filter(x => x.id !== S.selPosId);
+
+  // Create new rolled position
+  const newPos = {
+    id: Date.now().toString(),
+    symbol: p.symbol,
+    type: p.type,
+    strike: newStrike,
+    premium: netCredit, // Net credit of the roll
+    contracts: contracts,
+    expiration: newExp,
+    openDate: new Date().toISOString(),
+    rolledFrom: p.id,
+    rollCount: (p.rollCount || 0) + 1,
+    totalPremiumCollected: oldPremPerShare + netCredit // Track cumulative premium across rolls
+  };
+  S.positions.push(newPos);
+
+  save();
   closeModal('posModal');
-  nav('calc');
-  setMode(type);
-  $('tickerInput').value = sym;
-  searchTicker();
-  showToast(`Look for $${strike} strike on next expiration`, 'success');
+  renderHome();
+
+  const creditStr = netCredit >= 0 ? `+$${rollCreditTotal.toFixed(0)} credit` : `-$${Math.abs(rollCreditTotal).toFixed(0)} debit`;
+  const totalPrem = (oldPremPerShare + netCredit) * contracts * 100;
+  showToast(`Rolled ${p.symbol} $${p.strike} → $${newStrike} · ${creditStr} · Total premium: $${totalPrem.toFixed(0)}`, 'success');
 }
 
 // ====================================
@@ -9081,11 +9161,19 @@ function saveGoal() {
 }
 
 function getMonthlyPremium(yearMonth) {
-  const all = [...(S.positions || []), ...(S.history || [])];
-  return all.reduce((sum, t) => {
+  // Only count CLOSED (realized) trades toward monthly income
+  return (S.history || []).reduce((sum, t) => {
     const d = new Date(t.closeDate || t.openDate);
     const key = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
     if (key === yearMonth) sum += (t.premium || 0) * (t.contracts || 1) * 100;
+    return sum;
+  }, 0);
+}
+function getMonthlyPending(yearMonth) {
+  return (S.positions || []).reduce((sum, p) => {
+    const d = new Date(p.openDate);
+    const key = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+    if (key === yearMonth) sum += (p.premium || 0) * (p.contracts || 1) * 100;
     return sum;
   }, 0);
 }
@@ -9114,14 +9202,16 @@ function renderIncomeGoal() {
   if (!section) return;
   if (!S.incomeGoal || S.incomeGoal <= 0) { section.style.display = 'none'; return; }
   section.style.display = 'block';
-  const current = getMonthlyPremium(getCurrentMonthKey());
-  const pct = Math.min((current / S.incomeGoal) * 100, 100);
-  $('goalAmountText').textContent = '$' + current.toFixed(0) + ' / $' + S.incomeGoal;
+  const mk = getCurrentMonthKey();
+  const realized = getMonthlyPremium(mk);
+  const pending = getMonthlyPending(mk);
+  const pct = Math.min((realized / S.incomeGoal) * 100, 100);
+  $('goalAmountText').innerHTML = '$' + realized.toFixed(0) + ' / $' + S.incomeGoal + (pending > 0 ? ' <span style="font-size:11px;opacity:0.7">(+$' + pending.toFixed(0) + ' pending)</span>' : '');
   $('goalFill').style.width = pct + '%';
   if (pct >= 100) $('goalFill').style.background = 'linear-gradient(90deg, var(--green), #10b981)';
   const streak = getGoalStreak();
   const streakEl = $('goalStreak');
-  if (streakEl) streakEl.innerHTML = streak > 0 ? '🔥 ' + streak + ' month streak' : pct >= 100 ? '✅ Goal reached this month!' : Math.round(pct) + '% of goal';
+  if (streakEl) streakEl.innerHTML = streak > 0 ? '🔥 ' + streak + ' month streak' : pct >= 100 ? '✅ Goal reached this month!' : Math.round(pct) + '% of goal' + (pending > 0 ? ' · $' + pending.toFixed(0) + ' pending' : '');
 }
 
 function renderGoalsContent() {
@@ -9133,12 +9223,14 @@ function renderGoalsContent() {
     const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
     const key = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
     const earned = getMonthlyPremium(key);
+    const pend = getMonthlyPending(key);
     const goal = S.incomeGoal || 500;
     const pct = Math.min((earned / goal) * 100, 100);
     const label = d.toLocaleDateString('en', { month: 'long', year: 'numeric' });
     const hit = earned >= goal;
+    const pendLabel = pend > 0 ? ` <span style="font-size:11px;opacity:0.6">(+$${pend.toFixed(0)} pending)</span>` : '';
     html += `<div style="margin-bottom:12px">
-      <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px"><span>${label}</span><span style="font-weight:600;color:${hit?'var(--green)':'var(--text)'}">${hit?'✅ ':''}$${earned.toFixed(0)} / $${goal}</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px"><span>${label}</span><span style="font-weight:600;color:${hit?'var(--green)':'var(--text)'}">${hit?'✅ ':''}$${earned.toFixed(0)} / $${goal}${pendLabel}</span></div>
       <div class="goal-track"><div class="goal-fill" style="width:${pct}%;${hit?'background:var(--green)':''}"></div></div>
     </div>`;
   }

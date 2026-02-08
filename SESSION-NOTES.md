@@ -1,4 +1,4 @@
-# Market Elites - Session Notes (Jan 29, 2026)
+# Market Elites - Session Notes (Feb 8, 2026)
 
 ## How to Pick Up Where We Left Off
 
@@ -10,8 +10,68 @@ Read SESSION-NOTES.md in that directory for full context on what we've done and 
 
 ## Repo Info
 - **Repo:** github.com/elitesbeau/wheel
-- **Branch:** `claude/add-live-pricing-My9Kb`
-- **Single-file app:** `index.html` (~6,000+ lines)
+- **Branch:** `main` (GitHub Pages auto-deploys from main)
+- **Live site:** https://elitesbeau.github.io/wheel/
+- **Single-file app:** `index.html` (~9,000+ lines)
+
+## What Was Done Feb 8
+
+### Unusual Whales API Removal (commit 7f58831)
+- Removed entire Intel tab + UW integration (248 lines deleted) — too expensive
+- Removed: Intel tab HTML, nav button, UW API key settings, all fetch/render functions, watchlist badges
+- Kept `computePortfolioStats()` as it's independent of UW
+
+### Admin Panel Layout Fix (commit da6f471)
+- Signal form was cramped (CSP/CC toggle + ticker input + Load button in one row)
+- Stacked vertically: CSP/CC toggle centered → full-width ticker input → full-width Load button
+
+### Assignment Alerts + User Copy Flow (commit 6cd99c9)
+- `renderAlertsFeed()` now shows cards for assigned/called/winner status changes
+- Added "I was assigned too" button for users who copied the trade
+- Created `userMarkAssigned(signalId)` — lets users create their own wheel position from a copied signal
+
+### CC Signal Linking + Duplicate Fix (commit 0b35937)
+- CC signals in Open Positions now show "Covered by X assigned shares" badge
+- Assigned Shares section shows active CC details inline
+- Fixed duplicate CC alerts: `savePostToFirebase()` now dedupes before adding to `S.adminPosts`
+- Created `parseExpDate()` utility for "Feb 14" style dates (was parsing as year 2001)
+
+### DTE Badge Fix (commits f7fdd86, e38a05e)
+- Fixed false "EXPIRED" badge on positions with "Feb 14" style dates
+- DTE badge: only shows red for ≤3 days. DTE number colors: red ≤3, orange ≤7, default otherwise
+- Removed orange caution badge entirely — was confusing users
+
+### Admin Chain Strike Range (commit 318b3d4)
+- CSP mode: shows 1 strike above + 25 below current price
+- CC mode: shows 1 strike below + 25 above current price
+- Previously: 25 closest strikes split evenly both directions (not enough OTM)
+
+### Admin Wheel Flow Overhaul (commit fda5cd7)
+- **Fixed bracket mismatch** in `renderAdminPosts()` — inner else block wasn't closed
+- **Called Away guard**: `markPostCalled()` now checks `wheelPos.status === 'holding'` before processing
+- **Completed wheel toast**: Shows "wheel already completed" if called-away triggered twice
+- **Orphan CC cleanup**: `deletePost()` now removes all CC posts sharing the same `wheelId` when deleting a CSP
+- **Open Signals filter**: CC posts linked to completed wheels are excluded from "Open Options" section
+- **renderAdminPosts()**: Shows "Wheel complete · P&L" for completed wheels, hides Sell CC/Called Away buttons
+
+### Admin Wheel Flow — Full Lifecycle
+The wheel strategy flow in the admin panel now works correctly:
+1. **Sell CSP** → signal posted (open, with Winner/Assigned/Roll/Delete buttons)
+2. **Assigned** → creates `wheelPosition` with status 'holding', updates post status
+3. **Sell CC** → CC signal posted linked to wheel via `wheelId`, shows in open signals with "Covered by X shares" badge
+4. **Called Away** → wheel completed, all linked posts updated to 'called', P&L calculated and added to history
+5. **Delete CSP** → also cleans up orphaned CC posts and linked wheel positions
+
+### Key Functions (for reference)
+- `markPostAssigned(postId, post)` — CSP assigned → creates wheel position (line ~3874)
+- `sellCCOnWheel(wheelId)` — sell CC against assigned shares (line ~3414)
+- `calledAwayWheel(wheelId)` — shares called away, complete wheel (line ~3485)
+- `markPostCalled(postId, post)` — CC called, triggers calledAwayWheel (line ~3940)
+- `deletePost(postId)` — deletes post + linked wheel + orphaned CCs (line ~3290)
+- `renderAdminPosts()` — admin post list with context-aware action buttons (line ~3569)
+- `renderSignals()` — premium user signals view with open/closed/assigned sections (line ~8378)
+- `renderWheelPositions()` — manage positions panel (line ~3327)
+- `parseExpDate(exp)` — handles "Feb 14" style dates (line ~3264 area)
 
 ## What Was Done Jan 29
 
