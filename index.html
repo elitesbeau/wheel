@@ -2169,9 +2169,20 @@ async function fetchOptionsChain(symbol, expDate = null) {
         strikes.push(Math.round(s * 100) / 100);
       }
       const iv = 0.35;
-      const daysOut = [7, 14, 21, 30, 45, 60];
+      // Find next 6 Fridays (options expire on Fridays)
       const now = Math.floor(Date.now() / 1000);
-      const expirations = daysOut.map(d => now + d * 86400);
+      const expirations = [];
+      const today = new Date();
+      const dayOfWeek = today.getDay(); // 0=Sun
+      const daysToFri = dayOfWeek <= 5 ? (5 - dayOfWeek) : 6; // days until next Friday
+      const firstFri = new Date(today);
+      firstFri.setDate(today.getDate() + (daysToFri === 0 ? 7 : daysToFri)); // skip today if already Friday
+      firstFri.setHours(16, 0, 0, 0); // market close
+      for (let i = 0; i < 6; i++) {
+        const fri = new Date(firstFri);
+        fri.setDate(firstFri.getDate() + i * 7);
+        expirations.push(Math.floor(fri.getTime() / 1000));
+      }
       const dte = 30;
       const calls = [], puts = [];
       strikes.forEach(strike => {
