@@ -1938,6 +1938,8 @@ function completeAuth(user) {
   hideAuthScreen();
   checkLegal();
   renderHome(); // Fix: render home after login
+  // Track last login in Firebase
+  (async () => { try { if (await initFirebase()) firebase.database().ref('users/' + user.uid).update({ lastLogin: Date.now() }); } catch(e) {} })();
 }
 
 async function loadUserData(uid) {
@@ -7619,6 +7621,15 @@ function computePortfolioStats() {
 }
 
 
+function timeAgo(ts) {
+  const s = Math.floor((Date.now() - ts) / 1000);
+  if (s < 60) return 'just now';
+  if (s < 3600) return Math.floor(s/60) + 'm ago';
+  if (s < 86400) return Math.floor(s/3600) + 'h ago';
+  if (s < 604800) return Math.floor(s/86400) + 'd ago';
+  return new Date(ts).toLocaleDateString();
+}
+
 async function renderAdminUsers() {
   const el = $('adminUsersList');
   const countEl = $('userCount');
@@ -7632,7 +7643,7 @@ async function renderAdminUsers() {
     if (!users.length) { el.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:12px">No users yet</div>'; return; }
     el.innerHTML = users.map(u => {
       const date = u.createdAt ? new Date(u.createdAt).toLocaleDateString() : '?';
-      const time = u.createdAt ? new Date(u.createdAt).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : '';
+      const lastLogin = u.lastLogin ? timeAgo(u.lastLogin) : 'Never';
       const prov = u.provider ? `<span style="font-size:10px;background:var(--input);padding:1px 6px;border-radius:3px;margin-left:4px">${u.provider}</span>` : '';
       const premium = u.isPremium ? '<span style="font-size:10px;background:var(--green-bg);color:var(--green);padding:1px 6px;border-radius:3px;margin-left:4px;font-weight:600">PRO</span>' : '';
       return `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);font-size:13px">
@@ -7641,7 +7652,7 @@ async function renderAdminUsers() {
           <div style="font-size:11px;color:var(--text3)">${u.email || 'No email'}</div>
         </div>
         <div style="text-align:right;font-size:11px;color:var(--text3)">
-          <div>${date}</div><div>${time}</div>
+          <div>Joined ${date}</div><div>Last active ${lastLogin}</div>
         </div>
       </div>`;
     }).join('');
