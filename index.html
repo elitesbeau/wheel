@@ -3652,6 +3652,7 @@ function renderWheelPositions() {
       <div style="display:flex;gap:6px">
         <button class="btn btn-outline" onclick="sellCCOnWheel('${w.id}')" style="flex:1;font-size:11px;padding:6px">Sell CC</button>
         <button class="btn" onclick="calledAwayWheel('${w.id}')" style="flex:1;font-size:11px;padding:6px;background:var(--blue)">Called Away</button>
+        <button onclick="deleteWheelPosition('${w.id}')" style="font-size:11px;padding:6px 10px;background:transparent;border:1px solid var(--red);color:var(--red);border-radius:8px;cursor:pointer" title="Delete">✕</button>
       </div>
     </div>`;
   }).join('');
@@ -3690,6 +3691,19 @@ function renderWheelPositions() {
       save();
     }).catch(() => {});
   });
+}
+
+function deleteWheelPosition(wheelId) {
+  if (!confirm('Delete this wheel position? This cannot be undone.')) return;
+  S.wheelPositions = (S.wheelPositions || []).filter(w => w.id !== wheelId);
+  // Also unlink any admin posts that referenced this wheel
+  (S.adminPosts || []).forEach(p => { if (p.wheelId === wheelId) { p.wheelId = null; } });
+  save();
+  renderWheelPositions();
+  renderAdminPosts();
+  renderSignals();
+  renderHome();
+  showToast('Wheel position deleted', '');
 }
 
 // Sell a covered call against assigned shares
