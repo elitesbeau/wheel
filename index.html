@@ -1494,10 +1494,14 @@
     </div>
 
     <div id="adminSignalForm">
-      <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
-        <div class="toggle" style="flex-shrink:0"><button class="toggle-btn active" id="sigCspBtn" onclick="S.adminSigType='csp';this.classList.add('active');$('sigCcBtn').classList.remove('active');if(adminChainData)renderAdminChain(adminChainData)">CSP</button><button class="toggle-btn" id="sigCcBtn" onclick="S.adminSigType='cc';this.classList.add('active');$('sigCspBtn').classList.remove('active');if(adminChainData)renderAdminChain(adminChainData)">CC</button></div>
-        <input type="text" class="form-input" id="adminTicker" placeholder="TICKER" style="text-transform:uppercase;flex:1;font-size:16px;font-weight:700;letter-spacing:1px;text-align:center" maxlength="6">
-        <button class="btn" onclick="loadAdminChain()" style="white-space:nowrap;padding:10px 14px;font-size:13px">Load</button>
+      <div style="display:flex;gap:8px;justify-content:center;margin-bottom:10px">
+        <div class="toggle"><button class="toggle-btn active" id="sigCspBtn" onclick="S.adminSigType='csp';this.classList.add('active');$('sigCcBtn').classList.remove('active');if(adminChainData)renderAdminChain(adminChainData)">CSP</button><button class="toggle-btn" id="sigCcBtn" onclick="S.adminSigType='cc';this.classList.add('active');$('sigCspBtn').classList.remove('active');if(adminChainData)renderAdminChain(adminChainData)">CC</button></div>
+      </div>
+      <div style="margin-bottom:10px">
+        <input type="text" class="form-input" id="adminTicker" placeholder="TICKER" style="text-transform:uppercase;width:100%;font-size:16px;font-weight:700;letter-spacing:1px;text-align:center;padding:12px" maxlength="6">
+      </div>
+      <div style="margin-bottom:12px">
+        <button class="btn" onclick="loadAdminChain()" style="width:100%;padding:12px;font-size:14px">Load Chain</button>
       </div>
       <div id="adminTickerInfo" style="font-size:12px;color:var(--text3);margin-bottom:8px;text-align:center"></div>
 
