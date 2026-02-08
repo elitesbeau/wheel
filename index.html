@@ -7580,6 +7580,39 @@ function renderAlertsFeed() {
         <div style="font-size:13px;margin-top:6px">${p.original} → ${p.newPos}</div>
         <div style="font-size:14px;font-weight:600;color:var(--green);margin-top:4px">${p.credit}</div>
       </div>`;
+    } else if (p.kind === 'signal' && p.status === 'assigned') {
+      const hasCopy = (S.positions || []).find(pos => pos.signalId === p.id);
+      const assignBtn = hasCopy && !hasCopy.assigned
+        ? `<button onclick="event.stopPropagation();userMarkAssigned('${p.id}')" style="font-size:11px;padding:4px 10px;background:var(--orange);color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:600;margin-top:6px">I was assigned too</button>`
+        : hasCopy && hasCopy.assigned
+        ? `<span style="font-size:11px;color:var(--orange);font-weight:600;margin-top:6px;display:inline-block">You marked assigned</span>`
+        : '';
+      return `<div class="pos-card" style="border-left:3px solid var(--orange);padding:14px" onclick="nav('signals')">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span class="pos-badge" style="background:var(--orange-bg,rgba(255,152,0,0.1));color:var(--orange)">ASSIGNED</span>
+          <span style="font-size:11px;color:var(--text3)">${getTimeAgo(p.assignedAt || p.timestamp)}</span>
+        </div>
+        <div style="font-size:14px;font-weight:700;margin-top:6px">${p.ticker} — now holding shares</div>
+        <div style="font-size:12px;color:var(--text2);margin-top:2px">CSP $${p.strike} assigned · Selling covered calls</div>
+        ${assignBtn}
+      </div>`;
+    } else if (p.kind === 'signal' && p.status === 'called') {
+      return `<div class="pos-card" style="border-left:3px solid var(--blue);padding:14px" onclick="nav('signals')">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span class="pos-badge" style="background:var(--blue-bg,rgba(0,122,255,0.1));color:var(--blue)">CALLED AWAY</span>
+          <span style="font-size:11px;color:var(--text3)">${getTimeAgo(p.closedAt || p.timestamp)}</span>
+        </div>
+        <div style="font-size:14px;font-weight:700;margin-top:6px">${p.ticker} — shares called away</div>
+        <div style="font-size:12px;color:var(--text2);margin-top:2px">Back to selling puts</div>
+      </div>`;
+    } else if (p.kind === 'signal' && p.status === 'winner') {
+      return `<div class="pos-card" style="border-left:3px solid var(--green);padding:14px" onclick="nav('signals')">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span class="pos-badge" style="background:var(--green-bg);color:var(--green)">WIN</span>
+          <span style="font-size:11px;color:var(--text3)">${getTimeAgo(p.closedAt || p.timestamp)}</span>
+        </div>
+        <div style="font-size:14px;font-weight:700;margin-top:6px">${p.ticker} $${p.strike} ${(p.type||'').toUpperCase()} closed for profit</div>
+      </div>`;
     }
     return '';
   }).join('');
@@ -7902,6 +7935,57 @@ function copyTradeFromSignal(ticker, type, strike, exp, prem, signalId) {
     console.error(e);
   }
 }
+function userMarkAssigned(signalId) {
+  const pos = (S.positions || []).find(p => p.signalId === signalId);
+  if (!pos) return showToast('No copied position found for this signal', 'error');
+  const signal = (S.adminPosts || []).find(p => p.id === signalId);
+  const strike = signal ? signal.strike : pos.strike;
+  const ticker = pos.symbol;
+
+  showPrompt(`${ticker} assigned at $${strike}. Your assignment price?`, strike.toString(), (priceStr) => {
+    const assignPrice = parseFloat(priceStr);
+    if (!assignPrice || assignPrice <= 0) return showToast('Enter a valid price', 'error');
+    const shares = (pos.contracts || 1) * 100;
+    const premPerShare = pos.premium || 0;
+    const totalPremDollars = premPerShare * 100 * (pos.contracts || 1);
+
+    // Mark position as assigned
+    pos.assigned = true;
+    pos.assignedAt = Date.now();
+    pos.assignPrice = assignPrice;
+    pos.assignShares = shares;
+
+    // Create user wheel position
+    if (!S.wheelPositions) S.wheelPositions = [];
+    S.wheelPositions.push({
+      id: Date.now().toString(),
+      symbol: ticker,
+      shares: shares,
+      contracts: pos.contracts || 1,
+      assignPrice: strike,
+      currentPrice: assignPrice,
+      cspPremium: premPerShare,
+      costBasis: strike,
+      originalCostBasis: strike,
+      assignedAt: Date.now(),
+      cspSignalId: signalId,
+      status: 'holding',
+      ccHistory: [],
+      totalPremiumCollected: totalPremDollars,
+      userWheel: true
+    });
+
+    save();
+    renderHome();
+    renderSignals();
+    renderAlertsFeed();
+    const stockPnl = (assignPrice - strike) * shares;
+    const netPnl = stockPnl + totalPremDollars;
+    const fmtPnl = (v) => v >= 0 ? `+$${v.toFixed(0)}` : `-$${Math.abs(v).toFixed(0)}`;
+    showToast(`Marked assigned! ${shares} shares of ${ticker} at $${strike} · Stock: ${fmtPnl(stockPnl)} · Premium: +$${totalPremDollars.toFixed(0)} · Net: ${fmtPnl(netPnl)}`, '');
+  });
+}
+
 function setMode(m){S.mode=m;$('cspBtn').classList.toggle('active',m==='csp');$('ccBtn').classList.toggle('active',m==='cc');
   // Reload options if we have a current ticker
   if(currentTicker && currentChain) loadOptionsChain(currentTicker);
@@ -8312,6 +8396,9 @@ function renderSignals(){
       const fmtPnl = (v) => v >= 0 ? `+$${v.toFixed(0)}` : `-$${Math.abs(v).toFixed(0)}`;
       const netColor = netPnl >= 0 ? 'var(--green)' : 'var(--red)';
       const ccInfo = w.ccHistory.length > 0 ? ` · ${w.ccHistory.length} CC${w.ccHistory.length>1?'s':''} sold` : '';
+      // Check if user has a copied position for this signal but hasn't marked assigned yet
+      const userCopy = !isAdmin() && w.cspSignalId ? (S.positions || []).find(pos => pos.signalId === w.cspSignalId && !pos.assigned) : null;
+      const userAssignBtn = userCopy ? `<button onclick="event.stopPropagation();userMarkAssigned('${w.cspSignalId}')" style="font-size:11px;padding:5px 12px;background:var(--orange);color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:600;margin-top:6px">I was assigned too</button>` : '';
       html += `<div class="signal-card" style="border-left:3px solid var(--orange)">
         <div class="signal-header"><span class="signal-type" style="background:var(--orange-bg,rgba(255,152,0,0.1));color:var(--orange)">SHARES</span><span class="signal-time" style="margin-left:auto">Assigned ${getTimeAgo(w.assignedAt)}</span></div>
         <div class="signal-ticker">${w.symbol}</div>
@@ -8322,6 +8409,7 @@ function renderSignals(){
           <span>Net: <b style="color:${netColor};font-size:14px">${fmtPnl(netPnl)}</b></span>
         </div>
         <div style="font-size:11px;color:var(--text3);margin-top:4px">Selling covered calls to reduce cost basis${ccInfo}</div>
+        ${userAssignBtn}
       </div>`;
     });
   }
