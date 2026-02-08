@@ -1243,6 +1243,32 @@
 
     <div class="tab" id="alertsTab"><div class="section" style="padding-top:16px"><div class="section-header"><span class="section-title">Alerts</span></div><div id="alertsContainer"></div></div></div>
 
+    <!-- INTEL TAB: Market Intel + Portfolio Tracker -->
+    <div class="tab" id="intelTab">
+      <div class="section" style="padding-top:16px">
+        <!-- Portfolio Tracker -->
+        <div class="section-header"><span class="section-title">Portfolio Performance</span></div>
+        <div id="portfolioTracker" style="margin-bottom:24px"></div>
+
+        <!-- Market Tide -->
+        <div class="section-header" style="margin-top:16px"><span class="section-title">Market Sentiment</span><button class="section-link" onclick="refreshIntel()">Refresh</button></div>
+        <div id="marketTideContainer" style="margin-bottom:20px"></div>
+
+        <!-- Unusual Flow -->
+        <div class="section-header"><span class="section-title">Unusual Options Flow</span></div>
+        <p style="font-size:12px;color:var(--text3);margin-bottom:8px">Whale trades from Unusual Whales</p>
+        <div id="flowContainer" style="margin-bottom:20px"></div>
+
+        <!-- Dark Pool -->
+        <div class="section-header"><span class="section-title">Dark Pool Activity</span></div>
+        <div id="darkPoolContainer" style="margin-bottom:20px"></div>
+
+        <!-- Insider / Congress -->
+        <div class="section-header"><span class="section-title">Smart Money</span></div>
+        <div id="smartMoneyContainer"></div>
+      </div>
+    </div>
+
     <div class="tab" id="profileTab">
       <div class="card">
         <div class="profile-header">
@@ -1278,6 +1304,7 @@
     <button class="nav-btn" data-tab="calc" onclick="nav('calc')"><svg viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 6h8M8 10h8M8 14h4"/></svg><span>Calc</span></button>
     <button class="nav-btn" data-tab="watch" onclick="nav('watch')"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg><span>Watch</span></button>
     <button class="nav-btn" data-tab="signals" onclick="nav('signals')"><svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg><span>Signals</span></button>
+    <button class="nav-btn" data-tab="intel" onclick="nav('intel')"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg><span>Intel</span></button>
     <button class="nav-btn" data-tab="profile" onclick="goToProfile()"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>Profile</span></button>
   </div></nav>
 
@@ -1594,6 +1621,12 @@
         <div class="form-group"><label class="form-label">Webhook URL</label><input type="text" class="form-input" id="discordWebhook" placeholder="https://discord.com/api/webhooks/..."></div>
         <p style="font-size:11px;color:var(--text3);margin-top:4px">Signals, winners & announcements sent to your Discord server</p>
         <button class="btn btn-outline" onclick="testDiscordWebhook()" style="margin-top:8px;font-size:12px;padding:6px 16px">🧪 Send Test Message</button>
+      </div>
+
+      <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
+        <div class="form-label" style="font-weight:600;margin-bottom:8px">🐋 Unusual Whales API</div>
+        <div class="form-group"><label class="form-label">API Token</label><input type="password" class="form-input" id="uwApiKey" placeholder="Bearer token from unusualwhales.com"></div>
+        <p style="font-size:11px;color:var(--text3);margin-top:4px">Powers flow alerts, dark pool, market tide, Greeks. Get a key at <a href="https://unusualwhales.com" target="_blank" style="color:var(--blue)">unusualwhales.com</a></p>
       </div>
 
       <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
@@ -2551,6 +2584,11 @@ function saveAdminSettings() {
     emailjs.init(publicKey);
   }
 
+  // Save Unusual Whales API key
+  const uwKey = $('uwApiKey')?.value.trim();
+  if (uwKey) localStorage.setItem('uwApiKey', uwKey);
+  else localStorage.removeItem('uwApiKey');
+
   showToast('Settings saved!', 'success');
 }
 
@@ -2575,6 +2613,10 @@ function loadAdminSettings() {
   if (publicKey && typeof emailjs !== 'undefined') {
     emailjs.init(publicKey);
   }
+
+  // Load Unusual Whales API key
+  const uwKey = localStorage.getItem('uwApiKey');
+  if (uwKey && $('uwApiKey')) $('uwApiKey').value = uwKey;
 }
 
 // Send email notifications to subscribed users
@@ -4007,7 +4049,7 @@ function applyTheme(){
   // Sync dropdowns
   ['themeSelect','qThemeSelect'].forEach(id=>{if($(id))$(id).value=S.theme});
 }
-function nav(t){document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.nav-btn').forEach(x=>x.classList.remove('active'));$(`${t}Tab`)?.classList.add('active');document.querySelector(`.nav-btn[data-tab="${t}"]`)?.classList.add('active');if(t==='home')renderHome();if(t==='watch')renderWatch();if(t==='alerts')renderAlerts();if(t==='signals')renderSignals();if(t==='profile')renderProfile()}
+function nav(t){document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.nav-btn').forEach(x=>x.classList.remove('active'));$(`${t}Tab`)?.classList.add('active');document.querySelector(`.nav-btn[data-tab="${t}"]`)?.classList.add('active');if(t==='home')renderHome();if(t==='watch')renderWatch();if(t==='alerts')renderAlerts();if(t==='signals')renderSignals();if(t==='intel')renderIntel();if(t==='profile')renderProfile()}
 function goCalc(m){nav('calc');setMode(m)}
 function openModal(id){$(id)?.classList.add('show')}
 function closeModal(id){$(id)?.classList.remove('show')}
@@ -7408,6 +7450,206 @@ function updateStatus(){
   $('statusPill').className='status live';
   $('statusText').textContent=hasBroker?'Live + Broker':'Live Data';
 }
+
+// ========== UNUSUAL WHALES API ==========
+const uwCache = {};
+const UW_CACHE_TTL = 5 * 60 * 1000;
+
+function getUWKey() { return localStorage.getItem('uwApiKey') || ''; }
+
+async function uwFetch(endpoint, params = {}) {
+  const key = getUWKey();
+  if (!key) return null;
+  const qs = new URLSearchParams(params).toString();
+  const url = `https://api.unusualwhales.com${endpoint}${qs ? '?' + qs : ''}`;
+  if (uwCache[url] && Date.now() - uwCache[url].ts < UW_CACHE_TTL) return uwCache[url].data;
+  try {
+    const res = await fetch(url, { headers: { 'Authorization': `Bearer ${key}` } });
+    if (!res.ok) { console.warn('UW API error:', res.status); return null; }
+    const json = await res.json();
+    uwCache[url] = { data: json.data || json, ts: Date.now() };
+    return json.data || json;
+  } catch (e) { console.warn('UW fetch error:', e); return null; }
+}
+
+async function fetchFlowAlerts(ticker) {
+  const p = { limit: '15', min_premium: '25000' };
+  if (ticker) p.ticker_symbol = ticker;
+  return await uwFetch('/api/option-trades/flow-alerts', p);
+}
+async function fetchDarkPool(ticker) {
+  return ticker ? await uwFetch(`/api/darkpool/${ticker}`) : await uwFetch('/api/darkpool/recent');
+}
+async function fetchMarketTide() { return await uwFetch('/api/market/market-tide'); }
+async function fetchTickerGreeks(ticker) { return await uwFetch(`/api/stock/${ticker}/greeks`); }
+async function fetchInsiderTrades() { return await uwFetch('/api/insider/transactions'); }
+async function fetchCongressTrades() { return await uwFetch('/api/congress/recent-trades'); }
+
+// ========== MASTER PORTFOLIO TRACKER ==========
+function computePortfolioStats() {
+  const posts = S.adminPosts || [];
+  const wheels = S.wheelPositions || [];
+  const history = S.history || [];
+  const allSignals = posts.filter(p => p.kind === 'signal');
+  const openCSPs = allSignals.filter(p => p.type === 'csp' && (!p.status || p.status === 'open'));
+  const openCCs = allSignals.filter(p => p.type === 'cc' && (!p.status || p.status === 'open'));
+  const winners = allSignals.filter(p => p.status === 'winner');
+  const assigned = allSignals.filter(p => p.status === 'assigned');
+  const called = allSignals.filter(p => p.status === 'called');
+  const rolled = allSignals.filter(p => p.status === 'rolled' || p.rollCount > 0);
+
+  let totalPremiumCollected = 0;
+  winners.forEach(p => {
+    const prem = p.totalPremiumCollected || parseFloat((p.prem || '').replace(/[$,]/g, '')) || 0;
+    totalPremiumCollected += prem * 100 * (p.assignedContracts || 1);
+  });
+
+  let wheelPremium = 0, wheelStockPnl = 0;
+  wheels.filter(w => w.status === 'holding').forEach(w => {
+    const ccPrem = w.ccHistory.reduce((s, cc) => s + (cc.premiumTotal || 0), 0);
+    wheelPremium += (w.totalPremiumCollected || 0) + ccPrem;
+    wheelStockPnl += ((w.currentPrice || w.assignPrice) - w.assignPrice) * w.shares;
+  });
+
+  let realizedWheelPnl = 0;
+  history.filter(h => h.outcome === 'called_away').forEach(h => { realizedWheelPnl += h.pnl || 0; });
+
+  const closedTrades = winners.length + called.length;
+  const winRate = closedTrades > 0 ? Math.round(winners.length / closedTrades * 100) : 0;
+
+  return {
+    totalSignals: allSignals.length, openCSPs: openCSPs.length, openCCs: openCCs.length,
+    activeWheels: wheels.filter(w => w.status === 'holding').length,
+    winners: winners.length, assigned: assigned.length, called: called.length, rolled: rolled.length,
+    totalPremiumCollected, wheelPremium, wheelStockPnl,
+    wheelNetPnl: wheelStockPnl + wheelPremium, realizedWheelPnl,
+    totalPnl: totalPremiumCollected + wheelStockPnl + wheelPremium + realizedWheelPnl,
+    winRate, closedTrades
+  };
+}
+
+// ========== RENDER INTEL TAB ==========
+function renderIntel() {
+  renderPortfolioTracker();
+  renderMarketTide();
+  renderFlowAlerts();
+  renderDarkPool();
+  renderSmartMoney();
+}
+
+function refreshIntel() {
+  Object.keys(uwCache).forEach(k => delete uwCache[k]);
+  showToast('Refreshing market data...', '');
+  renderIntel();
+}
+
+function renderPortfolioTracker() {
+  const c = $('portfolioTracker');
+  if (!c) return;
+  const s = computePortfolioStats();
+  const fmt = (v) => v >= 0 ? `+$${v.toFixed(0)}` : `-$${Math.abs(v).toFixed(0)}`;
+  const tc = s.totalPnl >= 0 ? 'var(--green)' : 'var(--red)';
+  const wc = s.wheelNetPnl >= 0 ? 'var(--green)' : 'var(--red)';
+  c.innerHTML = `<div style="padding:16px;background:var(--input);border-radius:12px">
+    <div style="text-align:center;margin-bottom:12px">
+      <div style="font-size:12px;color:var(--text3);text-transform:uppercase;letter-spacing:1px">Total Portfolio P&L</div>
+      <div style="font-size:28px;font-weight:800;color:${tc};margin-top:4px">${fmt(s.totalPnl)}</div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">
+      <div style="text-align:center;padding:8px;background:var(--card);border-radius:8px">
+        <div style="font-size:18px;font-weight:700">${s.totalSignals}</div><div style="font-size:10px;color:var(--text3)">Signals</div></div>
+      <div style="text-align:center;padding:8px;background:var(--card);border-radius:8px">
+        <div style="font-size:18px;font-weight:700;color:var(--green)">${s.winRate}%</div><div style="font-size:10px;color:var(--text3)">Win Rate</div></div>
+      <div style="text-align:center;padding:8px;background:var(--card);border-radius:8px">
+        <div style="font-size:18px;font-weight:700;color:var(--green)">${fmt(s.totalPremiumCollected + s.wheelPremium)}</div><div style="font-size:10px;color:var(--text3)">Premiums</div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:12px">
+      <div style="padding:6px 8px;background:var(--card);border-radius:6px;display:flex;justify-content:space-between"><span style="color:var(--text3)">Open CSPs</span><b>${s.openCSPs}</b></div>
+      <div style="padding:6px 8px;background:var(--card);border-radius:6px;display:flex;justify-content:space-between"><span style="color:var(--text3)">Open CCs</span><b>${s.openCCs}</b></div>
+      <div style="padding:6px 8px;background:var(--card);border-radius:6px;display:flex;justify-content:space-between"><span style="color:var(--text3)">Active Wheels</span><b style="color:var(--orange)">${s.activeWheels}</b></div>
+      <div style="padding:6px 8px;background:var(--card);border-radius:6px;display:flex;justify-content:space-between"><span style="color:var(--text3)">Wheel Stock P&L</span><b style="color:${wc}">${fmt(s.wheelStockPnl)}</b></div>
+      <div style="padding:6px 8px;background:var(--card);border-radius:6px;display:flex;justify-content:space-between"><span style="color:var(--text3)">Winners</span><b style="color:var(--green)">${s.winners}</b></div>
+      <div style="padding:6px 8px;background:var(--card);border-radius:6px;display:flex;justify-content:space-between"><span style="color:var(--text3)">Called Away</span><b style="color:var(--blue)">${s.called}</b></div>
+      <div style="padding:6px 8px;background:var(--card);border-radius:6px;display:flex;justify-content:space-between"><span style="color:var(--text3)">Rolled</span><b style="color:var(--purple)">${s.rolled}</b></div>
+      <div style="padding:6px 8px;background:var(--card);border-radius:6px;display:flex;justify-content:space-between"><span style="color:var(--text3)">Realized Wheels</span><b style="color:var(--green)">${fmt(s.realizedWheelPnl)}</b></div>
+    </div></div>`;
+}
+
+async function renderMarketTide() {
+  const c = $('marketTideContainer');
+  if (!c) return;
+  if (!getUWKey()) { c.innerHTML = '<p style="font-size:12px;color:var(--text3)">Add Unusual Whales API key in Admin Settings to see market sentiment.</p>'; return; }
+  c.innerHTML = '<p style="font-size:12px;color:var(--text3)">Loading market tide...</p>';
+  const data = await fetchMarketTide();
+  if (!data || !data.length) { c.innerHTML = '<p style="font-size:12px;color:var(--text3)">No market tide data.</p>'; return; }
+  const latest = data[data.length - 1];
+  const bullish = latest.net_call_premium > latest.net_put_premium;
+  const sc = bullish ? 'var(--green)' : 'var(--red)';
+  c.innerHTML = `<div style="padding:12px;background:var(--input);border-radius:10px;display:flex;align-items:center;gap:12px">
+    <div style="width:48px;height:48px;border-radius:50%;background:${sc};display:flex;align-items:center;justify-content:center;font-size:20px;color:#fff;font-weight:700">${bullish ? '↑' : '↓'}</div>
+    <div><div style="font-size:16px;font-weight:700;color:${sc}">${bullish ? 'BULLISH' : 'BEARISH'}</div>
+    <div style="font-size:11px;color:var(--text3)">Call Premium: $${((latest.net_call_premium||0)/1e6).toFixed(1)}M · Put Premium: $${((latest.net_put_premium||0)/1e6).toFixed(1)}M</div></div></div>`;
+}
+
+async function renderFlowAlerts() {
+  const c = $('flowContainer');
+  if (!c) return;
+  if (!getUWKey()) { c.innerHTML = '<p style="font-size:12px;color:var(--text3)">Add Unusual Whales API key in Admin Settings to see flow.</p>'; return; }
+  c.innerHTML = '<p style="font-size:12px;color:var(--text3)">Loading flow...</p>';
+  const data = await fetchFlowAlerts();
+  if (!data || !data.length) { c.innerHTML = '<p style="font-size:12px;color:var(--text3)">No flow alerts.</p>'; return; }
+  c.innerHTML = data.slice(0, 10).map(f => {
+    const isCall = f.put_call === 'C' || f.is_call;
+    const color = isCall ? 'var(--green)' : 'var(--red)';
+    const prem = f.premium ? `$${(f.premium/1000).toFixed(0)}K` : '';
+    return `<div style="padding:8px 10px;background:var(--input);border-radius:8px;margin-bottom:6px;border-left:3px solid ${color};font-size:12px">
+      <div style="display:flex;justify-content:space-between"><span><b>${f.ticker_symbol||f.ticker||''}</b> <span style="color:${color}">${isCall?'CALL':'PUT'}</span> $${f.strike_price||f.strike||''} · ${f.expires_at||f.expiration||''}</span><b style="color:var(--green)">${prem}</b></div>
+      <div style="color:var(--text3);font-size:11px;margin-top:2px">Vol: ${f.volume||''} · OI: ${f.open_interest||''}${f.size_greater_oi?' · SIZE > OI':''}</div></div>`;
+  }).join('');
+}
+
+async function renderDarkPool() {
+  const c = $('darkPoolContainer');
+  if (!c) return;
+  if (!getUWKey()) { c.innerHTML = '<p style="font-size:12px;color:var(--text3)">Add Unusual Whales API key in Admin Settings.</p>'; return; }
+  c.innerHTML = '<p style="font-size:12px;color:var(--text3)">Loading dark pool...</p>';
+  const data = await fetchDarkPool();
+  if (!data || !data.length) { c.innerHTML = '<p style="font-size:12px;color:var(--text3)">No dark pool data.</p>'; return; }
+  c.innerHTML = data.slice(0, 8).map(d => {
+    const notional = d.notional_value ? `$${(d.notional_value/1e6).toFixed(2)}M` : '';
+    return `<div style="padding:8px 10px;background:var(--input);border-radius:8px;margin-bottom:6px;border-left:3px solid var(--purple);font-size:12px">
+      <div style="display:flex;justify-content:space-between"><span><b>${d.ticker_symbol||d.ticker||''}</b> · $${parseFloat(d.price||0).toFixed(2)}</span><b>${notional||(d.size||d.volume||'')+' shares'}</b></div></div>`;
+  }).join('');
+}
+
+async function renderSmartMoney() {
+  const c = $('smartMoneyContainer');
+  if (!c) return;
+  if (!getUWKey()) { c.innerHTML = '<p style="font-size:12px;color:var(--text3)">Add Unusual Whales API key in Admin Settings.</p>'; return; }
+  c.innerHTML = '<p style="font-size:12px;color:var(--text3)">Loading smart money...</p>';
+  const [insiders, congress] = await Promise.all([fetchInsiderTrades(), fetchCongressTrades()]);
+  let html = '';
+  if (congress && congress.length) {
+    html += '<div style="font-size:11px;font-weight:600;color:var(--text3);margin-bottom:6px;text-transform:uppercase">Congress Trades</div>';
+    html += congress.slice(0, 5).map(t => {
+      const isBuy = (t.transaction_type||'').toLowerCase().includes('purchase');
+      return `<div style="padding:8px 10px;background:var(--input);border-radius:8px;margin-bottom:6px;border-left:3px solid ${isBuy?'var(--green)':'var(--red)'};font-size:12px">
+        <div><b>${t.ticker||''}</b> · <span style="color:${isBuy?'var(--green)':'var(--red)'}">${isBuy?'BUY':'SELL'}</span> · ${t.amount||''}</div>
+        <div style="color:var(--text3);font-size:11px">${t.representative||t.politician||''} · ${t.transaction_date||''}</div></div>`;
+    }).join('');
+  }
+  if (insiders && insiders.length) {
+    html += '<div style="font-size:11px;font-weight:600;color:var(--text3);margin:12px 0 6px;text-transform:uppercase">Insider Trades</div>';
+    html += insiders.slice(0, 5).map(t => {
+      const isBuy = (t.acquisition_or_disposition||'').includes('A');
+      return `<div style="padding:8px 10px;background:var(--input);border-radius:8px;margin-bottom:6px;border-left:3px solid ${isBuy?'var(--green)':'var(--red)'};font-size:12px">
+        <div><b>${t.ticker||''}</b> · <span style="color:${isBuy?'var(--green)':'var(--red)'}">${isBuy?'BUY':'SELL'}</span> · ${t.shares?t.shares.toLocaleString()+' shares':''}</div>
+        <div style="color:var(--text3);font-size:11px">${t.insider_name||t.owner||''} · ${t.filing_date||''}</div></div>`;
+    }).join('');
+  }
+  c.innerHTML = html || '<p style="font-size:12px;color:var(--text3)">No smart money data.</p>';
+}
+
 function renderHome(){
   // Ensure critical DOM elements exist
   const balanceEl = $('balanceVal');
