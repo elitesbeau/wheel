@@ -1316,10 +1316,8 @@
     <!-- Ticker input with live price + load chain -->
     <div class="form-group">
       <label class="form-label">Symbol — type any ticker</label>
-      <div style="display:flex;gap:8px">
-        <input type="text" class="form-input" id="addSymbol" placeholder="e.g. AAPL, NVDA, SPY..." style="text-transform:uppercase;flex:1;font-size:18px;font-weight:600;letter-spacing:1px" maxlength="6">
-        <button class="btn" onclick="loadAddChainBtn()" id="addLoadChainBtn" style="white-space:nowrap;padding:10px 18px">Load Chain</button>
-      </div>
+      <input type="text" class="form-input" id="addSymbol" placeholder="e.g. AAPL, NVDA, SPY..." style="text-transform:uppercase;width:100%;font-size:18px;font-weight:600;letter-spacing:1px;margin-bottom:8px" maxlength="6">
+      <button class="btn" onclick="loadAddChainBtn()" id="addLoadChainBtn" style="width:100%;padding:12px;font-size:14px">Load Chain</button>
       <div id="addTickerPrice" style="font-size:13px;margin-top:6px;color:var(--text3)"></div>
     </div>
 
