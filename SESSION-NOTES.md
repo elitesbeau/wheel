@@ -9,200 +9,136 @@ Read SESSION-NOTES.md in that directory for full context on what we've done and 
 ```
 
 ## Repo Info
-- **Repo:** github.com/elitesbeau/wheel
+- **Repo:** github.com/elitesbeau/elitesbeau.github.io (renamed from "wheel")
 - **Branch:** `main` (GitHub Pages auto-deploys from main)
-- **Live site:** https://elitesbeau.github.io/wheel/
+- **Live site:** https://elitesbeau.github.io
 - **Single-file app:** `index.html` (~9,000+ lines)
+- **Local dir:** `C:\Users\Beau_\Documents\wheel` (folder name unchanged)
 
-## What Was Done Feb 8
+## What Was Done Feb 8 (Session 2 — Latest)
+
+### Firebase Delete Bug Fix (commit c6424b1)
+- **Root cause:** `loadPostsFromFirebase()` and `listenToFirebasePosts()` used `{ id: child.key, ...child.val() }` — when a post had a pre-set `id` (like `'cc-' + Date.now()`), the spread from `child.val()` overwrote the Firebase key with the original id. So `deletePostFromFirebase()` tried to delete a non-existent path.
+- **Fix 1:** Reversed spread order to `{ ...child.val(), id: child.key }` — Firebase key always wins
+- **Fix 2:** Strip `id` from post data before `push()` to prevent storing conflicting ids
+- **Fix 3:** Added `_deletedPostIds` Set to prevent real-time listener from re-adding deleted posts before Firebase confirms
+
+### Inline Roll Flow (commit 635af45)
+- Roll suggestions now open an inline form directly in the position modal (no more navigating to calculator tab)
+- Form fields: Cost to Buy Back (per share), New Strike, New Expiration (Friday dropdown), New Premium (per share)
+- `confirmInlineRoll()`: calculates real P&L = (original premium - buyback cost) × contracts × 100, moves old to history, creates new position with roll tracking
+- Deleted old `rollToCalc()` function
+
+### Roll P&L + Linkage Display (commit de290c1)
+- Added "Cost to Buy Back Current Position" field to roll form (was missing — P&L was always 0)
+- P&L now calculated correctly with buyback cost and fees
+- **Active positions:** Blue "Roll #N" badge + "from $X" subtitle
+- **Position detail modal:** Roll info banner with total premium across rolls
+- **History:** "Rolled" label + arrow showing new strike, "Called Away" label for those entries
+
+### Realized vs Unrealized Premium (commit 635af45)
+- **Green change box:** Shows "$X realized · $Y pending" breakdown with better spacing (flex-column layout)
+- **Monthly income goal:** Only counts closed trades (realized) toward the goal. Pending shown as "(+$Y pending)"
+- **Goals history:** Each month shows pending amount separately
+- **Analytics hero:** Changed "Total Premium Collected" to "Total Premium" with realized/pending split
+- **Profile stats:** Shows realized with pending noted separately
+- Added `getMonthlyPending()` helper function alongside `getMonthlyPremium()`
+
+### Expiration Date Dropdowns (commit c6424b1)
+- Replaced text inputs with Friday date `<select>` dropdowns everywhere:
+  - Admin signal form (`adminExp`)
+  - Admin roll form (`rollNewExp`)
+  - User inline roll form
+- `getExpDateOptions()` generates next 12 Fridays
+- Chain picker fallback: if selected date isn't in dropdown, auto-adds it
+
+### Other Fixes (commits 298ba08, ecf1d53, f908bbc, 951446f, 0acf014)
+- **Estimated chain expirations:** Now calculates next 6 actual Fridays instead of fixed day offsets
+- **Add Position layout:** Stacked ticker input + Load Chain button vertically (was cramped horizontal)
+- **Change box:** Now includes history P&L (was only counting open positions)
+- **Master Portfolio:** Added `renderMasterPortfolio()` to admin panel using `computePortfolioStats()`
+- **CC delete fix:** CC deletion only removes ccHistory entry, not the entire wheel position
+- **Firebase race condition:** `deletePost()` now awaits Firebase delete before re-rendering
+- **Close CC button:** Added to manage positions panel with `closeCCOnWheel()` function
+
+### Test User Readiness Audit (commit 2121332)
+- Fixed silent catch blocks: assignment sync, earnings fetch, leaderboard sync all now log warnings
+- **Site is safe for test users** — auth works, admin locked, no secrets exposed
+- Known gaps for later: Stripe payment link, EmailJS, Apple Sign In
+
+### Repo Renamed
+- `elitesbeau/wheel` → `elitesbeau/elitesbeau.github.io`
+- Live URL: `https://elitesbeau.github.io` (cleaner, no `/wheel/` path)
+- Local remote updated to match
+
+## What Was Done Feb 8 (Session 1)
 
 ### Unusual Whales API Removal (commit 7f58831)
 - Removed entire Intel tab + UW integration (248 lines deleted) — too expensive
-- Removed: Intel tab HTML, nav button, UW API key settings, all fetch/render functions, watchlist badges
-- Kept `computePortfolioStats()` as it's independent of UW
 
 ### Admin Panel Layout Fix (commit da6f471)
-- Signal form was cramped (CSP/CC toggle + ticker input + Load button in one row)
 - Stacked vertically: CSP/CC toggle centered → full-width ticker input → full-width Load button
 
 ### Assignment Alerts + User Copy Flow (commit 6cd99c9)
-- `renderAlertsFeed()` now shows cards for assigned/called/winner status changes
-- Added "I was assigned too" button for users who copied the trade
-- Created `userMarkAssigned(signalId)` — lets users create their own wheel position from a copied signal
+- `renderAlertsFeed()` shows cards for assigned/called/winner status changes
+- "I was assigned too" button for users who copied the trade
 
 ### CC Signal Linking + Duplicate Fix (commit 0b35937)
-- CC signals in Open Positions now show "Covered by X assigned shares" badge
-- Assigned Shares section shows active CC details inline
-- Fixed duplicate CC alerts: `savePostToFirebase()` now dedupes before adding to `S.adminPosts`
-- Created `parseExpDate()` utility for "Feb 14" style dates (was parsing as year 2001)
+- CC signals show "Covered by X assigned shares" badge
+- `parseExpDate()` utility for "Feb 14" style dates
 
 ### DTE Badge Fix (commits f7fdd86, e38a05e)
-- Fixed false "EXPIRED" badge on positions with "Feb 14" style dates
-- DTE badge: only shows red for ≤3 days. DTE number colors: red ≤3, orange ≤7, default otherwise
-- Removed orange caution badge entirely — was confusing users
+- Red for ≤3 days only. Orange removed entirely.
 
 ### Admin Chain Strike Range (commit 318b3d4)
-- CSP mode: shows 1 strike above + 25 below current price
-- CC mode: shows 1 strike below + 25 above current price
-- Previously: 25 closest strikes split evenly both directions (not enough OTM)
+- CSP: 1 above + 25 below. CC: 1 below + 25 above.
 
 ### Admin Wheel Flow Overhaul (commit fda5cd7)
-- **Fixed bracket mismatch** in `renderAdminPosts()` — inner else block wasn't closed
-- **Called Away guard**: `markPostCalled()` now checks `wheelPos.status === 'holding'` before processing
-- **Completed wheel toast**: Shows "wheel already completed" if called-away triggered twice
-- **Orphan CC cleanup**: `deletePost()` now removes all CC posts sharing the same `wheelId` when deleting a CSP
-- **Open Signals filter**: CC posts linked to completed wheels are excluded from "Open Options" section
-- **renderAdminPosts()**: Shows "Wheel complete · P&L" for completed wheels, hides Sell CC/Called Away buttons
+- Bracket mismatch fix, Called Away guard, orphan CC cleanup, open signals filter
+- Full lifecycle: Sell CSP → Assigned → Sell CC → Called Away → Complete
 
-### Admin Wheel Flow — Full Lifecycle
-The wheel strategy flow in the admin panel now works correctly:
-1. **Sell CSP** → signal posted (open, with Winner/Assigned/Roll/Delete buttons)
-2. **Assigned** → creates `wheelPosition` with status 'holding', updates post status
-3. **Sell CC** → CC signal posted linked to wheel via `wheelId`, shows in open signals with "Covered by X shares" badge
-4. **Called Away** → wheel completed, all linked posts updated to 'called', P&L calculated and added to history
-5. **Delete CSP** → also cleans up orphaned CC posts and linked wheel positions
-
-### Key Functions (for reference)
-- `markPostAssigned(postId, post)` — CSP assigned → creates wheel position (line ~3874)
-- `sellCCOnWheel(wheelId)` — sell CC against assigned shares (line ~3414)
-- `calledAwayWheel(wheelId)` — shares called away, complete wheel (line ~3485)
-- `markPostCalled(postId, post)` — CC called, triggers calledAwayWheel (line ~3940)
-- `deletePost(postId)` — deletes post + linked wheel + orphaned CCs (line ~3290)
-- `renderAdminPosts()` — admin post list with context-aware action buttons (line ~3569)
-- `renderSignals()` — premium user signals view with open/closed/assigned sections (line ~8378)
-- `renderWheelPositions()` — manage positions panel (line ~3327)
-- `parseExpDate(exp)` — handles "Feb 14" style dates (line ~3264 area)
+## Key Functions (for reference)
+- `markPostAssigned(postId, post)` — CSP assigned → creates wheel position
+- `sellCCOnWheel(wheelId)` — sell CC against assigned shares
+- `calledAwayWheel(wheelId)` — shares called away, complete wheel
+- `markPostCalled(postId, post)` — CC called, triggers calledAwayWheel
+- `deletePost(postId)` — deletes post + linked wheel + orphaned CCs
+- `renderAdminPosts()` — admin post list with context-aware action buttons
+- `renderSignals()` — premium user signals view
+- `renderWheelPositions()` — manage positions panel
+- `parseExpDate(exp)` — handles "Feb 14" style dates
+- `getExpDateOptions()` — generates next 12 Friday `<option>` tags
+- `startInlineRoll()` — renders inline roll form in position modal
+- `confirmInlineRoll()` — executes roll with P&L calculation
+- `getMonthlyPremium()` — realized (closed) premium for a month
+- `getMonthlyPending()` — unrealized (open) premium for a month
+- `renderMasterPortfolio()` — admin portfolio stats panel
 
 ## What Was Done Jan 29
+(See previous session notes — chain picker fix, kanban board, 7 UI themes)
 
-### Chain Picker Fix (DONE)
-- **Root cause:** Yahoo Finance options API via single `corsproxy.io` proxy was silently failing
-- **Fix:** Multi-proxy fallback system for both quotes and options chains
-  - Tries 3 CORS proxies: `allorigins.win`, `corsproxy.io`, `codetabs.com`
-  - Tries both `query1` and `query2` Yahoo Finance servers
-  - 8-second timeout per attempt to avoid hanging
-  - Guards against HTML error responses from failed proxies
-  - Admin Load Chain button now shows loading/disabled state
-  - Clear error toasts when chain fetch fails (directs to manual entry)
-- **Both admin AND user chain pickers now use the improved `fetchOptionsChain()`**
-- **Quote fetching (`fetchLiveQuote()`)** also upgraded with same multi-proxy fallback
-
-### Kanban Board (DONE)
-- Built as standalone project at `C:\Users\Beau_\Documents\kanban\index.html`
-- Dark theme, drag-and-drop columns, localStorage persistence
-- 5 columns: Backlog, To Do, In Progress, Review, Done
-- Card features: title, description, tag (bug/feature/ui/api/infra/debt), priority (high/med/low)
-- Filter by tag, search cards, create/edit/delete cards
-- Multi-project support (Market Elites + General projects)
-- Pre-loaded with all Market Elites work items
-- Open with: `npx http-server "C:\Users\Beau_\Documents\kanban" -p 3001 -o`
-
-### UI Themes - Full Structural Overhaul (DONE)
-- **Now 7 themes** (was 6): Light, Dark, Pro Trader, Luxury, 80s Retro, Fun, Clean Minimal
-- Added Google Fonts: Playfair Display, Orbitron, JetBrains Mono, Space Grotesk
-
-**Pro Trader (Webull/TradingView) - Enhanced:**
-- JetBrains Mono monospace font for all numbers/data
-- Dense 4px-corner compact layout
-- Data-table aesthetic, reduced padding
-- Uppercase labels with wide letter-spacing
-- Dark glass nav bar
-
-**Luxury Fintech - Enhanced:**
-- Playfair Display serif font on balance, section titles, signals, modal titles, stat values
-- 300ms ease-out transitions on ALL elements
-- Gold gradient buttons/accents with hover glow
-- Generous whitespace, hairline 0.5px borders
-- Hover effects with gold border glow
-
-**80s Retro (Synthwave) - Enhanced:**
-- Orbitron display font + Space Grotesk body font
-- CRT scanline overlay (repeating gradient)
-- CRT vignette effect (radial gradient overlay)
-- Subtle screen flicker animation (8s cycle)
-- Animated gradient hero background (12s cycle)
-- Pulsing neon glow on section titles
-- Text shadows on neon-colored elements
-
-**Fun/Playful - Enhanced:**
-- Space Grotesk display font
-- Tilted cards on hover (alternating -0.5deg/+0.5deg)
-- Bouncy spring animations (`cubic-bezier(.34,1.56,.64,1)`)
-- Floating animation on quick action icons
-- Blob shape animation on hero
-- Scale-up hover on stat boxes and ticker buttons
-- 24px+ rounded corners everywhere
-
-**Clean Minimal (Robinhood) - NEW:**
-- System font stack (SF Pro / -apple-system)
-- Borderless card layout (separator lines instead of card borders)
-- Green (#00c805) as sole accent color
-- No shadows, no border-radius on cards
-- Large 48px touch targets, big 48px balance font
-- Circular avatars/icons
-- Pill-shaped buttons (24px radius)
-- Ultra-clean white background
-
-## What Was Done Jan 28 (Previous Session)
-
-### Security
-- Replaced hardcoded admin password with Firebase UID-based auth
-- Beau's UID: `EG4Qi2PZVdPfh3PT0SXl0GKQC972` (in ADMIN_UIDS Set)
-
-### Data & APIs
-- Switched to Twelve Data API (primary) with Yahoo Finance fallback
-- Options chain from Yahoo via CORS proxies (multi-proxy fallback)
-- Twelve Data key from morning-report .env: `4a01eb8ca2a14d3f833d7141c295354d`
-
-### AI Chatbot
-- Groq API (Llama 3.3 70b) integrated for Wheely assistant
-- User needs Groq API key from console.groq.com
-
-### Alerts System (FIXED)
-- "Turn on alerts" popup now actually subscribes users to emailSubscribers in Firebase
-- Browser push notifications for new signals/posts (real-time via Firebase listener)
-- Notification toggles use correct CSS class ('on' not 'active')
-- Popup doesn't re-show if alerts already enabled
-
-### Discord Integration (OVERHAULED)
-- Rich branded embeds with author, footer, Market Elites logo
-- Covers all post types: signal, winner, assigned, called, roll, announcement
-- Error toast if webhook fails
-- Test button in admin settings
-- Custom bot name + avatar in Discord
-
-### Position Entry (OVERHAULED)
-- Smart options chain picker for both user Add Position and Admin Post Signal
-- Quick ticker buttons + type any ticker + Load Chain button
-- Live price display, expiration tabs, tap-to-select strikes
-- Manual entry always available as fallback
-- "Copy Trade" button on every open signal in the feed
-
-### Other Fixes
-- Apple Sign In button (white, matches Google)
-- Dark mode on auth screen (CSS variables)
-- P&L calculations fixed (no more fake multipliers)
-- Analytics dashboard overhaul
-- Education videos added/fixed
-- Stripe Payment Links ready (needs URL)
-- SEO meta tags, copyright year, dead links fixed
+## What Was Done Jan 28
+(See previous session notes — Firebase UID auth, Twelve Data, Groq AI, Discord, position entry)
 
 ## What's Next
 
-### Still Needs User Config
-- Groq API key (free at console.groq.com) -> Settings in app
-- Twelve Data API key -> Settings in app
-- Stripe Payment Link -> `STRIPE_PAYMENT_LINK` constant in code
-- Apple Sign In -> Enable in Firebase Console
-- Discord webhook -> Admin panel -> Notification Settings
-- GitHub Pages -> Repo Settings > Pages > main branch
+### Still Needs Config
+- Stripe Payment Link → `STRIPE_PAYMENT_LINK` constant in code
+- Apple Sign In → Enable in Firebase Console
+- Discord webhook → Admin panel → Notification Settings
+- EmailJS → Setup for email alerts
 
 ### Remaining Issues / Debt
-- Options chain still relies on Yahoo Finance via CORS proxies (fragile — consider paid API or server-side proxy for production)
-- Video attribution wrong on 4 others (content is fine, credits are wrong)
-- EmailJS needs setup for email alerts to actually send
-- Education video IDs: 3 broken ones were replaced with verified videos
-- Consider adding a theme preview/selector UI (currently cycles through on toggle button click)
+- Options chain relies on Yahoo Finance via CORS proxies (fragile)
+- Video attribution wrong on 4 (content fine, credits wrong)
+- FMP earnings uses demo API key (falls back to estimates)
+- Consider theme preview/selector UI
+- User mentioned wanting date dropdowns for ALL date inputs — Add Position still uses `type="date"` (native picker, probably fine)
+
+### User Feedback from Testing
+- Roll flow works inline now but user should verify P&L math with real trades
+- Green box spacing improved but user may want further tweaks
+- Premium realized/pending distinction is new — watch for confusion
 
 ## Tech Stack
 - Single HTML file (no build tools)
