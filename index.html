@@ -2294,7 +2294,10 @@ async function fetchOptionsChain(symbol, expDate = null) {
       const price = quote.price;
       const strikes = [];
       const step = price > 200 ? 5 : price > 50 ? 2.5 : price > 20 ? 1 : 0.5;
-      for (let s = Math.round((price * 0.85) / step) * step; s <= price * 1.15; s += step) {
+      // Wide range: 50% below to 30% above (deep OTM puts for wheel strategy)
+      const low = Math.max(step, Math.round((price * 0.50) / step) * step);
+      const high = Math.round((price * 1.30) / step) * step;
+      for (let s = low; s <= high; s += step) {
         strikes.push(Math.round(s * 100) / 100);
       }
       const iv = 0.35;
