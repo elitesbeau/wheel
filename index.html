@@ -217,7 +217,7 @@
     .hero-balance{text-align:center;margin-bottom:32px;position:relative;z-index:1}
     .balance-label{color:rgba(255,255,255,.6);font-size:13px;margin-bottom:6px}
     .balance-amount{font-size:44px;font-weight:800;color:#fff}
-    .balance-change{display:inline-flex;margin-top:8px;padding:5px 12px;background:var(--green-bg);border-radius:12px;font-size:13px;font-weight:600;color:var(--green)}
+    .balance-change{display:inline-flex;flex-direction:column;align-items:center;margin-top:8px;padding:8px 16px;background:var(--green-bg);border-radius:12px;font-size:14px;font-weight:600;color:var(--green);line-height:1.4;gap:2px}
     .hero-actions{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;position:relative;z-index:1}
     .hero-btn{display:flex;flex-direction:column;align-items:center;gap:10px;background:none;border:none;cursor:pointer;padding:8px}
     .hero-btn-icon{width:52px;height:52px;border-radius:50%;border:1.5px solid rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center}
@@ -1523,7 +1523,7 @@
 
       <div style="display:flex;gap:6px;margin-bottom:8px">
         <div class="form-group" style="flex:1;margin-bottom:0"><label class="form-label" style="font-size:10px">Strike</label><input type="number" class="form-input" id="adminStrike" placeholder="130" style="padding:8px 10px"></div>
-        <div class="form-group" style="flex:1;margin-bottom:0"><label class="form-label" style="font-size:10px">Exp</label><input type="text" class="form-input" id="adminExp" placeholder="Feb 7" style="padding:8px 10px"></div>
+        <div class="form-group" style="flex:1;margin-bottom:0"><label class="form-label" style="font-size:10px">Exp</label><select class="form-input" id="adminExp" style="padding:8px 10px"></select></div>
         <div class="form-group" style="flex:1;margin-bottom:0"><label class="form-label" style="font-size:10px">Premium</label><input type="text" class="form-input" id="adminPrem" placeholder="$3.20" style="padding:8px 10px"></div>
         <div class="form-group" style="flex:0.7;margin-bottom:0"><label class="form-label" style="font-size:10px">Delta</label><input type="text" class="form-input" id="adminDelta" placeholder=".25" style="padding:8px 10px"></div>
       </div>
@@ -1556,7 +1556,7 @@
           </div>
           <div class="form-group" style="flex:1;margin-bottom:0">
             <label class="form-label" style="font-size:10px">New Exp</label>
-            <input type="text" class="form-input" id="rollNewExp" placeholder="Feb 14" style="padding:8px 10px">
+            <select class="form-input" id="rollNewExp" style="padding:8px 10px"></select>
           </div>
           <div class="form-group" style="flex:1;margin-bottom:0">
             <label class="form-label" style="font-size:10px">New Premium</label>
@@ -2318,6 +2318,11 @@ function checkAdminAccess() {
 function openAdmin() {
   if (!isAdmin()) return checkAdminAccess();
   S.adminSigType = 'csp';
+  // Populate expiration dropdowns with upcoming Fridays
+  const adminExpEl = $('adminExp');
+  if (adminExpEl && adminExpEl.tagName === 'SELECT') adminExpEl.innerHTML = '<option value="">Select</option>' + getExpDateOptions();
+  const rollExpEl = $('rollNewExp');
+  if (rollExpEl && rollExpEl.tagName === 'SELECT') rollExpEl.innerHTML = '<option value="">Select</option>' + getExpDateOptions();
   renderMasterPortfolio();
   renderAdminPosts();
   renderWheelPositions();
@@ -2389,7 +2394,9 @@ async function savePostToFirebase(post) {
   }
   try {
     const db = firebase.database();
-    const ref = await db.ref('posts').push(post);
+    // Strip any local id before pushing so it doesn't conflict with Firebase key on reload
+    const { id: _stripId, ...postData } = post;
+    const ref = await db.ref('posts').push(postData);
     // Update with Firebase key; only add to local state if not already there
     post.id = ref.key;
     if (!S.adminPosts) S.adminPosts = [];
@@ -2739,7 +2746,7 @@ async function loadPostsFromFirebase(skipRender) {
     const snapshot = await db.ref('posts').orderByChild('timestamp').limitToLast(50).once('value');
     const posts = [];
     snapshot.forEach(child => {
-      posts.unshift({ id: child.key, ...child.val() });
+      posts.unshift({ ...child.val(), id: child.key });
     });
     // Filter out locally deleted posts that Firebase hasn't processed yet
     const filtered = posts.filter(p => !_deletedPostIds.has(p.id));
@@ -2780,7 +2787,7 @@ async function listenToFirebasePosts() {
     db.ref('posts').orderByChild('timestamp').limitToLast(50).on('value', snapshot => {
       const posts = [];
       snapshot.forEach(child => {
-        posts.unshift({ id: child.key, ...child.val() });
+        posts.unshift({ ...child.val(), id: child.key });
       });
 
       // On first load, mark all existing posts as already notified
@@ -3043,7 +3050,9 @@ async function selectRollExp(exp, label, btn) {
 function pickRollStrike(strike, premium, exp) {
   $('rollNewStrike').value = strike;
   $('rollNewPrem').value = premium;
-  $('rollNewExp').value = exp;
+  const expSel = $('rollNewExp');
+  expSel.value = exp;
+  if (!expSel.value) { const o = document.createElement('option'); o.value = exp; o.textContent = exp; expSel.insertBefore(o, expSel.firstChild?.nextSibling); expSel.value = exp; }
   $('rollChainPicker').style.display = 'none';
   updateRollSummary();
 }
@@ -3172,7 +3181,16 @@ function pickAdminOption(strike, bid, ask, delta, iv) {
   // Get expiration from active tab
   const activeExp = $('adminChainExps')?.querySelector('.chain-exp-btn.active');
   if (activeExp) {
-    $('adminExp').value = activeExp.textContent.split('(')[0].trim();
+    const expVal = activeExp.textContent.split('(')[0].trim();
+    const sel = $('adminExp');
+    sel.value = expVal;
+    // If the value from chain isn't in the dropdown, add it
+    if (!sel.value) {
+      const opt = document.createElement('option');
+      opt.value = expVal; opt.textContent = expVal;
+      sel.insertBefore(opt, sel.firstChild.nextSibling);
+      sel.value = expVal;
+    }
   }
 
   // Highlight
@@ -7647,8 +7665,8 @@ function renderHome(){
   if (changeEl) {
     const arrow = totalChange >= 0 ? '↑' : '↓';
     const sign = totalChange >= 0 ? '+' : '';
-    changeEl.innerHTML = `${arrow} ${sign}$${Math.abs(totalChange).toFixed(0)} (${pct}%)` +
-      (pendingPrem > 0 ? `<span style="display:block;font-size:10px;font-weight:500;opacity:0.8;margin-top:2px">$${realizedPnl.toFixed(0)} realized · $${pendingPrem.toFixed(0)} pending</span>` : '');
+    changeEl.innerHTML = `<span>${arrow} ${sign}$${Math.abs(totalChange).toFixed(0)} &nbsp;(${pct}%)</span>` +
+      (pendingPrem > 0 ? `<span style="font-size:11px;font-weight:500;opacity:0.75">$${realizedPnl.toFixed(0)} realized &nbsp;&middot;&nbsp; $${pendingPrem.toFixed(0)} pending</span>` : '');
     changeEl.style.color = totalChange >= 0 ? 'var(--green)' : 'var(--red)';
     changeEl.style.background = totalChange >= 0 ? 'var(--green-bg)' : 'var(--red-bg,rgba(255,23,68,0.1))';
   }
@@ -8905,6 +8923,22 @@ function toggleAlertType(type) {
   save();
 }
 
+function getExpDateOptions(selectedVal) {
+  const opts = [];
+  const now = new Date();
+  let d = new Date(now);
+  // Find next Friday
+  d.setDate(d.getDate() + ((5 - d.getDay() + 7) % 7 || 7));
+  for (let i = 0; i < 12; i++) {
+    const label = d.toLocaleDateString('en', { month: 'short', day: 'numeric' });
+    const val = label; // "Feb 14" format
+    const sel = selectedVal && val === selectedVal ? ' selected' : '';
+    opts.push(`<option value="${val}"${sel}>${label}</option>`);
+    d.setDate(d.getDate() + 7);
+  }
+  return opts.join('');
+}
+
 function parseExpDate(exp) {
   if (!exp) return null;
   let d = new Date(exp);
@@ -8981,18 +9015,19 @@ function startInlineRoll(suggestedStrike, label) {
 
   rollDiv.innerHTML = `
     <div style="font-size:12px;font-weight:600;color:var(--blue);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">${label}</div>
-    <div style="font-size:13px;color:var(--text2);margin-bottom:12px">${p.symbol} $${p.strike}${typeName[0]} → New Position</div>
-    <div style="display:flex;flex-direction:column;gap:10px">
+    <div style="font-size:13px;color:var(--text2);margin-bottom:14px">Rolling ${p.symbol} $${p.strike}${typeName[0]} to new position</div>
+    <div style="display:flex;flex-direction:column;gap:12px">
       <div>
-        <label style="font-size:11px;font-weight:600;color:var(--text3);display:block;margin-bottom:4px">New Strike</label>
+        <label style="font-size:12px;font-weight:600;color:var(--text2);display:block;margin-bottom:4px">New Strike Price</label>
         <input type="number" id="rollNewStrike" value="${suggestedStrike}" step="0.5" style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:var(--input);color:var(--text);font-size:16px;font-weight:600">
       </div>
       <div>
-        <label style="font-size:11px;font-weight:600;color:var(--text3);display:block;margin-bottom:4px">New Expiration</label>
-        <input type="text" id="rollNewExp" placeholder="e.g. Feb 21" style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:var(--input);color:var(--text);font-size:14px">
+        <label style="font-size:12px;font-weight:600;color:var(--text2);display:block;margin-bottom:4px">New Expiration</label>
+        <select id="rollNewExp" style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:var(--input);color:var(--text);font-size:14px"><option value="">Select Friday</option>${getExpDateOptions()}</select>
       </div>
       <div>
-        <label style="font-size:11px;font-weight:600;color:var(--text3);display:block;margin-bottom:4px">Net Credit Per Share (negative if debit roll)</label>
+        <label style="font-size:12px;font-weight:600;color:var(--text2);display:block;margin-bottom:4px">New Premium Collected</label>
+        <div style="font-size:11px;color:var(--text3);margin-bottom:4px">Premium per share on the new contract you're selling</div>
         <input type="number" id="rollNewPremium" placeholder="e.g. 1.50" step="0.01" style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:var(--input);color:var(--text);font-size:16px;font-weight:600">
       </div>
       <div style="display:flex;gap:8px;margin-top:4px">
@@ -9012,7 +9047,7 @@ function confirmInlineRoll() {
 
   if (!newStrike) return showToast('Enter a valid strike', 'error');
   if (!newExp) return showToast('Enter new expiration', 'error');
-  if (isNaN(netCredit)) return showToast('Enter net credit (can be negative for debit rolls)', 'error');
+  if (isNaN(netCredit)) return showToast('Enter the new premium per share', 'error');
 
   const contracts = p.contracts || 1;
   const oldPremPerShare = p.premium || 0;
