@@ -3131,6 +3131,39 @@ async function loadAdminChain() {
 
   // Restore button
   if (btn) { btn.disabled = false; btn.textContent = 'Load Chain'; }
+
+  // Fetch UW flow intel for this ticker (non-blocking)
+  if (getUWKey()) {
+    uwFetch(`/api/stock/${sym}/flow-recent`).then(flow => {
+      if (!flow || !flow.length) return;
+      const big = flow.filter(f => f.premium && f.premium >= 25000).slice(0, 5);
+      if (!big.length) return;
+      const calls = big.filter(f => f.put_call === 'C' || f.is_call).length;
+      const puts = big.length - calls;
+      const sentiment = calls > puts ? 'BULLISH' : puts > calls ? 'BEARISH' : 'MIXED';
+      const sColor = calls > puts ? 'var(--green)' : puts > calls ? 'var(--red)' : 'var(--orange)';
+      let flowHtml = `<div style="margin-top:8px;padding:8px;background:var(--input);border-radius:8px;font-size:11px">
+        <div style="font-weight:600;color:${sColor};margin-bottom:4px">Whale Flow: ${sentiment} (${big.length} big trades)</div>`;
+      big.forEach(f => {
+        const isC = f.put_call === 'C' || f.is_call;
+        flowHtml += `<div style="color:var(--text3)"><span style="color:${isC?'var(--green)':'var(--red)'}">${isC?'CALL':'PUT'}</span> $${f.strike_price||f.strike||''} · $${f.premium?Math.round(f.premium/1000)+'K':''} · Vol:${f.volume||''}</div>`;
+      });
+      flowHtml += '</div>';
+      const info = $('adminTickerInfo');
+      if (info) info.innerHTML += flowHtml;
+    }).catch(() => {});
+
+    uwFetch(`/api/stock/${sym}/options-volume`).then(vol => {
+      if (!vol) return;
+      const latest = Array.isArray(vol) ? vol[vol.length - 1] : vol;
+      if (!latest) return;
+      const pcr = latest.put_call_ratio || (latest.put_volume && latest.call_volume ? (latest.put_volume / latest.call_volume).toFixed(2) : null);
+      if (pcr) {
+        const info = $('adminTickerInfo');
+        if (info) info.innerHTML += `<div style="font-size:11px;color:var(--text3);margin-top:4px">P/C Ratio: <b style="color:${pcr > 1 ? 'var(--red)' : 'var(--green)'}">${pcr}</b> ${pcr > 1 ? '(more puts = bearish)' : '(more calls = bullish)'}</div>`;
+      }
+    }).catch(() => {});
+  }
 }
 
 function selectAdminExp(expTs, btn) {
@@ -3324,13 +3357,24 @@ async function deletePost(postId) {
     if (idx === -1 && typeof postId === 'number') idx = postId;
     if (idx === -1 || idx >= S.adminPosts.length) { _deleting = false; return; }
 
-    const firebaseId = S.adminPosts[idx].id;
+    const post = S.adminPosts[idx];
+    const firebaseId = post.id;
+
+    // If this post has a linked wheel position, remove it too
+    if (post.wheelId && S.wheelPositions) {
+      S.wheelPositions = S.wheelPositions.filter(w => w.id !== post.wheelId);
+    }
+    // Also remove any wheel positions that link back to this post
+    if (post.id && S.wheelPositions) {
+      S.wheelPositions = S.wheelPositions.filter(w => w.cspSignalId !== post.id);
+    }
 
     // Remove from local array first (instant UI update)
     S.adminPosts.splice(idx, 1);
     save();
     renderAdminPosts();
     renderSignals();
+    renderWheelPositions();
     showToast('Post deleted', '');
 
     // Delete from Firebase in background (don't block UI)
@@ -8393,7 +8437,7 @@ async function renderWatch(){
       const chgSign = chg >= 0 ? '+' : '';
       const clr = getTickerColor(sym);
       if (q) {
-        el.innerHTML = `<div class="pos-logo" style="cursor:pointer" onclick="qSearch('${sym}');nav('calc')"><img src="${logo(sym)}" onerror="this.outerHTML='<span class=pos-logo-text style=background:${clr}>${sym.slice(0,2)}</span>'"></div><div class="tx-info" style="cursor:pointer" onclick="qSearch('${sym}');nav('calc')"><div class="tx-title">${sym} <span class="live-dot" style="width:6px;height:6px"></span></div><div class="tx-sub">${names[sym]||sym}</div></div><div style="text-align:right;cursor:pointer" onclick="qSearch('${sym}');nav('calc')"><div style="font-size:15px;font-weight:700">$${q.price.toFixed(2)}</div><div style="font-size:12px;color:${chgColor}">${chgSign}${chg.toFixed(2)}%</div></div><button style="background:none;border:none;padding:8px;cursor:pointer;color:var(--text3)" onclick="event.stopPropagation();removeFromWatch('${sym}')">×</button>`;
+        el.innerHTML = `<div class="pos-logo" style="cursor:pointer" onclick="qSearch('${sym}');nav('calc')"><img src="${logo(sym)}" onerror="this.outerHTML='<span class=pos-logo-text style=background:${clr}>${sym.slice(0,2)}</span>'"></div><div class="tx-info" style="cursor:pointer" onclick="qSearch('${sym}');nav('calc')"><div class="tx-title">${sym} <span class="live-dot" style="width:6px;height:6px"></span></div><div class="tx-sub">${names[sym]||sym}</div><div id="uwBadge-${sym}" style="font-size:10px;margin-top:2px"></div></div><div style="text-align:right;cursor:pointer" onclick="qSearch('${sym}');nav('calc')"><div style="font-size:15px;font-weight:700">$${q.price.toFixed(2)}</div><div style="font-size:12px;color:${chgColor}">${chgSign}${chg.toFixed(2)}%</div></div><button style="background:none;border:none;padding:8px;cursor:pointer;color:var(--text3)" onclick="event.stopPropagation();removeFromWatch('${sym}')">×</button>`;
       } else {
         el.innerHTML = `<div class="pos-logo"><img src="${logo(sym)}" onerror="this.outerHTML='<span class=pos-logo-text style=background:${clr}>${sym.slice(0,2)}</span>'"></div><div class="tx-info"><div class="tx-title">${sym}</div><div class="tx-sub">${names[sym]||sym}</div></div><div style="text-align:right"><div style="font-size:13px;color:var(--text3)">Unavailable</div></div><button style="background:none;border:none;padding:8px;cursor:pointer;color:var(--text3)" onclick="removeFromWatch('${sym}')">×</button>`;
       }
@@ -8403,6 +8447,27 @@ async function renderWatch(){
   // Update status to show live data is working
   $('statusPill').className='status live';
   $('statusText').textContent='Live Data';
+
+  // Fetch UW flow data for watchlist tickers (if API key exists)
+  if (getUWKey()) {
+    watchlist.forEach(async (sym) => {
+      try {
+        const flow = await uwFetch(`/api/stock/${sym}/flow-recent`);
+        const badge = $(`uwBadge-${sym}`);
+        if (!badge || !flow || !flow.length) return;
+        const recentBig = flow.filter(f => f.premium && f.premium >= 50000).slice(0, 3);
+        if (recentBig.length > 0) {
+          const callCount = recentBig.filter(f => f.put_call === 'C' || f.is_call).length;
+          const putCount = recentBig.length - callCount;
+          let flowHtml = '';
+          if (callCount > putCount) flowHtml = `<span style="color:var(--green);font-weight:600">BULLISH FLOW</span> · ${recentBig.length} whale trades`;
+          else if (putCount > callCount) flowHtml = `<span style="color:var(--red);font-weight:600">BEARISH FLOW</span> · ${recentBig.length} whale trades`;
+          else flowHtml = `<span style="color:var(--orange);font-weight:600">MIXED FLOW</span> · ${recentBig.length} whale trades`;
+          badge.innerHTML = flowHtml;
+        }
+      } catch (e) { /* silently skip */ }
+    });
+  }
 }
 
 function removeFromWatch(sym) {
