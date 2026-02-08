@@ -3693,6 +3693,57 @@ function renderWheelPositions() {
   });
 }
 
+  // Completed wheels — full lifecycle log
+  const completed = positions.filter(w => w.status === 'completed');
+  if (completed.length > 0) {
+    c.innerHTML += `<div style="font-size:13px;font-weight:700;margin:16px 0 8px;color:var(--text2)">Completed Wheels (${completed.length})</div>`;
+    c.innerHTML += completed.slice(0, 10).map(w => {
+      const totalCCPrem = w.ccHistory.reduce((s, cc) => s + (cc.premiumTotal || 0), 0);
+      const totalPremium = (w.totalPremiumCollected || 0) + totalCCPrem;
+      const stockPnl = ((w.callStrike || w.assignPrice) - w.assignPrice) * w.shares;
+      const finalPnl = w.finalPnl || (stockPnl + totalPremium);
+      const fmtPnl = v => v >= 0 ? `+$${v.toFixed(0)}` : `-$${Math.abs(v).toFixed(0)}`;
+      const pnlColor = v => v >= 0 ? 'var(--green)' : 'var(--red)';
+      const assignDate = w.assignedAt ? new Date(w.assignedAt).toLocaleDateString('en-US', {month:'short',day:'numeric'}) : '?';
+      const completeDate = w.completedAt ? new Date(w.completedAt).toLocaleDateString('en-US', {month:'short',day:'numeric'}) : '?';
+
+      // Build lifecycle timeline
+      let timeline = `<div style="font-size:11px;color:var(--text3);margin-top:8px;border-left:2px solid var(--border);padding-left:10px">`;
+      // CSP phase
+      timeline += `<div style="margin-bottom:4px"><span style="color:var(--green);font-weight:600">CSP</span> $${w.assignPrice} Put · Premium: <span style="color:var(--green)">+$${(w.totalPremiumCollected || 0).toFixed(0)}</span></div>`;
+      // Assignment
+      timeline += `<div style="margin-bottom:4px"><span style="color:var(--orange);font-weight:600">ASSIGNED</span> ${w.shares} shares at $${w.assignPrice.toFixed(2)} · ${assignDate}</div>`;
+      // Each CC
+      w.ccHistory.forEach((cc, i) => {
+        const outcome = cc.outcome === 'winner' ? '<span style="color:var(--green)"> WIN</span>' : cc.status === 'closed' ? '' : ' <span style="color:var(--blue)">(open)</span>';
+        timeline += `<div style="margin-bottom:4px"><span style="color:var(--blue);font-weight:600">CC #${i+1}</span> $${cc.strike} Call · Exp ${cc.exp} · <span style="color:var(--green)">+$${(cc.premiumTotal||0).toFixed(0)}</span>${outcome}</div>`;
+      });
+      // Called away
+      if (w.callStrike) {
+        timeline += `<div style="margin-bottom:4px"><span style="color:var(--purple);font-weight:600">CALLED</span> Shares sold at $${w.callStrike.toFixed(2)} · ${completeDate}</div>`;
+      }
+      timeline += `</div>`;
+
+      // Summary
+      const summary = `<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;margin-top:8px;font-size:11px;text-align:center">
+        <div style="padding:4px;background:var(--input);border-radius:4px"><div style="color:var(--text3)">Stock</div><b style="color:${pnlColor(stockPnl)}">${fmtPnl(stockPnl)}</b></div>
+        <div style="padding:4px;background:var(--input);border-radius:4px"><div style="color:var(--text3)">Premiums</div><b style="color:var(--green)">+$${totalPremium.toFixed(0)}</b></div>
+        <div style="padding:4px;background:var(--input);border-radius:4px"><div style="color:var(--text3)">Total P&L</div><b style="color:${pnlColor(finalPnl)}">${fmtPnl(finalPnl)}</b></div>
+      </div>`;
+
+      return `<div style="border-left:3px solid ${finalPnl >= 0 ? 'var(--green)' : 'var(--red)'};padding:12px;margin-bottom:8px;background:var(--input);border-radius:0 8px 8px 0;opacity:0.85">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div style="font-weight:700;font-size:14px">${w.symbol} <span style="font-size:11px;font-weight:400;color:var(--text3)">Wheel Complete</span></div>
+          <span style="font-size:12px;font-weight:700;color:${pnlColor(finalPnl)}">${fmtPnl(finalPnl)}</span>
+        </div>
+        <div style="font-size:11px;color:var(--text3)">${assignDate} → ${completeDate} · ${w.ccHistory.length} CC${w.ccHistory.length!==1?'s':''} sold</div>
+        ${timeline}${summary}
+        <div style="margin-top:6px;text-align:right"><button onclick="deleteWheelPosition('${w.id}')" style="font-size:10px;padding:3px 8px;background:transparent;border:1px solid var(--text3);color:var(--text3);border-radius:4px;cursor:pointer">Remove</button></div>
+      </div>`;
+    }).join('');
+  }
+}
+
 function deleteWheelPosition(wheelId) {
   if (!confirm('Delete this wheel position? This cannot be undone.')) return;
   S.wheelPositions = (S.wheelPositions || []).filter(w => w.id !== wheelId);
@@ -4155,6 +4206,19 @@ function markPostWinner(postId, postRef) {
     post.status = 'winner';
     post.closedAt = Date.now();
 
+    // If this CC is linked to a wheel, close the active CC in ccHistory
+    if (post.wheelId && post.type === 'cc') {
+      const wheel = (S.wheelPositions || []).find(w => w.id === post.wheelId);
+      if (wheel) {
+        const activeCC = wheel.ccHistory.find(cc => cc.status === 'open');
+        if (activeCC) {
+          activeCC.status = 'closed';
+          activeCC.closedAt = Date.now();
+          activeCC.outcome = 'winner';
+        }
+      }
+    }
+
     // Update local state immediately
     save();
     showCelebration(post);
@@ -4163,6 +4227,7 @@ function markPostWinner(postId, postRef) {
     // Re-render everything
     renderSignals();
     renderAlertsFeed();
+    renderWheelPositions();
     renderHome();
 
     // Reopen admin after brief delay
