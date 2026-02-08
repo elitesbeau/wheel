@@ -3314,10 +3314,14 @@ function renderWheelPositions() {
 
   c.innerHTML = active.map(w => {
     const totalCCPrem = w.ccHistory.reduce((s, cc) => s + (cc.premiumTotal || 0), 0);
-    const adjustedBasis = w.costBasis - (totalCCPrem / w.shares);
-    const unrealizedPnl = w.currentPrice ? (w.currentPrice - adjustedBasis) * w.shares : 0;
-    const pnlColor = unrealizedPnl >= 0 ? 'var(--green)' : 'var(--red)';
+    const totalPremium = (w.totalPremiumCollected || 0) + totalCCPrem;
+    const livePrice = w.currentPrice || w.assignPrice;
+    const stockPnl = (livePrice - w.assignPrice) * w.shares;
+    const netPnl = stockPnl + totalPremium;
+    const stockColor = stockPnl >= 0 ? 'var(--green)' : 'var(--red)';
+    const netColor = netPnl >= 0 ? 'var(--green)' : 'var(--red)';
     const ccCount = w.ccHistory.length;
+    const fmtPnl = (v) => v >= 0 ? `+$${v.toFixed(0)}` : `-$${Math.abs(v).toFixed(0)}`;
 
     return `<div style="padding:12px;background:var(--input);border-radius:10px;margin-bottom:10px;border-left:3px solid var(--orange)">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
@@ -3326,13 +3330,17 @@ function renderWheelPositions() {
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;font-size:12px;margin-bottom:8px">
         <div><span style="color:var(--text3)">Shares:</span> <b>${w.shares}</b></div>
-        <div><span style="color:var(--text3)">Assign Price:</span> <b>$${w.assignPrice}</b></div>
-        <div><span style="color:var(--text3)">Original Basis:</span> <b>$${w.originalCostBasis.toFixed(2)}</b></div>
-        <div><span style="color:var(--text3)">Adjusted Basis:</span> <b style="color:var(--green)">$${adjustedBasis.toFixed(2)}</b></div>
-        <div><span style="color:var(--text3)">CSP Premium:</span> <b style="color:var(--green)">$${w.totalPremiumCollected.toFixed(0)}</b></div>
-        <div><span style="color:var(--text3)">CC Premium:</span> <b style="color:var(--green)">$${totalCCPrem.toFixed(0)}</b></div>
+        <div><span style="color:var(--text3)">Bought At:</span> <b>$${w.assignPrice.toFixed(2)}</b></div>
+        <div><span style="color:var(--text3)">Live Price:</span> <b id="wheelPrice-${w.id}">$${livePrice.toFixed(2)}</b></div>
+        <div><span style="color:var(--text3)">Stock P&L:</span> <b style="color:${stockColor}">${fmtPnl(stockPnl)}</b></div>
+        <div><span style="color:var(--text3)">CSP Premium:</span> <b style="color:var(--green)">+$${(w.totalPremiumCollected || 0).toFixed(0)}</b></div>
+        <div><span style="color:var(--text3)">CC Premium:</span> <b style="color:var(--green)">+$${totalCCPrem.toFixed(0)}</b></div>
         <div><span style="color:var(--text3)">CCs Sold:</span> <b>${ccCount}</b></div>
-        <div><span style="color:var(--text3)">P&L:</span> <b style="color:${pnlColor}">${unrealizedPnl>=0?'+':''}$${unrealizedPnl.toFixed(0)}</b></div>
+        <div><span style="color:var(--text3)">Total Premium:</span> <b style="color:var(--green)">+$${totalPremium.toFixed(0)}</b></div>
+      </div>
+      <div style="padding:8px;background:var(--card);border-radius:8px;margin-bottom:8px;text-align:center">
+        <span style="font-size:11px;color:var(--text3)">Net Wheel P&L:</span>
+        <b style="font-size:16px;color:${netColor};margin-left:6px">${fmtPnl(netPnl)}</b>
       </div>
       <div style="display:flex;gap:6px">
         <button class="btn btn-outline" onclick="sellCCOnWheel('${w.id}')" style="flex:1;font-size:11px;padding:6px">Sell CC</button>
@@ -3340,6 +3348,41 @@ function renderWheelPositions() {
       </div>
     </div>`;
   }).join('');
+
+  // Fetch live prices for all active wheel positions
+  active.forEach(w => {
+    fetchLiveQuote(w.symbol).then(q => {
+      if (!q || (!q.price && !q.close)) return;
+      const livePrice = q.price || q.close;
+      w.currentPrice = livePrice;
+      const el = $(`wheelPrice-${w.id}`);
+      if (el) {
+        el.textContent = `$${livePrice.toFixed(2)}`;
+        // Re-calc and update P&L display inline
+        const totalCCPrem = w.ccHistory.reduce((s, cc) => s + (cc.premiumTotal || 0), 0);
+        const totalPremium = (w.totalPremiumCollected || 0) + totalCCPrem;
+        const stockPnl = (livePrice - w.assignPrice) * w.shares;
+        const netPnl = stockPnl + totalPremium;
+        // Update the parent card's P&L cells
+        const card = el.closest('div[style*="border-left"]');
+        if (card) {
+          const cells = card.querySelectorAll('b');
+          cells.forEach(b => {
+            if (b.previousElementSibling?.textContent === 'Stock P&L:') {
+              b.style.color = stockPnl >= 0 ? 'var(--green)' : 'var(--red)';
+              b.textContent = stockPnl >= 0 ? `+$${stockPnl.toFixed(0)}` : `-$${Math.abs(stockPnl).toFixed(0)}`;
+            }
+          });
+          const netEl = card.querySelector('div[style*="text-align:center"] b[style*="font-size:16px"]');
+          if (netEl) {
+            netEl.style.color = netPnl >= 0 ? 'var(--green)' : 'var(--red)';
+            netEl.textContent = netPnl >= 0 ? `+$${netPnl.toFixed(0)}` : `-$${Math.abs(netPnl).toFixed(0)}`;
+          }
+        }
+      }
+      save();
+    }).catch(() => {});
+  });
 }
 
 // Sell a covered call against assigned shares
@@ -3374,33 +3417,40 @@ function sellCCOnWheel(wheelId) {
         };
         w.ccHistory.push(ccEntry);
 
-        // Save locally FIRST (before any Firebase calls)
-        save();
-
-        // Post as a CC signal so users see it (fire-and-forget)
+        // Post as a CC signal so users see it in the feed
         const ccSignal = {
+          id: 'cc-' + Date.now(),
           type: 'cc',
           ticker: w.symbol,
           strike: ccStrike,
           exp: exp,
           prem: '$' + premPerShare.toFixed(2),
-          notes: `Selling CC against assigned shares (cost basis: $${w.costBasis.toFixed(2)})`,
+          notes: `Selling CC against ${w.shares} assigned shares (bought at $${w.assignPrice.toFixed(2)})`,
           time: 'Just now',
           timestamp: Date.now(),
           kind: 'signal',
+          status: 'open',
           wheelId: w.id
         };
+        // Add to local state so it shows immediately
+        if (!S.adminPosts) S.adminPosts = [];
+        S.adminPosts.unshift(ccSignal);
+
+        // Save locally FIRST (before any Firebase calls)
+        save();
+
+        // Sync to Firebase (fire-and-forget)
         savePostToFirebase(ccSignal).catch(e => console.warn('CC signal save error:', e));
 
-        // Calculate new adjusted cost basis for display
+        // Calculate total premiums for display
         const totalCCPrem = w.ccHistory.reduce((s, cc) => s + (cc.premiumTotal || 0), 0);
-        const adjustedBasis = w.costBasis - (totalCCPrem / w.shares);
+        const totalPremium = (w.totalPremiumCollected || 0) + totalCCPrem;
 
         renderWheelPositions();
         renderAdminPosts();
         renderSignals();
         renderHome();
-        showToast(`Sold ${contracts} CC at $${ccStrike} for $${totalPrem.toFixed(0)} · New cost basis: $${adjustedBasis.toFixed(2)}`, 'success');
+        showToast(`Sold ${contracts} CC at $${ccStrike} for $${totalPrem.toFixed(0)} · Total premiums collected: $${totalPremium.toFixed(0)}`, 'success');
       });
     });
   });
@@ -3419,10 +3469,12 @@ function calledAwayWheel(wheelId) {
     const callStrike = parseFloat(strikeStr);
     if (!callStrike) return showToast('Enter the call strike', 'error');
 
-    const adjustedBasis = w.costBasis - (totalCCPrem / w.shares);
-
-    // Final PnL = (call strike - adjusted cost basis) × shares
-    const finalPnl = (callStrike - adjustedBasis) * w.shares;
+    // Stock P&L = (sell price - buy price) × shares
+    const stockPnl = (callStrike - w.assignPrice) * w.shares;
+    // Total premiums = CSP premium + all CC premiums
+    const totalPremium = (w.totalPremiumCollected || 0) + totalCCPrem;
+    // Final P&L = stock gain/loss + all premiums collected
+    const finalPnl = stockPnl + totalPremium;
 
     // Book the called away PnL
     S.history = S.history || [];
@@ -3441,10 +3493,10 @@ function calledAwayWheel(wheelId) {
       outcome: 'called_away',
       wheelSummary: {
         assignPrice: w.assignPrice,
-        cspPremium: w.totalPremiumCollected,
+        cspPremium: w.totalPremiumCollected || 0,
         ccPremium: totalCCPrem,
-        totalPremium: w.totalPremiumCollected + totalCCPrem,
-        adjustedBasis: adjustedBasis,
+        totalPremium: totalPremium,
+        stockPnl: stockPnl,
         callStrike: callStrike,
         shares: w.shares,
         ccCount: w.ccHistory.length
@@ -3476,8 +3528,9 @@ function calledAwayWheel(wheelId) {
     renderSignals();
     renderHome();
 
+    const stockStr = stockPnl >= 0 ? `+$${stockPnl.toFixed(0)}` : `-$${Math.abs(stockPnl).toFixed(0)}`;
     const pnlStr = finalPnl >= 0 ? `+$${finalPnl.toFixed(0)}` : `-$${Math.abs(finalPnl).toFixed(0)}`;
-    showToast(`${w.symbol} wheel complete! Final P&L: ${pnlStr}`, finalPnl >= 0 ? 'success' : '');
+    showToast(`${w.symbol} wheel complete! Stock: ${stockStr} + Premiums: +$${totalPremium.toFixed(0)} = ${pnlStr}`, finalPnl >= 0 ? 'success' : '');
 
     // Notify users
     sendAssignmentNotification({ ticker: w.symbol, strike: callStrike }, 'called').catch(e => console.warn(e));
@@ -3732,16 +3785,17 @@ function markPostAssigned(postId, postRef) {
         // Premium per share from CSP (including any roll premiums)
         const premPerShare = post.totalPremiumCollected || parseFloat((post.prem || '').replace(/[$,]/g, '')) || 0;
 
-        // Cost basis = strike - total premium collected per share
-        // This is your effective purchase price after accounting for premium received
-        const costBasis = post.strike - premPerShare;
+        // Cost basis = STRIKE price (what you actually paid per share when assigned)
+        // Premium is tracked separately as income, NOT baked into cost basis
+        const costBasis = post.strike;
 
-        // Unrealized P&L at assignment = (current stock price - cost basis) × shares
-        // This will be NEGATIVE when stock is below cost basis (typical at assignment)
-        const unrealizedPnl = (currentPrice - costBasis) * shares;
-
-        // Total premium in dollars (for tracking)
+        // Total premium in dollars (income collected from selling the CSP)
         const totalPremDollars = premPerShare * 100 * contracts;
+
+        // Stock P&L = (current price - strike) × shares (NEGATIVE at assignment, stock dropped)
+        const stockPnl = (currentPrice - costBasis) * shares;
+        // Net P&L = stock loss + premium income
+        const netPnl = stockPnl + totalPremDollars;
 
         // Create wheel position — this is an OPEN position, not a closed trade
         if (!S.wheelPositions) S.wheelPositions = [];
@@ -3778,9 +3832,10 @@ function markPostAssigned(postId, postRef) {
         renderAlertsFeed();
         renderHome();
 
-        // Show unrealized loss (negative = loss, which is expected at assignment)
-        const pnlStr = unrealizedPnl >= 0 ? `+$${unrealizedPnl.toFixed(0)}` : `-$${Math.abs(unrealizedPnl).toFixed(0)}`;
-        showToast(`${post.ticker} assigned! ${shares} shares · Cost basis: $${costBasis.toFixed(2)} · Unrealized: ${pnlStr}`, '');
+        // Show real numbers: stock loss + premium income = net
+        const stockStr = stockPnl >= 0 ? `+$${stockPnl.toFixed(0)}` : `-$${Math.abs(stockPnl).toFixed(0)}`;
+        const netStr = netPnl >= 0 ? `+$${netPnl.toFixed(0)}` : `-$${Math.abs(netPnl).toFixed(0)}`;
+        showToast(`${post.ticker} assigned! ${shares} shares at $${costBasis.toFixed(2)} · Stock: ${stockStr} · Premium: +$${totalPremDollars.toFixed(0)} · Net: ${netStr}`, '');
         setTimeout(() => openAdmin(), 300);
 
         // Firebase + notifications (fire-and-forget)
@@ -3810,16 +3865,18 @@ function markPostAssigned(postId, postRef) {
         const contracts = parseInt(conStr) || 1;
         const shares = contracts * 100;
         const premPerShare = post.totalPremiumCollected || parseFloat((post.prem || '').replace(/[$,]/g, '')) || 0;
-        const costBasis = post.strike - premPerShare;
-        const unrealizedPnl = (currentPrice - costBasis) * shares;
+        const costBasis = post.strike;
         const totalPremDollars = premPerShare * 100 * contracts;
+        const stockPnl = (currentPrice - costBasis) * shares;
+        const netPnl = stockPnl + totalPremDollars;
         if (!S.wheelPositions) S.wheelPositions = [];
         const wheelPos = { id: Date.now().toString(), symbol: post.ticker, shares, contracts, assignPrice: post.strike, currentPrice, cspPremium: premPerShare, costBasis, originalCostBasis: costBasis, assignedAt: Date.now(), cspSignalId: post.id, status: 'holding', ccHistory: [], totalPremiumCollected: totalPremDollars };
         S.wheelPositions.push(wheelPos);
         post.status = 'assigned'; post.assignedAt = Date.now(); post.assignmentPrice = currentPrice; post.assignedContracts = contracts; post.wheelId = wheelPos.id;
         save(); renderAdminPosts(); renderWheelPositions(); renderSignals(); renderAlertsFeed(); renderHome();
-        const pnlStr = unrealizedPnl >= 0 ? `+$${unrealizedPnl.toFixed(0)}` : `-$${Math.abs(unrealizedPnl).toFixed(0)}`;
-        showToast(`${post.ticker} assigned! ${shares} shares · Cost basis: $${costBasis.toFixed(2)} · Unrealized: ${pnlStr}`, '');
+        const stockStr = stockPnl >= 0 ? `+$${stockPnl.toFixed(0)}` : `-$${Math.abs(stockPnl).toFixed(0)}`;
+        const netStr = netPnl >= 0 ? `+$${netPnl.toFixed(0)}` : `-$${Math.abs(netPnl).toFixed(0)}`;
+        showToast(`${post.ticker} assigned! ${shares} shares at $${costBasis.toFixed(2)} · Stock: ${stockStr} · Premium: +$${totalPremDollars.toFixed(0)} · Net: ${netStr}`, '');
         setTimeout(() => openAdmin(), 300);
         (async () => { try { if (await initFirebase() && post.id) { firebase.database().ref('posts/' + post.id).update({ status: 'assigned', assignedAt: Date.now(), assignmentPrice: currentPrice, assignedContracts: contracts, wheelId: wheelPos.id }).catch(e => console.warn(e)); } sendAssignmentNotification(post, 'assigned').catch(e => console.warn(e)); } catch(e) {} })();
       });
@@ -8159,8 +8216,9 @@ function renderSignals(){
   const rolls = posts.filter(p => p.kind === 'roll');
 
   // Separate open vs closed positions
+  // "assigned" signals are NOT closed — they're active wheel positions shown in Assigned Shares section
   const openSigs = sigs.filter(p => !p.status || p.status === 'open');
-  const closedSigs = sigs.filter(p => p.status && p.status !== 'open');
+  const closedSigs = sigs.filter(p => p.status && p.status !== 'open' && p.status !== 'assigned');
 
   let html = '';
 
@@ -8174,9 +8232,37 @@ function renderSignals(){
     html += `<div class="signal-card" style="border-left:3px solid var(--purple)"><div class="signal-header"><span class="signal-type" style="background:var(--purple-bg);color:var(--purple)">ROLL</span><span class="signal-time">${getTimeAgo(r.timestamp)}</span></div><div style="font-size:13px;margin:8px 0"><span style="color:var(--red)">${r.original}</span> → <span style="color:var(--green)">${r.newPos}</span></div><div style="font-size:14px;font-weight:600;color:var(--green)">${r.credit}</div>${r.notes?`<div style="font-size:12px;color:var(--text2);margin-top:4px">${r.notes}</div>`:''}</div>`;
   });
 
+  // ASSIGNED SHARES section (wheel positions with live tracking)
+  const activeWheels = (S.wheelPositions || []).filter(w => w.status === 'holding');
+  if (activeWheels.length > 0) {
+    html += `<div class="card-title" style="margin:16px 0 12px;display:flex;align-items:center;gap:8px"><span style="display:inline-block;width:8px;height:8px;background:var(--orange);border-radius:50%;animation:pulse 2s infinite"></span>Assigned Shares (${activeWheels.length})</div>`;
+    activeWheels.forEach(w => {
+      const totalCCPrem = w.ccHistory.reduce((s, cc) => s + (cc.premiumTotal || 0), 0);
+      const totalPremium = (w.totalPremiumCollected || 0) + totalCCPrem;
+      const livePrice = w.currentPrice || w.assignPrice;
+      const stockPnl = (livePrice - w.assignPrice) * w.shares;
+      const netPnl = stockPnl + totalPremium;
+      const fmtPnl = (v) => v >= 0 ? `+$${v.toFixed(0)}` : `-$${Math.abs(v).toFixed(0)}`;
+      const netColor = netPnl >= 0 ? 'var(--green)' : 'var(--red)';
+      const ccInfo = w.ccHistory.length > 0 ? ` · ${w.ccHistory.length} CC${w.ccHistory.length>1?'s':''} sold` : '';
+      html += `<div class="signal-card" style="border-left:3px solid var(--orange)">
+        <div class="signal-header"><span class="signal-type" style="background:var(--orange-bg,rgba(255,152,0,0.1));color:var(--orange)">SHARES</span><span class="signal-time" style="margin-left:auto">Assigned ${getTimeAgo(w.assignedAt)}</span></div>
+        <div class="signal-ticker">${w.symbol}</div>
+        <div class="signal-details">${w.shares} shares · Bought at $${w.assignPrice.toFixed(2)} · Now $${livePrice.toFixed(2)}</div>
+        <div style="display:flex;gap:16px;font-size:13px;align-items:center;flex-wrap:wrap">
+          <span>Stock: <b style="color:${stockPnl>=0?'var(--green)':'var(--red)'}">${fmtPnl(stockPnl)}</b></span>
+          <span>Premiums: <b style="color:var(--green)">+$${totalPremium.toFixed(0)}</b></span>
+          <span>Net: <b style="color:${netColor};font-size:14px">${fmtPnl(netPnl)}</b></span>
+        </div>
+        <div style="font-size:11px;color:var(--text3);margin-top:4px">Selling covered calls to reduce cost basis${ccInfo}</div>
+      </div>`;
+    });
+  }
+
   // OPEN POSITIONS section
+  const totalOpen = openSigs.length + activeWheels.length;
   if (openSigs.length > 0) {
-    html += `<div class="card-title" style="margin:16px 0 12px;display:flex;align-items:center;gap:8px"><span style="display:inline-block;width:8px;height:8px;background:var(--green);border-radius:50%;animation:pulse 2s infinite"></span>Open Positions (${openSigs.length})</div>`;
+    html += `<div class="card-title" style="margin:16px 0 12px;display:flex;align-items:center;gap:8px"><span style="display:inline-block;width:8px;height:8px;background:var(--green);border-radius:50%;animation:pulse 2s infinite"></span>Open Options (${openSigs.length})</div>`;
     openSigs.forEach((s) => {
       const time = s.timestamp ? getTimeAgo(s.timestamp) : s.time;
       const premVal = s.prem || '';
@@ -8185,7 +8271,7 @@ function renderSignals(){
       const totalPremLine = s.totalPremiumCollected ? `<div style="font-size:11px;color:var(--text3);margin-top:4px">Total premium across rolls: <b style="color:var(--green)">$${(s.totalPremiumCollected * 100).toFixed(0)}</b></div>` : '';
       html += `<div class="signal-card" style="border-left:3px solid var(--${s.type==='csp'?'green':'blue'})"><div class="signal-header"><span class="signal-type ${s.type}">${s.type.toUpperCase()}</span>${rollBadge}<span class="signal-time" style="margin-left:auto">${time}</span></div><div class="signal-ticker">${s.ticker}</div><div class="signal-details">$${s.strike} ${s.type==='csp'?'Put':'Call'} · Exp ${s.exp}</div><div style="display:flex;gap:16px;font-size:13px;align-items:center"><span>Premium: <b style="color:var(--green)">${premVal}</b></span><span>Delta: <b>${s.delta||''}</b></span><button class="copy-trade-btn" onclick="event.stopPropagation();copyTradeFromSignal('${s.ticker}','${s.type}','${s.strike}','${s.exp}','${premVal}'${sid})">+ Copy Trade</button></div>${totalPremLine}</div>`;
     });
-  } else {
+  } else if (activeWheels.length === 0) {
     html += `<div class="empty" style="padding:24px"><div class="empty-title">No Open Positions</div><div class="empty-text">New signals will appear here when posted</div></div>`;
   }
 
