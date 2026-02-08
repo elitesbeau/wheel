@@ -2782,9 +2782,11 @@ async function sendEmailNotifications(post) {
         try {
           await emailjs.send(serviceId, templateId, {
             to_email: sub.email,
+            to_name: sub.name || '',
             subject: subject,
             message: body,
-            from_name: 'Market Elites'
+            from_name: 'Market Elites',
+            reply_to: 'noreply@marketelites.com'
           });
         } catch (e) {
           console.error('Email send error:', e);
@@ -2829,9 +2831,11 @@ async function sendSmsNotifications(post) {
         try {
           await emailjs.send(serviceId, templateId, {
             to_email: smsEmail,
-            subject: '',
+            to_name: '',
+            subject: 'Market Elites Alert',
             message: msg,
-            from_name: 'Market Elites'
+            from_name: 'Market Elites',
+            reply_to: 'noreply@marketelites.com'
           });
         } catch (e) {
           console.warn('SMS send error for', uid, e);
@@ -2912,6 +2916,7 @@ async function saveEmailSubscription() {
     const emailKey = email.replace(/[.#$[\]]/g, '_'); // Firebase-safe key
     await db.ref('emailSubscribers/' + emailKey).set({
       email: email,
+      name: S.user.name || '',
       active: true,
       subscribedAt: Date.now(),
       uid: S.firebaseUid || null
