@@ -2371,17 +2371,17 @@ async function savePostToFirebase(post) {
   if (!await initFirebase()) {
     // Fallback to localStorage only
     if (!S.adminPosts) S.adminPosts = [];
-    S.adminPosts.unshift(post);
+    if (!S.adminPosts.find(p => p === post || p.id === post.id)) S.adminPosts.unshift(post);
     save();
     return;
   }
   try {
     const db = firebase.database();
     const ref = await db.ref('posts').push(post);
-    // Immediately add to local state with Firebase key so listener deduplicates
+    // Update with Firebase key; only add to local state if not already there
     post.id = ref.key;
     if (!S.adminPosts) S.adminPosts = [];
-    S.adminPosts.unshift(post);
+    if (!S.adminPosts.find(p => p === post || p.id === post.id)) S.adminPosts.unshift(post);
     save();
     renderAdminPosts();
     renderSignals();
@@ -2390,7 +2390,7 @@ async function savePostToFirebase(post) {
   } catch (e) {
     console.error('Firebase save error:', e);
     if (!S.adminPosts) S.adminPosts = [];
-    S.adminPosts.unshift(post);
+    if (!S.adminPosts.find(p => p === post || p.id === post.id)) S.adminPosts.unshift(post);
     save();
     renderAdminPosts();
     renderSignals();
@@ -8338,7 +8338,7 @@ async function refreshWatch(){
   Object.keys(priceCache).forEach(k => delete priceCache[k]);
   renderWatch();
 }
-function renderAlerts(){const c=$('alertsContainer');const alerts=[];S.positions.forEach(p=>{if(!p.expiration)return;const dte=Math.ceil((new Date(p.expiration)-new Date())/864e5);if(dte<=7)alerts.push({...p,dte,urgent:dte<=3})});if(!alerts.length){c.innerHTML='<div class="empty"><div class="empty-icon"><svg viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/></svg></div><div class="empty-title">No Alerts</div><div class="empty-text">Alerts appear when positions expire soon</div></div>';return}c.innerHTML=alerts.map(a=>`<div class="pos-card" style="border-left:3px solid ${a.urgent?'var(--red)':'var(--orange)'}"><div style="font-weight:600">${a.symbol} $${a.strike}${a.type==='csp'?'P':'C'}</div><div style="font-size:13px;color:var(--text2);margin-top:4px">${a.dte} days remaining</div></div>`).join('')}
+function renderAlerts(){const c=$('alertsContainer');const alerts=[];S.positions.forEach(p=>{if(!p.expiration)return;const expD=parseExpDate(p.expiration);if(!expD)return;const dte=Math.ceil((expD-new Date())/864e5);if(dte<=7&&dte>0)alerts.push({...p,dte,urgent:dte<=3})});if(!alerts.length){c.innerHTML='<div class="empty"><div class="empty-icon"><svg viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/></svg></div><div class="empty-title">No Alerts</div><div class="empty-text">Alerts appear when positions expire soon</div></div>';return}c.innerHTML=alerts.map(a=>`<div class="pos-card" style="border-left:3px solid ${a.urgent?'var(--red)':'var(--orange)'}"><div style="font-weight:600">${a.symbol} $${a.strike}${a.type==='csp'?'P':'C'}</div><div style="font-size:13px;color:var(--text2);margin-top:4px">${a.dte} days remaining</div></div>`).join('')}
 function renderSignals(){
   const c=$('signalsContainer');
   const posts = S.adminPosts || [];
@@ -8395,10 +8395,20 @@ function renderSignals(){
       const netPnl = stockPnl + totalPremium;
       const fmtPnl = (v) => v >= 0 ? `+$${v.toFixed(0)}` : `-$${Math.abs(v).toFixed(0)}`;
       const netColor = netPnl >= 0 ? 'var(--green)' : 'var(--red)';
-      const ccInfo = w.ccHistory.length > 0 ? ` · ${w.ccHistory.length} CC${w.ccHistory.length>1?'s':''} sold` : '';
       // Check if user has a copied position for this signal but hasn't marked assigned yet
       const userCopy = !isAdmin() && w.cspSignalId ? (S.positions || []).find(pos => pos.signalId === w.cspSignalId && !pos.assigned) : null;
       const userAssignBtn = userCopy ? `<button onclick="event.stopPropagation();userMarkAssigned('${w.cspSignalId}')" style="font-size:11px;padding:5px 12px;background:var(--orange);color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:600;margin-top:6px">I was assigned too</button>` : '';
+      // Show active CC attached to this position
+      const activeCC = w.ccHistory.find(cc => cc.status === 'open');
+      const ccHistoryCount = w.ccHistory.length;
+      let activeCCHtml = '';
+      if (activeCC) {
+        activeCCHtml = `<div style="margin-top:8px;padding:8px 10px;background:var(--blue-bg,rgba(0,122,255,0.08));border-radius:8px;border-left:3px solid var(--blue)">
+          <div style="font-size:11px;font-weight:600;color:var(--blue);margin-bottom:2px">COVERED CALL ACTIVE</div>
+          <div style="font-size:12px">$${activeCC.strike} Call · Exp ${activeCC.exp} · <span style="color:var(--green)">+$${activeCC.premiumTotal.toFixed(0)} collected</span></div>
+        </div>`;
+      }
+      const ccCountLabel = ccHistoryCount > 0 ? ` · ${ccHistoryCount} CC${ccHistoryCount>1?'s':''} sold` : '';
       html += `<div class="signal-card" style="border-left:3px solid var(--orange)">
         <div class="signal-header"><span class="signal-type" style="background:var(--orange-bg,rgba(255,152,0,0.1));color:var(--orange)">SHARES</span><span class="signal-time" style="margin-left:auto">Assigned ${getTimeAgo(w.assignedAt)}</span></div>
         <div class="signal-ticker">${w.symbol}</div>
@@ -8408,7 +8418,8 @@ function renderSignals(){
           <span>Premiums: <b style="color:var(--green)">+$${totalPremium.toFixed(0)}</b></span>
           <span>Net: <b style="color:${netColor};font-size:14px">${fmtPnl(netPnl)}</b></span>
         </div>
-        <div style="font-size:11px;color:var(--text3);margin-top:4px">Selling covered calls to reduce cost basis${ccInfo}</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:4px">Selling covered calls to reduce cost basis${ccCountLabel}</div>
+        ${activeCCHtml}
         ${userAssignBtn}
       </div>`;
     });
@@ -8424,7 +8435,10 @@ function renderSignals(){
       const sid = s.id ? `,'${s.id}'` : '';
       const rollBadge = s.rollCount ? `<span style="font-size:10px;padding:2px 6px;background:var(--purple-bg);color:var(--purple);border-radius:10px;font-weight:600;margin-left:6px">ROLL #${s.rollCount}</span>` : '';
       const totalPremLine = s.totalPremiumCollected ? `<div style="font-size:11px;color:var(--text3);margin-top:4px">Net premium (all rolls): <b style="color:${s.totalPremiumCollected >= 0 ? 'var(--green)' : 'var(--red)'}">$${(s.totalPremiumCollected * 100).toFixed(0)}</b></div>` : '';
-      html += `<div class="signal-card" style="border-left:3px solid var(--${s.type==='csp'?'green':'blue'})"><div class="signal-header"><span class="signal-type ${s.type}">${s.type.toUpperCase()}</span>${rollBadge}<span class="signal-time" style="margin-left:auto">${time}</span></div><div class="signal-ticker">${s.ticker}</div><div class="signal-details">$${s.strike} ${s.type==='csp'?'Put':'Call'} · Exp ${s.exp}</div><div style="display:flex;gap:16px;font-size:13px;align-items:center"><span>Premium: <b style="color:var(--green)">${premVal}</b></span><span>Delta: <b>${s.delta||''}</b></span><button class="copy-trade-btn" onclick="event.stopPropagation();copyTradeFromSignal('${s.ticker}','${s.type}','${s.strike}','${s.exp}','${premVal}'${sid})">+ Copy Trade</button></div>${totalPremLine}</div>`;
+      // Show "Covered by X shares" tag on CC signals linked to wheel positions
+      const linkedWheel = s.wheelId ? (S.wheelPositions || []).find(w => w.id === s.wheelId) : null;
+      const coveredBadge = linkedWheel ? `<div style="font-size:11px;color:var(--blue);margin-top:4px;padding:4px 8px;background:var(--blue-bg,rgba(0,122,255,0.08));border-radius:6px;display:inline-block">Covered by ${linkedWheel.shares} assigned ${linkedWheel.symbol} shares</div>` : '';
+      html += `<div class="signal-card" style="border-left:3px solid var(--${s.type==='csp'?'green':'blue'})"><div class="signal-header"><span class="signal-type ${s.type}">${s.type.toUpperCase()}</span>${rollBadge}<span class="signal-time" style="margin-left:auto">${time}</span></div><div class="signal-ticker">${s.ticker}</div><div class="signal-details">$${s.strike} ${s.type==='csp'?'Put':'Call'} · Exp ${s.exp}</div><div style="display:flex;gap:16px;font-size:13px;align-items:center"><span>Premium: <b style="color:var(--green)">${premVal}</b></span><span>Delta: <b>${s.delta||''}</b></span><button class="copy-trade-btn" onclick="event.stopPropagation();copyTradeFromSignal('${s.ticker}','${s.type}','${s.strike}','${s.exp}','${premVal}'${sid})">+ Copy Trade</button></div>${totalPremLine}${coveredBadge}</div>`;
     });
   } else if (activeWheels.length === 0) {
     html += `<div class="empty" style="padding:24px"><div class="empty-title">No Open Positions</div><div class="empty-text">New signals will appear here when posted</div></div>`;
@@ -8687,7 +8701,9 @@ function checkPositionAlerts() {
   const now = new Date();
   positions.forEach(p => {
     if (!p.expiration || p.type === 'shares') return;
-    const dte = Math.ceil((new Date(p.expiration) - now) / 864e5);
+    const expD = parseExpDate(p.expiration);
+    if (!expD) return;
+    const dte = Math.ceil((expD - now) / 864e5);
     if (dte <= S.dteThreshold && dte >= 0 && S.alertSettings.dte) {
       if (S.alertSettings.browser && Notification.permission === 'granted') {
         showBrowserNotification(
@@ -8721,9 +8737,23 @@ function toggleAlertType(type) {
   save();
 }
 
+function parseExpDate(exp) {
+  if (!exp) return null;
+  let d = new Date(exp);
+  // If "Feb 14" style (no year), append current year
+  if (isNaN(d.getTime()) || d.getFullYear() < 2020) {
+    d = new Date(exp + ' ' + new Date().getFullYear());
+  }
+  // Still invalid? try as-is
+  if (isNaN(d.getTime())) return null;
+  return d;
+}
+
 function getPositionAlertBadges(p) {
   if (!p.expiration || p.type === 'shares') return '';
-  const dte = Math.ceil((new Date(p.expiration) - new Date()) / 864e5);
+  const expDate = parseExpDate(p.expiration);
+  if (!expDate) return '';
+  const dte = Math.ceil((expDate - new Date()) / 864e5);
   if (dte <= 0) return '<span class="dte-warn danger">EXPIRED</span>';
   if (dte <= 3) return '<span class="dte-warn danger">' + dte + 'D</span>';
   if (dte <= (S.dteThreshold || 7)) return '<span class="dte-warn caution">' + dte + 'D</span>';
