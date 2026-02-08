@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Market Elites — Timeline Archive</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #111113;
+    --surface: #1A1A1E;
+    --card: #1E1E24;
+    --border: #2D2D35;
+    --text-primary: #F0F0F4;
+    --text-secondary: #71717A;
+    --purple: #7C3AED;
+    --green: #22C55E;
+    --amber: #F59E0B;
+    --blue: #3B82F6;
+    --gray: #9CA3AF;
+    --filter-border: #333;
+    --timeline-line: #2D2D35;
+    --hover-card: #242430;
+    --tag-text: inherit;
+  }
+
+  :root.light {
+    --bg: #F5F5F7;
+    --surface: #EAEAEE;
+    --card: #FFFFFF;
+    --border: #D4D4D8;
+    --text-primary: #18181B;
+    --text-secondary: #71717A;
+    --filter-border: #CBCBD0;
+    --timeline-line: #D4D4D8;
+    --hover-card: #F0F0F4;
+    --tag-text: inherit;
+  }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg);
+    color: var(--text-primary);
+    line-height: 1.5;
+    min-height: 100vh;
+    transition: background 0.3s, color 0.3s;
+  }
+
+  .app {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 24px 16px 60px;
+  }
+
+  /* ── Header ── */
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .header-left { display: flex; flex-direction: column; gap: 2px; }
+  .header-title {
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+  }
+  .header-subtitle {
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--text-secondary);
+  }
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .portfolio-pill {
+    font-size: 12px;
+    font-weight: 600;
+    padding: 5px 12px;
+    border-radius: 20px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--green);
+    white-space: nowrap;
+  }
+  .theme-toggle {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text-primary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    transition: background 0.2s;
+  }
+  .theme-toggle:hover { background: var(--card); }
+
+  /* ── Filter Bar ── */
+  .filter-bar {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 6px;
+    margin-bottom: 20px;
+    scrollbar-width: none;
+  }
+  .filter-bar::-webkit-scrollbar { display: none; }
+  .filter-pill {
+    flex-shrink: 0;
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 1px solid var(--filter-border);
+    background: transparent;
+    color: var(--text-secondary);
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .filter-pill:hover { border-color: var(--purple); color: var(--text-primary); }
+  .filter-pill.active {
+    background: var(--purple);
+    border-color: var(--purple);
+    color: #fff;
+  }
+
+  /* ── Stats Bar ── */
+  .stats-bar {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-bottom: 24px;
+  }
+  .stat-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    text-align: center;
+  }
+  .stat-value {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+  .stat-label {
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 2px;
+  }
+
+  /* ── Archive Sidebar (inline) ── */
+  .archive-section {
+    margin-bottom: 24px;
+  }
+  .archive-heading {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+  }
+  .archive-list { list-style: none; }
+  .archive-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.15s;
+    font-size: 13px;
+  }
+  .archive-item:hover { background: var(--surface); }
+  .archive-item.active { background: var(--surface); color: var(--purple); font-weight: 600; }
+  .archive-item .count {
+    font-size: 11px;
+    color: var(--text-secondary);
+    font-weight: 500;
+  }
+  .archive-item .arrow {
+    font-size: 10px;
+    color: var(--text-secondary);
+    margin-right: 6px;
+    transition: transform 0.2s;
+    display: inline-block;
+  }
+  .archive-item.active .arrow { transform: rotate(90deg); }
+  .archive-item-label { display: flex; align-items: center; gap: 4px; }
+
+  /* ── Timeline ── */
+  .month-section { margin-bottom: 8px; }
+  .month-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.15s;
+    margin-bottom: 0;
+  }
+  .month-header:hover { background: var(--hover-card); }
+  .month-header-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .month-header .entry-count {
+    font-size: 12px;
+    color: var(--text-secondary);
+    font-weight: 400;
+  }
+  .month-header .chevron {
+    font-size: 12px;
+    color: var(--text-secondary);
+    transition: transform 0.25s ease;
+    display: inline-block;
+  }
+  .month-header.collapsed .chevron { transform: rotate(-90deg); }
+
+  .month-entries {
+    overflow: hidden;
+    transition: max-height 0.35s ease, opacity 0.25s ease;
+    max-height: 2000px;
+    opacity: 1;
+  }
+  .month-entries.collapsed {
+    max-height: 0;
+    opacity: 0;
+  }
+
+  .timeline-list {
+    position: relative;
+    padding: 12px 0 4px 24px;
+    margin-left: 16px;
+  }
+  .timeline-list::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: var(--timeline-line);
+  }
+
+  .timeline-entry {
+    position: relative;
+    margin-bottom: 12px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    border-left: 3px solid var(--border);
+    transition: background 0.15s, border-left-color 0.15s, box-shadow 0.2s;
+    cursor: default;
+  }
+  .timeline-entry:last-child { margin-bottom: 4px; }
+  .timeline-entry:hover {
+    background: var(--hover-card);
+  }
+
+  /* dot on the timeline */
+  .timeline-entry::before {
+    content: '';
+    position: absolute;
+    left: -30px;
+    top: 20px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--border);
+    border: 2px solid var(--bg);
+    z-index: 1;
+  }
+
+  /* Type colors */
+  .timeline-entry.signal  { border-left-color: var(--purple); }
+  .timeline-entry.signal::before { background: var(--purple); }
+  .timeline-entry.signal:hover { box-shadow: -3px 0 12px rgba(124,58,237,0.15); }
+
+  .timeline-entry.winner  { border-left-color: var(--green); }
+  .timeline-entry.winner::before { background: var(--green); }
+  .timeline-entry.winner:hover { box-shadow: -3px 0 12px rgba(34,197,94,0.15); }
+
+  .timeline-entry.assigned { border-left-color: var(--amber); }
+  .timeline-entry.assigned::before { background: var(--amber); }
+  .timeline-entry.assigned:hover { box-shadow: -3px 0 12px rgba(245,158,11,0.15); }
+
+  .timeline-entry.roll    { border-left-color: var(--blue); }
+  .timeline-entry.roll::before { background: var(--blue); }
+  .timeline-entry.roll:hover { box-shadow: -3px 0 12px rgba(59,130,246,0.15); }
+
+  .timeline-entry.announcement { border-left-color: var(--gray); }
+  .timeline-entry.announcement::before { background: var(--gray); }
+  .timeline-entry.announcement:hover { box-shadow: -3px 0 12px rgba(156,163,175,0.10); }
+
+  .entry-timestamp {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+  }
+  .entry-title {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    line-height: 1.4;
+  }
+  .entry-body {
+    font-size: 12.5px;
+    color: var(--text-secondary);
+    line-height: 1.55;
+    margin-bottom: 10px;
+  }
+  .entry-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .entry-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+  }
+  .tag {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 4px;
+    letter-spacing: 0.3px;
+  }
+  .tag-signal   { background: rgba(124,58,237,0.12); color: var(--purple); }
+  .tag-winner   { background: rgba(34,197,94,0.12); color: var(--green); }
+  .tag-assigned { background: rgba(245,158,11,0.12); color: var(--amber); }
+  .tag-roll     { background: rgba(59,130,246,0.12); color: var(--blue); }
+  .tag-alert    { background: rgba(156,163,175,0.10); color: var(--gray); }
+  .tag-ticker   { background: rgba(255,255,255,0.06); color: var(--text-secondary); }
+
+  .copy-btn {
+    font-family: inherit;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 4px;
+    border: 1px solid var(--purple);
+    background: transparent;
+    color: var(--purple);
+    cursor: pointer;
+    transition: background 0.15s;
+    white-space: nowrap;
+  }
+  .copy-btn:hover {
+    background: var(--purple);
+    color: #fff;
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 480px) {
+    .stats-bar { grid-template-columns: repeat(2, 1fr); }
+    .header { flex-direction: column; align-items: flex-start; }
+    .header-right { width: 100%; justify-content: flex-end; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- Header -->
+  <header class="header">
+    <div class="header-left">
+      <div class="header-title">Market Elites</div>
+      <div class="header-subtitle">Trading Timeline</div>
+    </div>
+    <div class="header-right">
+      <span class="portfolio-pill">$47,280 &#9650;4.05%</span>
+      <button class="theme-toggle" id="themeToggle" title="Toggle theme">&#9789;</button>
+    </div>
+  </header>
+
+  <!-- Filter Bar -->
+  <div class="filter-bar" id="filterBar">
+    <button class="filter-pill active" data-filter="all">All (42)</button>
+    <button class="filter-pill" data-filter="signal">Signals (24)</button>
+    <button class="filter-pill" data-filter="winner">Winners (11)</button>
+    <button class="filter-pill" data-filter="assigned">Assigned (3)</button>
+    <button class="filter-pill" data-filter="roll">Called Away (1)</button>
+    <button class="filter-pill" data-filter="roll">Rolls (2)</button>
+    <button class="filter-pill" data-filter="announcement">Announcements (1)</button>
+  </div>
+
+  <!-- Stats Bar -->
+  <div class="stats-bar">
+    <div class="stat-box">
+      <div class="stat-value">84%</div>
+      <div class="stat-label">Win Rate</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-value">$3.2K</div>
+      <div class="stat-label">Monthly</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-value">12</div>
+      <div class="stat-label">Open</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-value">156</div>
+      <div class="stat-label">Total Trades</div>
+    </div>
+  </div>
+
+  <!-- Archive -->
+  <div class="archive-section">
+    <div class="archive-heading">Archive</div>
+    <ul class="archive-list">
+      <li class="archive-item active">
+        <span class="archive-item-label"><span class="arrow">&#9658;</span> 2026</span>
+        <span class="count">14 entries</span>
+      </li>
+      <li class="archive-item">
+        <span class="archive-item-label"><span class="arrow">&#9658;</span> 2025</span>
+        <span class="count">156 entries</span>
+      </li>
+      <li class="archive-item">
+        <span class="archive-item-label"><span class="arrow">&#9658;</span> 2024</span>
+        <span class="count">89 entries</span>
+      </li>
+    </ul>
+  </div>
+
+  <!-- Timeline Feed -->
+  <div id="timelineFeed">
+
+    <!-- January 2026 -->
+    <div class="month-section">
+      <div class="month-header" onclick="toggleMonth(this)">
+        <span class="month-header-left">January 2026 <span class="entry-count">&middot; 8 entries</span></span>
+        <span class="chevron">&#9660;</span>
+      </div>
+      <div class="month-entries">
+        <div class="timeline-list">
+
+          <!-- Signal -->
+          <div class="timeline-entry signal" data-type="signal">
+            <div class="entry-timestamp">Jan 28, 2:34 PM</div>
+            <div class="entry-title">NEW SIGNAL: NVDA $420P</div>
+            <div class="entry-body">Exp: Feb 21 &middot; Premium: $3.85 &middot; Delta: 0.25 &middot; Cash-Secured Put. Strong support at $415, IV rank 42. Favorable risk/reward with earnings behind us.</div>
+            <div class="entry-footer">
+              <div class="entry-tags">
+                <span class="tag tag-signal">CSP</span>
+                <span class="tag tag-signal">High Confidence</span>
+              </div>
+              <button class="copy-btn">Copy Trade</button>
+            </div>
+          </div>
+
+          <!-- Winner -->
+          <div class="timeline-entry winner" data-type="winner">
+            <div class="entry-timestamp">Jan 25, Market Close</div>
+            <div class="entry-title">WINNER: AAPL $185P expired worthless</div>
+            <div class="entry-body">Premium collected: $284 &middot; Max profit achieved &middot; 18 DTE to expiration. AAPL stayed well above $185 strike as expected post-earnings momentum held.</div>
+            <div class="entry-footer">
+              <div class="entry-tags">
+                <span class="tag tag-winner">Winner</span>
+                <span class="tag tag-signal">CSP</span>
+                <span class="tag tag-ticker">AAPL</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Signal -->
+          <div class="timeline-entry signal" data-type="signal">
+            <div class="entry-timestamp">Jan 24, 11:02 AM</div>
+            <div class="entry-title">NEW SIGNAL: AMZN $178P</div>
+            <div class="entry-body">Exp: Feb 14 &middot; Premium: $2.10 &middot; Delta: 0.18 &middot; Cash-Secured Put. Cloud revenue beat driving support. Entering on pullback to 20-day MA.</div>
+            <div class="entry-footer">
+              <div class="entry-tags">
+                <span class="tag tag-signal">CSP</span>
+                <span class="tag tag-signal">Medium Confidence</span>
+              </div>
+              <button class="copy-btn">Copy Trade</button>
+            </div>
+          </div>
+
+          <!-- Assignment -->
+          <div class="timeline-entry assigned" data-type="assigned">
+            <div class="entry-timestamp">Jan 22, After Hours</div>
+            <div class="entry-title">ASSIGNED: MSFT $370P</div>
+            <div class="entry-body">100 shares assigned at $370. Cost basis: $366.15 after premium collected. Switching to covered calls strategy. MSFT fundamentals remain strong — comfortable holding.</div>
+            <div class="entry-footer">
+              <div class="entry-tags">
+                <span class="tag tag-assigned">Assigned</span>
+                <span class="tag tag-ticker">MSFT</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Roll -->
+          <div class="timeline-entry roll" data-type="roll">
+            <div class="entry-timestamp">Jan 20, 10:15 AM</div>
+            <div class="entry-title">ROLLED: AMD $140P &rarr; $135P</div>
+            <div class="entry-body">Rolled down and out to Feb 14. Net credit: $0.45. New delta: 0.20. AMD pulled back on sector rotation; adjusting strike to maintain margin of safety.</div>
+            <div class="entry-footer">
+              <div class="entry-tags">
+                <span class="tag tag-roll">Roll</span>
+                <span class="tag tag-ticker">AMD</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Announcement -->
+          <div class="timeline-entry announcement" data-type="announcement">
+            <div class="entry-timestamp">Jan 18, 9:00 AM</div>
+            <div class="entry-title">Market Alert: FOMC Meeting This Week</div>
+            <div class="entry-body">Expect elevated IV across tech. Consider waiting for post-FOMC entries. VIX at 18.5. Historical tendency for vol crush post-announcement favors selling after the event.</div>
+            <div class="entry-footer">
+              <div class="entry-tags">
+                <span class="tag tag-alert">Alert</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Winner -->
+          <div class="timeline-entry winner" data-type="winner">
+            <div class="entry-timestamp">Jan 15, Market Close</div>
+            <div class="entry-title">WINNER: TSLA $220P expired worthless</div>
+            <div class="entry-body">Premium collected: $412 &middot; Max profit achieved &middot; TSLA rallied into deliveries report. Position managed passively — textbook CSP win.</div>
+            <div class="entry-footer">
+              <div class="entry-tags">
+                <span class="tag tag-winner">Winner</span>
+                <span class="tag tag-signal">CSP</span>
+                <span class="tag tag-ticker">TSLA</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Signal -->
+          <div class="timeline-entry signal" data-type="signal">
+            <div class="entry-timestamp">Jan 10, 3:15 PM</div>
+            <div class="entry-title">NEW SIGNAL: META $480P</div>
+            <div class="entry-body">Exp: Feb 7 &middot; Premium: $4.50 &middot; Delta: 0.22 &middot; Cash-Secured Put. Ad revenue guidance strong. Selling into elevated pre-earnings IV with wide buffer.</div>
+            <div class="entry-footer">
+              <div class="entry-tags">
+                <span class="tag tag-signal">CSP</span>
+                <span class="tag tag-signal">High Confidence</span>
+              </div>
+              <button class="copy-btn">Copy Trade</button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- December 2025 -->
+    <div class="month-section">
+      <div class="month-header collapsed" onclick="toggleMonth(this)">
+        <span class="month-header-left">December 2025 <span class="entry-count">&middot; 11 entries</span></span>
+        <span class="chevron">&#9660;</span>
+      </div>
+      <div class="month-entries collapsed">
+        <div class="timeline-list">
+
+          <div class="timeline-entry winner" data-type="winner">
+            <div class="entry-timestamp">Dec 29, Market Close</div>
+            <div class="entry-title">WINNER: GOOGL $165P expired worthless</div>
+            <div class="entry-body">Premium collected: $196 &middot; Max profit achieved &middot; Year-end rally kept GOOGL well above strike. Clean end to the year.</div>
+            <div class="entry-footer">
+              <div class="entry-tags">
+                <span class="tag tag-winner">Winner</span>
+                <span class="tag tag-signal">CSP</span>
+                <span class="tag tag-ticker">GOOGL</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="timeline-entry signal" data-type="signal">
+            <div class="entry-timestamp">Dec 22, 1:48 PM</div>
+            <div class="entry-title">NEW SIGNAL: SPY $580P</div>
+            <div class="entry-body">Exp: Jan 17 &middot; Premium: $2.85 &middot; Delta: 0.15 &middot; Cash-Secured Put. Holiday low-volume drift expected. Wide margin, short duration into year-end.</div>
+            <div class="entry-footer">
+              <div class="entry-tags">
+                <span class="tag tag-signal">CSP</span>
+                <span class="tag tag-signal">Low Risk</span>
+              </div>
+              <button class="copy-btn">Copy Trade</button>
+            </div>
+          </div>
+
+          <div class="timeline-entry roll" data-type="roll">
+            <div class="entry-timestamp">Dec 18, 9:45 AM</div>
+            <div class="entry-title">ROLLED: NFLX $750P &rarr; $730P</div>
+            <div class="entry-body">Rolled down to Jan 10. Net credit: $0.60. NFLX tested support on broader market pullback. Extending timeline to allow recovery.</div>
+            <div class="entry-footer">
+              <div class="entry-tags">
+                <span class="tag tag-roll">Roll</span>
+                <span class="tag tag-ticker">NFLX</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- November 2025 -->
+    <div class="month-section">
+      <div class="month-header collapsed" onclick="toggleMonth(this)">
+        <span class="month-header-left">November 2025 <span class="entry-count">&middot; 13 entries</span></span>
+        <span class="chevron">&#9660;</span>
+      </div>
+      <div class="month-entries collapsed">
+        <div class="timeline-list">
+
+          <div class="timeline-entry winner" data-type="winner">
+            <div class="entry-timestamp">Nov 28, Market Close</div>
+            <div class="entry-title">WINNER: NVDA $380P expired worthless</div>
+            <div class="entry-body">Premium collected: $520 &middot; Max profit achieved &middot; Post-earnings run kept NVDA far above strike. One of the best setups of Q4.</div>
+            <div class="entry-footer">
+              <div class="entry-tags">
+                <span class="tag tag-winner">Winner</span>
+                <span class="tag tag-signal">CSP</span>
+                <span class="tag tag-ticker">NVDA</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="timeline-entry announcement" data-type="announcement">
+            <div class="entry-timestamp">Nov 15, 8:30 AM</div>
+            <div class="entry-title">Strategy Update: Q4 Approach</div>
+            <div class="entry-body">Shifting to tighter expirations (14-21 DTE) for year-end. Holiday theta decay is favorable. Keeping position sizes conservative ahead of potential tax-loss selling.</div>
+            <div class="entry-footer">
+              <div class="entry-tags">
+                <span class="tag tag-alert">Strategy</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+  // Theme toggle
+  const toggle = document.getElementById('themeToggle');
+  toggle.addEventListener('click', () => {
+    document.documentElement.classList.toggle('light');
+    const isLight = document.documentElement.classList.contains('light');
+    toggle.innerHTML = isLight ? '&#9788;' : '&#9789;';
+  });
+
+  // Month collapse/expand
+  function toggleMonth(header) {
+    header.classList.toggle('collapsed');
+    const entries = header.nextElementSibling;
+    entries.classList.toggle('collapsed');
+  }
+
+  // Filter pills
+  const filterBar = document.getElementById('filterBar');
+  const pills = filterBar.querySelectorAll('.filter-pill');
+  const entries = document.querySelectorAll('.timeline-entry');
+
+  pills.forEach(pill => {
+    pill.addEventListener('click', () => {
+      pills.forEach(p => p.classList.remove('active'));
+      pill.classList.add('active');
+      const filter = pill.getAttribute('data-filter');
+
+      entries.forEach(entry => {
+        if (filter === 'all') {
+          entry.style.display = '';
+        } else {
+          entry.style.display = entry.getAttribute('data-type') === filter ? '' : 'none';
+        }
+      });
+
+      // Expand all months when filtering so results are visible
+      if (filter !== 'all') {
+        document.querySelectorAll('.month-header.collapsed').forEach(h => {
+          h.classList.remove('collapsed');
+          h.nextElementSibling.classList.remove('collapsed');
+        });
+      }
+    });
+  });
+</script>
+</body>
+</html>

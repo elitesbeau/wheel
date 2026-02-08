@@ -1,0 +1,2266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ana.sh — Bento Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --bg: #F9FAFB;
+  --card-bg: #FFFFFF;
+  --card-border: #EAECF0;
+  --gray-25: #FCFCFD;
+  --gray-50: #F9FAFB;
+  --gray-100: #F2F4F7;
+  --gray-200: #EAECF0;
+  --gray-300: #D0D5DD;
+  --gray-400: #98A2B3;
+  --gray-500: #667085;
+  --gray-600: #475467;
+  --gray-700: #344054;
+  --gray-800: #182230;
+  --gray-900: #101828;
+  --purple: #7A5AF8;
+  --purple-light: rgba(122, 90, 248, 0.1);
+  --green: #12B76A;
+  --green-light: rgba(18, 183, 106, 0.1);
+  --red: #F04438;
+  --red-light: rgba(240, 68, 56, 0.1);
+  --amber: #F79009;
+  --blue: #2E90FA;
+  --blue-light: rgba(46, 144, 250, 0.1);
+  --shadow-hover: 0 8px 25px -5px rgba(122, 90, 248, 0.15);
+  --shadow-inner: inset 0 2px 4px 0 rgba(62, 28, 150, 0.05);
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --radius: 1rem;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: var(--bg);
+  background-image: radial-gradient(circle, #EAECF0 1.25px, transparent 1.25px);
+  background-size: 20px 20px;
+  min-height: 100vh;
+  color: var(--gray-900);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+  cursor: default;
+}
+
+/* Scroll progress bar */
+#scrollProgress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--purple), #A78BFA, var(--purple));
+  z-index: 10000;
+  width: 0%;
+  transition: width 50ms linear;
+  border-radius: 0 2px 2px 0;
+  box-shadow: 0 0 10px rgba(122, 90, 248, 0.5);
+}
+
+/* Cursor glow */
+#cursorGlow {
+  position: fixed;
+  pointer-events: none;
+  width: 300px;
+  height: 300px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(122, 90, 248, 0.06) 0%, transparent 70%);
+  transform: translate(-50%, -50%);
+  z-index: 9998;
+  transition: width 300ms var(--ease), height 300ms var(--ease), opacity 200ms var(--ease);
+}
+#cursorGlow.focused {
+  width: 150px;
+  height: 150px;
+  background: radial-gradient(circle, rgba(122, 90, 248, 0.12) 0%, transparent 70%);
+}
+
+/* Dot grid spotlight overlay */
+#dotSpotlight {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0;
+  transition: opacity 400ms ease;
+}
+
+/* Floating particles */
+.floating-particle {
+  position: fixed;
+  width: 3px;
+  height: 3px;
+  background: var(--purple);
+  border-radius: 50%;
+  opacity: 0.05;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Breathing container */
+.breath-wrap {
+  animation: breathe 8s ease-in-out infinite;
+}
+@keyframes breathe {
+  0%, 100% { transform: scale(1.0); }
+  50% { transform: scale(1.002); }
+}
+
+.container {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 0.75rem;
+  position: relative;
+  z-index: 2;
+}
+
+/* Header */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  margin-bottom: 4px;
+  border-radius: var(--radius);
+  border: 1px solid var(--card-border);
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px) saturate(1.5);
+  -webkit-backdrop-filter: blur(12px) saturate(1.5);
+  position: sticky;
+  top: 8px;
+  z-index: 100;
+  transition: background 300ms ease, box-shadow 300ms ease, backdrop-filter 300ms ease;
+  opacity: 0;
+  transform: translateY(-30px);
+}
+.header.scrolled {
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(20px) saturate(2);
+  -webkit-backdrop-filter: blur(20px) saturate(2);
+  box-shadow: 0 4px 20px rgba(122, 90, 248, 0.08);
+}
+.header.visible {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 300ms ease 200ms, transform 400ms var(--spring) 200ms, background 300ms ease, box-shadow 300ms ease;
+}
+.header-brand {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--gray-900);
+  letter-spacing: -0.02em;
+}
+.header-greeting {
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--gray-500);
+}
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.market-status-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 500;
+}
+.status-dot-wrapper {
+  position: relative;
+  width: 8px;
+  height: 8px;
+}
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+.status-dot-ping {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  animation: ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
+  opacity: 0.5;
+}
+@keyframes ping {
+  75%, 100% {
+    transform: scale(2.5);
+    opacity: 0;
+  }
+}
+.avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid var(--purple);
+  background: var(--gray-100);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--purple);
+  transition: transform 300ms var(--spring), box-shadow 300ms ease;
+}
+.avatar:hover {
+  transform: scale(1.1) rotate(5deg);
+  box-shadow: 0 0 0 4px rgba(122, 90, 248, 0.15);
+}
+
+/* Bento Grid */
+.bento-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.75rem;
+  perspective: 800px;
+}
+
+/* Card base */
+.card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius);
+  overflow: visible;
+  padding: 20px;
+  position: relative;
+  transform-style: preserve-3d;
+  transition: box-shadow 300ms var(--ease), border-color 300ms var(--ease);
+  opacity: 0;
+  will-change: transform;
+  /* Cards start stacked in center for deal animation */
+  transform: scale(0.95) rotate(-1deg) translateY(40px);
+}
+.card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 200ms ease;
+  background: radial-gradient(circle at 50% 50%, rgba(255,255,255,0.8) 0%, transparent 60%);
+  z-index: 10;
+}
+.card:hover {
+  box-shadow: var(--shadow-hover);
+}
+/* Ripple effect layer */
+.card .ripple {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(122, 90, 248, 0.15) 0%, transparent 70%);
+  pointer-events: none;
+  transform: scale(0);
+  animation: rippleOut 600ms ease-out forwards;
+  z-index: 5;
+}
+@keyframes rippleOut {
+  to {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+.card.dealt {
+  opacity: 1;
+  transform: scale(1) rotate(0deg) translateY(0);
+  transition: transform 700ms var(--spring), opacity 400ms ease, box-shadow 300ms var(--ease), border-color 300ms var(--ease);
+}
+
+/* Scroll reveal for cards below fold */
+.card.scroll-reveal {
+  transform: scale(0.95) rotate(-1deg);
+  opacity: 0.3;
+  transition: transform 500ms var(--spring), opacity 400ms ease, box-shadow 300ms var(--ease), border-color 300ms var(--ease);
+}
+.card.scroll-reveal.in-view {
+  transform: scale(1) rotate(0deg);
+  opacity: 1;
+}
+
+.card-label {
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 500;
+  color: var(--gray-400);
+  padding-bottom: 12px;
+  text-transform: lowercase;
+}
+
+/* Span utilities */
+.col-span-2 { grid-column: span 2; }
+.col-span-1 { grid-column: span 1; }
+.row-span-2 { grid-row: span 2; }
+
+/* Widget 1: Portfolio Value */
+.portfolio-value-num {
+  font-size: 36px;
+  font-weight: 700;
+  color: var(--gray-900);
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  display: flex;
+  overflow: hidden;
+}
+.digit-roller {
+  display: inline-block;
+  height: 1.15em;
+  overflow: hidden;
+  position: relative;
+}
+.digit-roller-inner {
+  display: flex;
+  flex-direction: column;
+  transition: transform 600ms var(--spring);
+}
+.digit-roller-inner span {
+  display: block;
+  height: 1.15em;
+  line-height: 1.15em;
+}
+.portfolio-change {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 6px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--green-light);
+  color: var(--green);
+  font-size: 13px;
+  font-weight: 600;
+}
+.sparkline-container {
+  margin-top: 16px;
+  width: 100%;
+  height: 56px;
+  position: relative;
+}
+.sparkline-container svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.sparkline-path {
+  fill: none;
+  stroke: var(--purple);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.sparkline-fill {
+  opacity: 0;
+}
+.sparkline-glow-dot {
+  fill: #fff;
+  filter: drop-shadow(0 0 6px var(--purple)) drop-shadow(0 0 12px var(--purple));
+  opacity: 0;
+}
+.sparkline-dot {
+  fill: var(--purple);
+  animation: pulseDot 2s ease-in-out infinite;
+}
+.ghost-dot {
+  fill: var(--purple);
+  opacity: 0;
+  animation: ghostFade 2s ease-in-out infinite;
+}
+.ghost-dot:nth-child(1) { animation-delay: 0.15s; }
+.ghost-dot:nth-child(2) { animation-delay: 0.3s; }
+.ghost-dot:nth-child(3) { animation-delay: 0.45s; }
+@keyframes ghostFade {
+  0%, 100% { opacity: 0.1; r: 2; }
+  25% { opacity: 0.3; r: 3; }
+  50% { opacity: 0.1; r: 2; }
+}
+@keyframes pulseDot {
+  0%, 100% { r: 3; opacity: 1; }
+  50% { r: 5; opacity: 0.6; }
+}
+@keyframes fadeIn {
+  to { opacity: 1; }
+}
+
+/* Widget 2: Market Status */
+.market-card {
+  transition: border-color 100ms ease;
+  overflow: visible;
+}
+.market-card.flash-green { border-color: var(--green); box-shadow: 0 0 15px rgba(18, 183, 106, 0.2); }
+.market-card.flash-red { border-color: var(--red); box-shadow: 0 0 15px rgba(240, 68, 56, 0.2); }
+.market-ticker {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--gray-900);
+}
+.market-price {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--gray-900);
+  letter-spacing: -0.02em;
+  margin: 4px 0;
+  display: flex;
+  overflow: hidden;
+}
+.price-digit {
+  display: inline-block;
+  height: 1.2em;
+  overflow: hidden;
+  position: relative;
+}
+.price-digit-inner {
+  display: flex;
+  flex-direction: column;
+  transition: transform 400ms var(--spring);
+}
+.price-digit-inner span {
+  display: block;
+  height: 1.2em;
+  line-height: 1.2em;
+}
+.mini-candle-container {
+  margin-top: 8px;
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 30px;
+}
+.mini-candle {
+  width: 6px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.candle-wick {
+  width: 1px;
+  background: var(--gray-400);
+}
+.candle-body {
+  width: 6px;
+  border-radius: 1px;
+  min-height: 2px;
+}
+.market-open-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+}
+.market-open-label {
+  font-size: 12px;
+  font-weight: 500;
+}
+.market-change {
+  font-size: 13px;
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+/* Widget 3: Win Rate Ring */
+.ring-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.ring-svg {
+  width: 90px;
+  height: 90px;
+  transition: filter 300ms ease;
+}
+.card:hover .ring-svg {
+  filter: drop-shadow(0 0 8px rgba(122, 90, 248, 0.4));
+}
+.ring-bg {
+  fill: none;
+  stroke: var(--gray-100);
+  stroke-width: 8;
+}
+.ring-fill {
+  fill: none;
+  stroke: var(--purple);
+  stroke-width: 8;
+  stroke-linecap: round;
+  transform: rotate(-90deg);
+  transform-origin: center;
+  stroke-dasharray: 226.2;
+  stroke-dashoffset: 226.2;
+}
+.ring-sparkle {
+  fill: #fff;
+  opacity: 0;
+  filter: drop-shadow(0 0 3px var(--purple)) drop-shadow(0 0 6px #fff);
+}
+@keyframes sparkle {
+  0% { opacity: 0; r: 0; }
+  30% { opacity: 1; r: 4; }
+  100% { opacity: 0; r: 6; }
+}
+.ring-center-text {
+  font-size: 24px;
+  font-weight: 700;
+  fill: var(--gray-900);
+}
+.ring-sub {
+  font-size: 12px;
+  color: var(--gray-400);
+}
+
+/* Widget 4: Streak */
+.streak-num {
+  font-size: 36px;
+  font-weight: 700;
+  color: var(--gray-900);
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+.streak-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--gray-500);
+  margin-top: 2px;
+}
+.streak-squares {
+  display: flex;
+  gap: 3px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+.streak-sq {
+  width: 8px;
+  height: 8px;
+  border-radius: 4px;
+  background: var(--gray-200);
+  transform: scale(0);
+  transition: transform 200ms var(--spring), background 200ms ease;
+  cursor: pointer;
+  position: relative;
+}
+.streak-sq.pop {
+  transform: scale(1);
+}
+.streak-sq.filled {
+  background: var(--purple);
+}
+.streak-sq.today {
+  background: var(--purple);
+  position: relative;
+}
+.streak-sq.today::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--purple);
+  border-radius: 50%;
+  transform: translate(-50%, -50%) scale(0.5);
+  opacity: 0;
+  animation: todayRing 2s ease-in-out infinite;
+}
+@keyframes todayRing {
+  0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0.6; }
+  100% { transform: translate(-50%, -50%) scale(2); opacity: 0; }
+}
+.streak-sq.empty {
+  background: var(--gray-200);
+}
+.streak-best {
+  font-size: 12px;
+  color: var(--gray-400);
+  margin-top: 8px;
+}
+/* Streak tooltip */
+.streak-tooltip {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%) scale(0.8);
+  background: var(--gray-900);
+  color: #fff;
+  font-size: 10px;
+  padding: 3px 7px;
+  border-radius: 5px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 150ms ease, transform 150ms var(--spring);
+  z-index: 20;
+}
+.streak-sq:hover .streak-tooltip {
+  opacity: 1;
+  transform: translateX(-50%) scale(1);
+}
+
+/* Widget 5: Best Position */
+.best-ticker {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--gray-900);
+}
+.best-pl {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--green);
+  margin-top: 2px;
+}
+.dte-ring-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 12px;
+}
+.dte-ring-svg {
+  width: 64px;
+  height: 64px;
+}
+.dte-ring-bg {
+  fill: none;
+  stroke: var(--gray-100);
+  stroke-width: 6;
+}
+.dte-ring-fill {
+  fill: none;
+  stroke: var(--purple);
+  stroke-width: 6;
+  stroke-linecap: round;
+  transform: rotate(-90deg);
+  transform-origin: center;
+  stroke-dasharray: 150.8;
+  stroke-dashoffset: 150.8;
+}
+.dte-ring-text {
+  font-size: 14px;
+  font-weight: 700;
+  fill: var(--gray-900);
+}
+
+/* Widget 6: Monthly P&L */
+.monthly-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--green);
+  letter-spacing: -0.02em;
+}
+.bars-container {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  margin-top: 16px;
+  height: 60px;
+}
+.bar-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  position: relative;
+}
+.bar {
+  width: 100%;
+  border-radius: 4px 4px 0 0;
+  transform-origin: bottom;
+  transform: scaleY(0);
+  cursor: pointer;
+  transition: filter 200ms ease;
+}
+.bar:hover {
+  filter: brightness(1.1);
+}
+.bar.purple { background: var(--purple); }
+.bar.red { background: var(--red); }
+.bar-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--gray-400);
+}
+/* Bar tooltip */
+.bar-tooltip {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%) scale(0.8);
+  background: var(--gray-900);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 5px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 150ms ease, transform 150ms var(--spring);
+  z-index: 20;
+}
+.bar-col:hover .bar-tooltip {
+  opacity: 1;
+  transform: translateX(-50%) scale(1);
+}
+
+/* Widget 7: Latest Signal */
+.signal-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.badge-new {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--purple-light);
+  color: var(--purple);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  position: relative;
+}
+.badge-dot {
+  width: 6px;
+  height: 6px;
+  background: var(--purple);
+  border-radius: 50%;
+  position: relative;
+}
+.badge-dot::after,
+.badge-dot::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: var(--purple);
+}
+.badge-dot::after {
+  animation: ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+.badge-dot::before {
+  animation: ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite 0.3s;
+}
+/* Extra rings for NEW badge */
+.badge-ring {
+  position: absolute;
+  top: 50%;
+  left: 12px;
+  width: 6px;
+  height: 6px;
+  border: 1px solid var(--purple);
+  border-radius: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  opacity: 0;
+  pointer-events: none;
+}
+.badge-ring:nth-child(2) { animation: ringExpand 2s ease-out infinite 0s; }
+.badge-ring:nth-child(3) { animation: ringExpand 2s ease-out infinite 0.4s; }
+.badge-ring:nth-child(4) { animation: ringExpand 2s ease-out infinite 0.8s; }
+@keyframes ringExpand {
+  0% { transform: translate(-50%, -50%) scale(1); opacity: 0.5; }
+  100% { transform: translate(-50%, -50%) scale(6); opacity: 0; }
+}
+.signal-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--gray-900);
+  margin-top: 8px;
+}
+.signal-stats {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+.stat-chip {
+  flex: 1;
+  min-width: 80px;
+  padding: 8px 10px;
+  border: 1px solid var(--card-border);
+  border-radius: 10px;
+  text-align: center;
+  transition: border-color 200ms ease, transform 200ms var(--spring);
+}
+.stat-chip:hover {
+  border-color: var(--purple);
+  transform: translateY(-2px);
+}
+.stat-chip-label {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--gray-400);
+  display: block;
+}
+.stat-chip-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--gray-900);
+  margin-top: 2px;
+  display: block;
+}
+.copy-btn {
+  margin-top: 14px;
+  padding: 8px 20px;
+  border: none;
+  border-radius: 999px;
+  background: var(--purple);
+  color: #fff;
+  font-family: 'Inter', system-ui;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 200ms var(--spring), box-shadow 200ms var(--ease), background 300ms ease, width 300ms var(--spring), border-radius 300ms ease;
+  position: relative;
+  overflow: hidden;
+  min-width: 120px;
+}
+.copy-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(122, 90, 248, 0.3);
+}
+.copy-btn.copied {
+  background: var(--green);
+  border-radius: 50%;
+  min-width: 40px;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+}
+/* Click flash */
+.click-flash {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  pointer-events: none;
+  animation: flashOut 150ms ease-out forwards;
+  z-index: 20;
+}
+@keyframes flashOut {
+  0% { transform: scale(0); opacity: 1; }
+  100% { transform: scale(3); opacity: 0; }
+}
+/* Confetti particle */
+.confetti {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 30;
+  animation: confettiBurst 700ms ease-out forwards;
+}
+@keyframes confettiBurst {
+  0% { transform: translate(0, 0) scale(1); opacity: 1; }
+  100% { opacity: 0; }
+}
+/* Green success pulse */
+.success-pulse {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  background: rgba(18, 183, 106, 0.15);
+  pointer-events: none;
+  animation: successPulseOut 500ms ease-out forwards;
+  z-index: 5;
+}
+@keyframes successPulseOut {
+  0% { transform: translate(-50%, -50%) scale(0); opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(3); opacity: 0; }
+}
+
+/* Widget 8: Open Positions */
+.positions-list {
+  max-height: 320px;
+  overflow-y: auto;
+  margin-top: 4px;
+}
+.positions-list::-webkit-scrollbar {
+  width: 4px;
+}
+.positions-list::-webkit-scrollbar-thumb {
+  background: var(--gray-300);
+  border-radius: 4px;
+}
+.position-row-wrapper {
+  position: relative;
+  overflow: hidden;
+  border-radius: 8px;
+}
+.position-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 8px;
+  border-radius: 8px;
+  transition: background 100ms ease, transform 200ms ease;
+  position: relative;
+  z-index: 2;
+  background: var(--card-bg);
+  cursor: grab;
+}
+.position-row-wrapper:nth-child(even) .position-row {
+  background: var(--gray-50);
+}
+.position-row:hover {
+  background: var(--gray-100);
+}
+.position-row:hover .pos-dot {
+  box-shadow: 0 0 8px 2px currentColor;
+}
+.close-pos-btn {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 90px;
+  background: var(--red);
+  color: #fff;
+  font-family: 'Inter', system-ui;
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  cursor: pointer;
+  z-index: 1;
+  border-radius: 0 8px 8px 0;
+}
+.pos-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  transition: box-shadow 200ms ease;
+}
+.pos-info {
+  flex: 1;
+  min-width: 0;
+}
+.pos-ticker {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gray-900);
+}
+.pos-type {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 4px;
+  margin-left: 6px;
+}
+.pos-type.csp { background: var(--purple-light); color: var(--purple); }
+.pos-type.cc { background: var(--blue-light); color: var(--blue); }
+.pos-pl {
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: transform 300ms var(--spring);
+}
+.pos-pl.gain { color: var(--green); }
+.pos-pl.loss { color: var(--red); }
+.pos-pl.pulse-in {
+  animation: plPulse 500ms var(--spring);
+}
+@keyframes plPulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+.dte-bar-bg {
+  width: 40px;
+  height: 4px;
+  background: var(--gray-200);
+  border-radius: 2px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.dte-bar-fill {
+  height: 100%;
+  border-radius: 2px;
+  background: var(--purple);
+}
+
+/* Widget 9: Quick Actions */
+.actions-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.action-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 999px;
+  font-family: 'Inter', system-ui;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  color: #fff;
+  transition: transform 200ms var(--spring), box-shadow 200ms var(--ease);
+  position: relative;
+  overflow: hidden;
+}
+.action-pill:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+}
+.action-pill svg {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+}
+.action-pill.purple { background: var(--purple); }
+.action-pill.blue { background: var(--blue); }
+.action-pill.green { background: var(--green); }
+.action-pill.gray { background: var(--gray-400); }
+
+/* Widget 10: AI Assistant */
+.ai-card {
+  transition: transform 300ms var(--spring);
+}
+.ai-card:hover .chat-bubble {
+  transform: translateY(-3px);
+}
+.chat-bubble {
+  background: var(--purple);
+  color: #fff;
+  padding: 12px 16px;
+  border-radius: 14px 14px 14px 4px;
+  font-size: 13px;
+  line-height: 1.5;
+  font-weight: 400;
+  transition: transform 300ms var(--spring);
+  min-height: 3em;
+}
+.typing-indicator {
+  display: flex;
+  gap: 4px;
+  margin-top: 10px;
+  opacity: 0;
+}
+.typing-indicator.show {
+  opacity: 1;
+  transition: opacity 300ms ease;
+}
+.typing-dot {
+  width: 6px;
+  height: 6px;
+  background: var(--gray-300);
+  border-radius: 50%;
+  animation: typingBounce 1.2s ease-in-out infinite;
+}
+.typing-dot:nth-child(2) { animation-delay: 0.15s; }
+.typing-dot:nth-child(3) { animation-delay: 0.3s; }
+@keyframes typingBounce {
+  0%, 60%, 100% { transform: translateY(0); }
+  30% { transform: translateY(-6px); }
+}
+.ai-input {
+  margin-top: 12px;
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--card-border);
+  border-radius: 10px;
+  font-family: 'Inter', system-ui;
+  font-size: 13px;
+  color: var(--gray-600);
+  background: var(--gray-50);
+  outline: none;
+  transition: border-color 200ms var(--ease), box-shadow 200ms ease;
+  caret-color: var(--purple);
+}
+.ai-input:focus {
+  border-color: var(--purple);
+  box-shadow: 0 0 0 3px rgba(122, 90, 248, 0.1);
+  animation: caretPulse 1.2s ease-in-out infinite;
+}
+@keyframes caretPulse {
+  0%, 100% { caret-color: var(--purple); }
+  50% { caret-color: transparent; }
+}
+
+/* Widget 11: Sector Breakdown */
+.stacked-bar {
+  display: flex;
+  height: 10px;
+  border-radius: 5px;
+  overflow: hidden;
+  margin-top: 4px;
+}
+.stacked-bar > div {
+  height: 100%;
+  transition: width 0.8s var(--ease);
+}
+.sector-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  margin-top: 14px;
+}
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--gray-500);
+  font-weight: 400;
+}
+.legend-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* Footer */
+.footer {
+  text-align: center;
+  padding: 16px 0 12px;
+  font-size: 12px;
+  color: var(--gray-400);
+}
+
+/* Red bar shake */
+@keyframes barShake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-2px); }
+  40% { transform: translateX(2px); }
+  60% { transform: translateX(-1px); }
+  80% { transform: translateX(1px); }
+}
+.bar.red.shake {
+  animation: barShake 400ms ease;
+}
+
+/* Magnetic button class */
+.magnetic {
+  transition: transform 100ms ease-out;
+}
+
+/* Radial wipe for dot grid */
+@keyframes radialWipe {
+  0% {
+    -webkit-mask-image: radial-gradient(circle at center, black 0%, transparent 0%);
+    mask-image: radial-gradient(circle at center, black 0%, transparent 0%);
+  }
+  100% {
+    -webkit-mask-image: radial-gradient(circle at center, black 100%, transparent 100%);
+    mask-image: radial-gradient(circle at center, black 100%, transparent 100%);
+  }
+}
+body.loading {
+  background-image: none;
+}
+body.dot-reveal {
+  animation: dotReveal 400ms ease-out forwards;
+}
+@keyframes dotReveal {
+  0% {
+    background-image: radial-gradient(circle, #EAECF0 1.25px, transparent 1.25px);
+    background-size: 20px 20px;
+    -webkit-mask-image: radial-gradient(circle at 50% 40%, black 0%, transparent 0%);
+    mask-image: radial-gradient(circle at 50% 40%, black 0%, transparent 0%);
+  }
+  100% {
+    background-image: radial-gradient(circle, #EAECF0 1.25px, transparent 1.25px);
+    background-size: 20px 20px;
+    -webkit-mask-image: radial-gradient(circle at 50% 40%, black 200%, transparent 200%);
+    mask-image: radial-gradient(circle at 50% 40%, black 200%, transparent 200%);
+  }
+}
+</style>
+</head>
+<body class="loading">
+
+<!-- Scroll Progress -->
+<div id="scrollProgress"></div>
+
+<!-- Cursor Glow -->
+<div id="cursorGlow"></div>
+
+<!-- Dot Grid Spotlight -->
+<div id="dotSpotlight"></div>
+
+<div class="breath-wrap">
+<div class="container">
+  <!-- Header -->
+  <header class="header" id="mainHeader">
+    <div class="header-brand">ana.sh</div>
+    <div class="header-greeting" id="greeting">hey beau</div>
+    <div class="header-right">
+      <div class="market-status-badge" id="marketBadge">
+        <div class="status-dot-wrapper">
+          <span class="status-dot-ping" id="statusPing"></span>
+          <span class="status-dot" id="statusDot"></span>
+        </div>
+        <span id="marketStatusText">market open</span>
+      </div>
+      <div class="avatar">B</div>
+    </div>
+  </header>
+
+  <!-- Bento Grid -->
+  <div class="bento-grid" id="bentoGrid">
+
+    <!-- W1: Portfolio Value (col-span-2) -->
+    <div class="card col-span-2" id="hero-card" data-deal="0">
+      <div class="card-label">portfolio value</div>
+      <div class="portfolio-value-num" id="portfolioValue"></div>
+      <span class="portfolio-change">+$2,847 (+1.96%)</span>
+      <div class="sparkline-container">
+        <svg viewBox="0 0 400 60" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="sparkGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#7A5AF8" stop-opacity="0.25"/>
+              <stop offset="100%" stop-color="#7A5AF8" stop-opacity="0"/>
+            </linearGradient>
+            <filter id="glowFilter">
+              <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+              <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+          </defs>
+          <path class="sparkline-fill" id="sparkFill" d="M0,45 L30,40 60,42 90,35 120,38 150,30 180,28 210,32 240,22 270,18 300,20 330,12 360,10 390,6 400,4 400,60 0,60Z" fill="url(#sparkGrad)"/>
+          <path class="sparkline-path" id="sparkPath" d="M0,45 L30,40 60,42 90,35 120,38 150,30 180,28 210,32 240,22 270,18 300,20 330,12 360,10 390,6 400,4" fill="none" stroke="var(--purple)" stroke-width="2"/>
+          <!-- Ghost dots trailing behind the pulse endpoint -->
+          <circle class="ghost-dot" cx="370" cy="8" r="2"/>
+          <circle class="ghost-dot" cx="380" cy="6.5" r="2"/>
+          <circle class="ghost-dot" cx="390" cy="5" r="2"/>
+          <circle class="sparkline-dot" cx="400" cy="4" r="3"/>
+          <!-- Glow dot that moves along the draw path -->
+          <circle class="sparkline-glow-dot" id="sparkGlowDot" cx="0" cy="45" r="5" filter="url(#glowFilter)"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- W2: Market Status -->
+    <div class="card col-span-1 market-card" id="marketCard" data-deal="1">
+      <div class="card-label">market status</div>
+      <div class="market-ticker">SPY</div>
+      <div class="market-price" id="spy-price"></div>
+      <div class="market-open-row">
+        <div class="status-dot-wrapper" style="width:6px;height:6px;">
+          <span class="status-dot-ping" id="marketCardPing" style="width:6px;height:6px;"></span>
+          <span class="status-dot" id="marketCardDot" style="width:6px;height:6px;"></span>
+        </div>
+        <span class="market-open-label" id="marketCardLabel">Open</span>
+      </div>
+      <div class="market-change" id="spy-change">+0.84%</div>
+      <div class="mini-candle-container" id="miniCandles"></div>
+    </div>
+
+    <!-- W3: Win Rate Ring -->
+    <div class="card col-span-1" data-deal="2">
+      <div class="card-label">win rate</div>
+      <div class="ring-container">
+        <svg class="ring-svg" viewBox="0 0 100 100">
+          <circle class="ring-bg" cx="50" cy="50" r="36"/>
+          <circle class="ring-fill" id="winRing" cx="50" cy="50" r="36"/>
+          <circle class="ring-sparkle" id="ringSparkle" cx="50" cy="14" r="0"/>
+          <text class="ring-center-text" x="50" y="50" text-anchor="middle" dominant-baseline="central">87%</text>
+        </svg>
+        <span class="ring-sub">last 30 days</span>
+      </div>
+    </div>
+
+    <!-- W4: Streak Counter -->
+    <div class="card col-span-1" data-deal="3">
+      <div class="card-label">trading streak</div>
+      <div style="display:flex;align-items:baseline;gap:6px;">
+        <span class="streak-num">12</span>
+        <span style="font-size:24px;">&#128293;</span>
+      </div>
+      <div class="streak-label">Day Streak</div>
+      <div class="streak-squares" id="streakSquares"></div>
+      <div class="streak-best">Personal best: 18</div>
+    </div>
+
+    <!-- W5: Best Position -->
+    <div class="card col-span-1" data-deal="4">
+      <div class="card-label">top performer</div>
+      <div class="best-ticker">AAPL $185P</div>
+      <div class="best-pl">+$420 (+12.3%)</div>
+      <div class="dte-ring-container">
+        <svg class="dte-ring-svg" viewBox="0 0 80 80">
+          <circle class="dte-ring-bg" cx="40" cy="40" r="24"/>
+          <circle class="dte-ring-fill" id="dteRing" cx="40" cy="40" r="24"/>
+          <text class="dte-ring-text" x="40" y="38" text-anchor="middle" dominant-baseline="central">18</text>
+          <text x="40" y="50" text-anchor="middle" font-size="9" fill="#98A2B3" font-family="Inter,system-ui">DTE</text>
+        </svg>
+      </div>
+    </div>
+
+    <!-- W6: Monthly P&L -->
+    <div class="card col-span-1" data-deal="5">
+      <div class="card-label">monthly p&l</div>
+      <div class="monthly-value">$4,280</div>
+      <div class="bars-container" id="barsContainer">
+        <div class="bar-col" data-val="+$1,420">
+          <div class="bar-tooltip">+$1,420</div>
+          <div class="bar purple" style="height:45px;" data-target-height="45"></div>
+          <span class="bar-label">W1</span>
+        </div>
+        <div class="bar-col" data-val="+$2,180">
+          <div class="bar-tooltip">+$2,180</div>
+          <div class="bar purple" style="height:55px;" data-target-height="55"></div>
+          <span class="bar-label">W2</span>
+        </div>
+        <div class="bar-col" data-val="-$640">
+          <div class="bar-tooltip">-$640</div>
+          <div class="bar red" style="height:25px;" data-target-height="25"></div>
+          <span class="bar-label">W3</span>
+        </div>
+        <div class="bar-col" data-val="+$1,320">
+          <div class="bar-tooltip">+$1,320</div>
+          <div class="bar purple" style="height:50px;" data-target-height="50"></div>
+          <span class="bar-label">W4</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- W7: Latest Signal (col-span-2) -->
+    <div class="card col-span-2" id="signalCard" data-deal="6">
+      <div class="card-label">latest signal</div>
+      <div class="signal-header">
+        <span class="badge-new">
+          <span class="badge-dot"></span> NEW
+          <span class="badge-ring"></span>
+          <span class="badge-ring"></span>
+          <span class="badge-ring"></span>
+        </span>
+      </div>
+      <div class="signal-title">NVDA $420P CSP</div>
+      <div class="signal-stats">
+        <div class="stat-chip">
+          <span class="stat-chip-label">Premium</span>
+          <span class="stat-chip-value">$5.80</span>
+        </div>
+        <div class="stat-chip">
+          <span class="stat-chip-label">Delta</span>
+          <span class="stat-chip-value">0.22</span>
+        </div>
+        <div class="stat-chip">
+          <span class="stat-chip-label">DTE</span>
+          <span class="stat-chip-value">28</span>
+        </div>
+        <div class="stat-chip">
+          <span class="stat-chip-label">IV Rank</span>
+          <span class="stat-chip-value">42%</span>
+        </div>
+      </div>
+      <button class="copy-btn magnetic" id="copyBtn">Copy Trade</button>
+    </div>
+
+    <!-- W8: Open Positions (col-span-2, row-span-2) -->
+    <div class="card col-span-2 row-span-2" data-deal="7">
+      <div class="card-label">open positions (8)</div>
+      <div class="positions-list" id="positionsList"></div>
+    </div>
+
+    <!-- W9: Quick Actions (col-span-2) -->
+    <div class="card col-span-2" data-deal="8">
+      <div class="card-label">quick actions</div>
+      <div class="actions-row">
+        <button class="action-pill purple magnetic">
+          <svg viewBox="0 0 16 16"><path d="M8 1a1 1 0 011 1v5h5a1 1 0 110 2H9v5a1 1 0 11-2 0V9H2a1 1 0 010-2h5V2a1 1 0 011-1z"/></svg>
+          Add Position
+        </button>
+        <button class="action-pill blue magnetic">
+          <svg viewBox="0 0 16 16"><path d="M2 3a1 1 0 011-1h10a1 1 0 110 2H3a1 1 0 01-1-1zm0 5a1 1 0 011-1h6a1 1 0 110 2H3a1 1 0 01-1-1zm0 5a1 1 0 011-1h8a1 1 0 110 2H3a1 1 0 01-1-1z"/></svg>
+          View Signals
+        </button>
+        <button class="action-pill green magnetic">
+          <svg viewBox="0 0 16 16"><path d="M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13zM7 5a1 1 0 012 0v3.586l1.707 1.707a1 1 0 01-1.414 1.414l-2-2A1 1 0 017 9V5z"/></svg>
+          Learn
+        </button>
+        <button class="action-pill gray magnetic">
+          <svg viewBox="0 0 16 16"><path d="M8 10a2 2 0 100-4 2 2 0 000 4zm6.32-1.906a6.6 6.6 0 000-1.188l1.336-1.05a.32.32 0 00.076-.4l-1.264-2.19a.318.318 0 00-.388-.14l-1.576.634a6.5 6.5 0 00-1.028-.594L11.2.578A.31.31 0 0010.882.27H8.354a.31.31 0 00-.308.268l-.236 1.688a6.5 6.5 0 00-1.028.594L5.206 2.186a.308.308 0 00-.388.14L3.554 4.516a.312.312 0 00.076.4l1.336 1.05a6.6 6.6 0 000 1.188L3.63 8.204a.32.32 0 00-.076.4l1.264 2.19c.078.136.246.188.388.14l1.576-.634c.316.232.66.43 1.028.594l.236 1.688a.31.31 0 00.308.268h2.528a.31.31 0 00.308-.268l.236-1.688c.368-.164.712-.362 1.028-.594l1.576.634a.308.308 0 00.388-.14l1.264-2.19a.312.312 0 00-.076-.4l-1.336-1.05z"/></svg>
+          Settings
+        </button>
+      </div>
+    </div>
+
+    <!-- W10: AI Assistant -->
+    <div class="card col-span-1 ai-card" data-deal="9">
+      <div class="card-label">ask wheely</div>
+      <div class="chat-bubble" id="chatBubble"></div>
+      <div class="typing-indicator" id="typingIndicator">
+        <span class="typing-dot"></span>
+        <span class="typing-dot"></span>
+        <span class="typing-dot"></span>
+      </div>
+      <input class="ai-input" type="text" placeholder="Ask a question...">
+    </div>
+
+    <!-- W11: Sector Breakdown -->
+    <div class="card col-span-1" data-deal="10">
+      <div class="card-label">sector exposure</div>
+      <div class="stacked-bar">
+        <div style="width:45%;background:var(--purple);"></div>
+        <div style="width:20%;background:var(--blue);"></div>
+        <div style="width:15%;background:var(--green);"></div>
+        <div style="width:10%;background:var(--amber);"></div>
+        <div style="width:10%;background:var(--gray-300);"></div>
+      </div>
+      <div class="sector-legend">
+        <div class="legend-item"><span class="legend-dot" style="background:var(--purple);"></span>Tech 45%</div>
+        <div class="legend-item"><span class="legend-dot" style="background:var(--blue);"></span>Healthcare 20%</div>
+        <div class="legend-item"><span class="legend-dot" style="background:var(--green);"></span>Finance 15%</div>
+        <div class="legend-item"><span class="legend-dot" style="background:var(--amber);"></span>Energy 10%</div>
+        <div class="legend-item"><span class="legend-dot" style="background:var(--gray-300);"></span>Other 10%</div>
+      </div>
+    </div>
+
+  </div><!-- /bento-grid -->
+
+  <!-- Footer -->
+  <footer class="footer">
+    ana.sh &middot; Last updated <span id="liveClock"></span>
+  </footer>
+</div>
+</div>
+
+<script>
+/* ====================================================================
+   ana.sh — OVERKILL MODE
+   Every pixel breathes, every interaction responds.
+   ==================================================================== */
+
+// ── TIME OF DAY ──
+(function timeOfDay() {
+  const h = new Date().getHours();
+  const greetEl = document.getElementById('greeting');
+  const statusText = document.getElementById('marketStatusText');
+  const statusDot = document.getElementById('statusDot');
+  const statusPing = document.getElementById('statusPing');
+  const badge = document.getElementById('marketBadge');
+  const mcDot = document.getElementById('marketCardDot');
+  const mcPing = document.getElementById('marketCardPing');
+  const mcLabel = document.getElementById('marketCardLabel');
+
+  let greeting, marketStatus, statusColor;
+
+  if (h >= 4 && h < 9.5) {
+    greeting = 'hey beau, good morning';
+    marketStatus = 'Pre-Market';
+    statusColor = 'var(--amber)';
+    document.documentElement.style.setProperty('--purple', '#8B6CF8');
+  } else if (h >= 9.5 || (h === 9 && new Date().getMinutes() >= 30)) {
+    if (h < 16) {
+      greeting = 'hey beau, good morning';
+      if (h >= 12) greeting = 'hey beau, good afternoon';
+      marketStatus = 'Market Open';
+      statusColor = 'var(--green)';
+    } else if (h < 20) {
+      greeting = 'hey beau, good evening';
+      marketStatus = 'After Hours';
+      statusColor = 'var(--amber)';
+      document.documentElement.style.setProperty('--purple', '#6B4CE0');
+    } else {
+      greeting = 'hey beau, late night grind';
+      marketStatus = 'Market Closed';
+      statusColor = 'var(--red)';
+      document.documentElement.style.setProperty('--purple', '#6048D0');
+    }
+  } else {
+    greeting = 'hey beau, late night grind';
+    marketStatus = 'Market Closed';
+    statusColor = 'var(--red)';
+    document.documentElement.style.setProperty('--purple', '#6048D0');
+  }
+
+  // Correct morning/afternoon based purely on hour
+  if (h >= 5 && h < 12) greeting = 'hey beau, good morning';
+  else if (h >= 12 && h < 17) greeting = 'hey beau, good afternoon';
+  else if (h >= 17 && h < 22) greeting = 'hey beau, good evening';
+  else greeting = 'hey beau, late night grind';
+
+  greetEl.textContent = greeting;
+  statusText.textContent = marketStatus;
+  [statusDot, statusPing, mcDot, mcPing].forEach(el => { if (el) el.style.background = statusColor; });
+  badge.style.color = statusColor;
+  if (mcLabel) { mcLabel.textContent = marketStatus; mcLabel.style.color = statusColor; }
+})();
+
+// ── CURSOR GLOW ──
+const cursorGlow = document.getElementById('cursorGlow');
+let mouseX = 0, mouseY = 0;
+document.addEventListener('mousemove', e => {
+  mouseX = e.clientX;
+  mouseY = e.clientY;
+  cursorGlow.style.left = e.clientX + 'px';
+  cursorGlow.style.top = e.clientY + 'px';
+});
+
+// ── DOT GRID SPOTLIGHT ──
+const dotSpotlight = document.getElementById('dotSpotlight');
+document.addEventListener('mousemove', e => {
+  if (e.clientY < 400) {
+    dotSpotlight.style.opacity = '1';
+    dotSpotlight.style.background = `radial-gradient(circle 200px at ${e.clientX}px ${e.clientY}px, rgba(122,90,248,0.04) 0%, transparent 100%)`;
+  } else {
+    dotSpotlight.style.opacity = '0';
+  }
+});
+
+// ── FLOATING PARTICLES ──
+(function createParticles() {
+  for (let i = 0; i < 10; i++) {
+    const p = document.createElement('div');
+    p.className = 'floating-particle';
+    p.style.left = (Math.random() * 100) + 'vw';
+    p.style.top = (Math.random() * 100) + 'vh';
+    document.body.appendChild(p);
+    animateParticle(p);
+  }
+  function animateParticle(el) {
+    const dur = 8000 + Math.random() * 12000;
+    const startX = Math.random() * window.innerWidth;
+    const startY = window.innerHeight + 20;
+    el.style.left = startX + 'px';
+    el.style.top = startY + 'px';
+    el.style.opacity = '0';
+    const anim = el.animate([
+      { transform: 'translateY(0) translateX(0)', opacity: 0 },
+      { opacity: 0.05, offset: 0.1 },
+      { transform: `translateY(-${window.innerHeight + 40}px) translateX(${(Math.random()-0.5)*80}px)`, opacity: 0 }
+    ], { duration: dur, easing: 'linear' });
+    anim.onfinish = () => animateParticle(el);
+  }
+})();
+
+// ── SCROLL PROGRESS ──
+const scrollProgress = document.getElementById('scrollProgress');
+window.addEventListener('scroll', () => {
+  const scrollTop = document.documentElement.scrollTop;
+  const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
+  const pct = scrollHeight > 0 ? (scrollTop / scrollHeight) * 100 : 0;
+  scrollProgress.style.width = pct + '%';
+
+  // Header glassmorphism boost on scroll
+  const header = document.getElementById('mainHeader');
+  if (scrollTop > 150) {
+    header.classList.add('scrolled');
+  } else {
+    header.classList.remove('scrolled');
+  }
+}, { passive: true });
+
+// ── 3D CARD TILT (ALL CARDS) ──
+(function setupTilt() {
+  const cards = document.querySelectorAll('.card');
+  cards.forEach(card => {
+    let tiltX = 0, tiltY = 0, targetTiltX = 0, targetTiltY = 0;
+    let highlightX = 50, highlightY = 50;
+    let rafId = null;
+    let isHovering = false;
+
+    // Spring physics for return to flat
+    let velX = 0, velY = 0;
+    const stiffness = 0.08;
+    const damping = 0.7;
+
+    function updateTilt() {
+      if (isHovering) {
+        tiltX += (targetTiltX - tiltX) * 0.15;
+        tiltY += (targetTiltY - tiltY) * 0.15;
+      } else {
+        // Spring physics
+        const forceX = -tiltX * stiffness;
+        const forceY = -tiltY * stiffness;
+        velX = (velX + forceX) * damping;
+        velY = (velY + forceY) * damping;
+        tiltX += velX;
+        tiltY += velY;
+        highlightX += (50 - highlightX) * 0.1;
+        highlightY += (50 - highlightY) * 0.1;
+      }
+
+      card.style.transform = `perspective(800px) rotateX(${tiltX}deg) rotateY(${tiltY}deg) translateZ(${isHovering ? 20 : 0}px) scale(${isHovering ? 1.01 : 1})`;
+
+      // Specular highlight
+      card.style.setProperty('--hl-x', highlightX + '%');
+      card.style.setProperty('--hl-y', highlightY + '%');
+      if (card.querySelector(':scope')  ) {
+        card.style.background = `radial-gradient(circle at ${highlightX}% ${highlightY}%, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0) 50%), #fff`;
+      }
+
+      if (isHovering || Math.abs(tiltX) > 0.01 || Math.abs(tiltY) > 0.01) {
+        rafId = requestAnimationFrame(updateTilt);
+      } else {
+        tiltX = 0; tiltY = 0;
+        card.style.transform = '';
+        card.style.background = '';
+        rafId = null;
+      }
+    }
+
+    card.addEventListener('mouseenter', e => {
+      isHovering = true;
+      cursorGlow.classList.add('focused');
+      // Ripple from entry point
+      const rect = card.getBoundingClientRect();
+      const ripple = document.createElement('div');
+      ripple.className = 'ripple';
+      ripple.style.width = '100px';
+      ripple.style.height = '100px';
+      ripple.style.left = (e.clientX - rect.left - 50) + 'px';
+      ripple.style.top = (e.clientY - rect.top - 50) + 'px';
+      card.appendChild(ripple);
+      setTimeout(() => ripple.remove(), 600);
+      if (!rafId) rafId = requestAnimationFrame(updateTilt);
+    });
+
+    card.addEventListener('mousemove', e => {
+      const rect = card.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      const centerX = rect.width / 2;
+      const centerY = rect.height / 2;
+      targetTiltX = ((y - centerY) / centerY) * -8;
+      targetTiltY = ((x - centerX) / centerX) * 8;
+      // Highlight moves opposite to tilt
+      highlightX = 100 - (x / rect.width * 100);
+      highlightY = 100 - (y / rect.height * 100);
+    });
+
+    card.addEventListener('mouseleave', () => {
+      isHovering = false;
+      targetTiltX = 0;
+      targetTiltY = 0;
+      velX = tiltX * 0.05;
+      velY = tiltY * 0.05;
+      cursorGlow.classList.remove('focused');
+      if (!rafId) rafId = requestAnimationFrame(updateTilt);
+    });
+  });
+})();
+
+// ── MAGNETIC BUTTONS ──
+(function magneticButtons() {
+  document.querySelectorAll('.magnetic').forEach(btn => {
+    btn.addEventListener('mousemove', e => {
+      const rect = btn.getBoundingClientRect();
+      const bx = rect.left + rect.width / 2;
+      const by = rect.top + rect.height / 2;
+      const dx = e.clientX - bx;
+      const dy = e.clientY - by;
+      const dist = Math.sqrt(dx*dx + dy*dy);
+      if (dist < 80) {
+        const pull = (1 - dist / 80) * 8;
+        btn.style.transform = `translate(${dx / dist * pull}px, ${dy / dist * pull}px) scale(1.05)`;
+      }
+    });
+    btn.addEventListener('mouseleave', () => {
+      btn.style.transform = '';
+    });
+    // Click flash
+    btn.addEventListener('click', e => {
+      const rect = btn.getBoundingClientRect();
+      const flash = document.createElement('div');
+      flash.className = 'click-flash';
+      flash.style.width = '40px';
+      flash.style.height = '40px';
+      flash.style.left = (e.clientX - rect.left - 20) + 'px';
+      flash.style.top = (e.clientY - rect.top - 20) + 'px';
+      btn.appendChild(flash);
+      setTimeout(() => flash.remove(), 200);
+    });
+  });
+})();
+
+// ── PORTFOLIO VALUE SLOT MACHINE COUNTER ──
+function createDigitRoller(container, targetStr) {
+  container.innerHTML = '';
+  for (let i = 0; i < targetStr.length; i++) {
+    const ch = targetStr[i];
+    if (isNaN(parseInt(ch))) {
+      // Static character ($, comma, .)
+      const span = document.createElement('span');
+      span.textContent = ch;
+      span.style.display = 'inline-block';
+      container.appendChild(span);
+    } else {
+      const digit = parseInt(ch);
+      const roller = document.createElement('div');
+      roller.className = 'digit-roller';
+      const inner = document.createElement('div');
+      inner.className = 'digit-roller-inner';
+      // Create digits 0-9 + land on target
+      for (let d = 0; d <= 9; d++) {
+        const s = document.createElement('span');
+        s.textContent = d;
+        inner.appendChild(s);
+      }
+      roller.appendChild(inner);
+      container.appendChild(roller);
+
+      // Animate: start from 0, roll to target digit
+      setTimeout(() => {
+        inner.style.transform = `translateY(-${digit * 1.15}em)`;
+      }, 800 + i * 80);
+    }
+  }
+}
+
+// ── SPY PRICE ROLLING DIGITS ──
+function createPriceDigits(container, priceStr) {
+  container.innerHTML = '';
+  for (let i = 0; i < priceStr.length; i++) {
+    const ch = priceStr[i];
+    if (isNaN(parseInt(ch))) {
+      const span = document.createElement('span');
+      span.textContent = ch;
+      span.style.display = 'inline-block';
+      container.appendChild(span);
+    } else {
+      const digit = parseInt(ch);
+      const roller = document.createElement('div');
+      roller.className = 'price-digit';
+      roller.dataset.index = i;
+      const inner = document.createElement('div');
+      inner.className = 'price-digit-inner';
+      for (let d = 0; d <= 9; d++) {
+        const s = document.createElement('span');
+        s.textContent = d;
+        inner.appendChild(s);
+      }
+      roller.appendChild(inner);
+      container.appendChild(roller);
+      inner.style.transform = `translateY(-${digit * 1.2}em)`;
+    }
+  }
+}
+
+function updatePriceDigits(container, newPriceStr, oldPriceStr) {
+  const rollers = container.querySelectorAll('.price-digit');
+  let rIdx = 0;
+  for (let i = 0; i < newPriceStr.length; i++) {
+    const ch = newPriceStr[i];
+    if (!isNaN(parseInt(ch))) {
+      if (rollers[rIdx]) {
+        const inner = rollers[rIdx].querySelector('.price-digit-inner');
+        const digit = parseInt(ch);
+        inner.style.transform = `translateY(-${digit * 1.2}em)`;
+      }
+      rIdx++;
+    }
+  }
+}
+
+// ── SPARKLINE DRAW WITH TRAILING GLOW ──
+function animateSparkline() {
+  const path = document.getElementById('sparkPath');
+  const fill = document.getElementById('sparkFill');
+  const glowDot = document.getElementById('sparkGlowDot');
+  if (!path) return;
+
+  const totalLength = path.getTotalLength();
+  path.style.strokeDasharray = totalLength;
+  path.style.strokeDashoffset = totalLength;
+
+  // Animate draw
+  const drawDuration = 800;
+  const startTime = performance.now();
+
+  function drawStep(now) {
+    const elapsed = now - startTime;
+    const progress = Math.min(elapsed / drawDuration, 1);
+    const eased = 1 - Math.pow(1 - progress, 3); // ease-out cubic
+    path.style.strokeDashoffset = totalLength * (1 - eased);
+
+    // Move glow dot along path
+    const pt = path.getPointAtLength(totalLength * eased);
+    glowDot.setAttribute('cx', pt.x);
+    glowDot.setAttribute('cy', pt.y);
+    glowDot.style.opacity = progress < 1 ? 0.9 : 0;
+
+    if (progress < 1) {
+      requestAnimationFrame(drawStep);
+    } else {
+      // Fade in fill area
+      fill.style.transition = 'opacity 0.5s ease';
+      fill.style.opacity = '1';
+      glowDot.style.transition = 'opacity 0.3s';
+      glowDot.style.opacity = '0';
+    }
+  }
+
+  requestAnimationFrame(drawStep);
+}
+
+// ── WIN RATE RING LIQUID FILL ──
+function animateWinRing() {
+  const ring = document.getElementById('winRing');
+  const sparkle = document.getElementById('ringSparkle');
+  if (!ring) return;
+
+  const targetOffset = 29.4; // 87% fill
+  const totalDash = 226.2;
+  const duration = 1200;
+  const start = performance.now();
+
+  function step(now) {
+    const elapsed = now - start;
+    let progress = Math.min(elapsed / duration, 1);
+    // Add slight wobble for liquid feel
+    const wobble = Math.sin(progress * Math.PI * 6) * (1 - progress) * 8;
+    const currentOffset = totalDash - (totalDash - targetOffset) * progress + wobble;
+    ring.style.strokeDashoffset = Math.max(targetOffset - 5, currentOffset);
+
+    if (progress < 1) {
+      requestAnimationFrame(step);
+    } else {
+      ring.style.strokeDashoffset = targetOffset;
+      // Sparkle at endpoint
+      sparkle.style.animation = 'sparkle 500ms ease-out forwards';
+    }
+  }
+
+  requestAnimationFrame(step);
+}
+
+// ── DTE RING ANIMATE ──
+function animateDteRing() {
+  const ring = document.getElementById('dteRing');
+  if (!ring) return;
+  const target = 90.5;
+  const total = 150.8;
+  const duration = 1000;
+  const start = performance.now();
+  function step(now) {
+    const progress = Math.min((now - start) / duration, 1);
+    const eased = 1 - Math.pow(1 - progress, 3);
+    ring.style.strokeDashoffset = total - (total - target) * eased;
+    if (progress < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
+// ── BARS SPRING ANIMATION ──
+function animateBars() {
+  const bars = document.querySelectorAll('.bar');
+  bars.forEach((bar, i) => {
+    const targetH = parseInt(bar.dataset.targetHeight) || 40;
+    const delay = i * 100;
+    const isRed = bar.classList.contains('red');
+
+    setTimeout(() => {
+      const duration = 600;
+      const start = performance.now();
+      function step(now) {
+        const elapsed = now - start;
+        let progress = Math.min(elapsed / duration, 1);
+        // Spring overshoot
+        const spring = progress < 1
+          ? 1 - Math.pow(1 - progress, 3) * Math.cos(progress * Math.PI * 1.5)
+          : 1;
+        const scale = Math.max(0, Math.min(spring, 1.15));
+        bar.style.transform = `scaleY(${scale})`;
+
+        if (progress < 1) {
+          requestAnimationFrame(step);
+        } else {
+          bar.style.transform = 'scaleY(1)';
+          if (isRed) {
+            bar.classList.add('shake');
+            setTimeout(() => bar.classList.remove('shake'), 500);
+          }
+        }
+      }
+      requestAnimationFrame(step);
+    }, delay + 1000);
+  });
+}
+
+// ── STREAK SQUARES ──
+(function buildStreak() {
+  const container = document.getElementById('streakSquares');
+  const today = new Date();
+  for (let i = 0; i < 14; i++) {
+    const sq = document.createElement('div');
+    sq.className = 'streak-sq';
+    if (i < 12) sq.classList.add('filled');
+    else if (i === 12) sq.classList.add('today');
+    else sq.classList.add('empty');
+
+    // Tooltip with date
+    const d = new Date(today);
+    d.setDate(d.getDate() - (13 - i));
+    const tooltip = document.createElement('div');
+    tooltip.className = 'streak-tooltip';
+    tooltip.textContent = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    sq.appendChild(tooltip);
+
+    container.appendChild(sq);
+
+    // Stagger pop-in animation
+    setTimeout(() => {
+      sq.classList.add('pop');
+    }, 1000 + i * 50);
+  }
+})();
+
+// ── OPEN POSITIONS ──
+(function buildPositions() {
+  const positions = [
+    { ticker: 'AAPL', strike: '$185P', type: 'CSP', pl: '+$420', gain: true, dte: 0.4, color: '#7A5AF8' },
+    { ticker: 'NVDA', strike: '$420P', type: 'CSP', pl: '+$280', gain: true, dte: 0.6, color: '#12B76A' },
+    { ticker: 'MSFT', strike: '$400P', type: 'CSP', pl: '+$195', gain: true, dte: 0.35, color: '#2E90FA' },
+    { ticker: 'AMD', strike: '$140P', type: 'CSP', pl: '-$45', gain: false, dte: 0.8, color: '#F04438' },
+    { ticker: 'GOOGL', strike: '$165P', type: 'CSP', pl: '+$310', gain: true, dte: 0.25, color: '#F79009' },
+    { ticker: 'TSLA', strike: '$250C', type: 'CC', pl: '+$680', gain: true, dte: 0.55, color: '#7A5AF8' },
+    { ticker: 'AMZN', strike: '$210C', type: 'CC', pl: '-$115', gain: false, dte: 0.7, color: '#2E90FA' },
+    { ticker: 'META', strike: '$500C', type: 'CC', pl: '+$155', gain: true, dte: 0.45, color: '#12B76A' },
+  ];
+  const list = document.getElementById('positionsList');
+  positions.forEach(p => {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'position-row-wrapper';
+
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'close-pos-btn';
+    closeBtn.textContent = 'Close Position';
+    wrapper.appendChild(closeBtn);
+
+    const row = document.createElement('div');
+    row.className = 'position-row';
+    row.innerHTML = `
+      <span class="pos-dot" style="background:${p.color};color:${p.color}"></span>
+      <div class="pos-info">
+        <span class="pos-ticker">${p.ticker} ${p.strike}</span>
+        <span class="pos-type ${p.type.toLowerCase()}">${p.type}</span>
+      </div>
+      <span class="pos-pl ${p.gain ? 'gain' : 'loss'}">${p.pl}</span>
+      <div class="dte-bar-bg"><div class="dte-bar-fill" style="width:${p.dte * 100}%"></div></div>
+    `;
+
+    // Swipe to reveal close button
+    let startX = 0, currentX = 0, isDragging = false;
+    row.addEventListener('mousedown', e => {
+      startX = e.clientX;
+      isDragging = true;
+      row.style.transition = 'none';
+    });
+    row.addEventListener('mousemove', e => {
+      if (!isDragging) return;
+      currentX = e.clientX - startX;
+      if (currentX < -10) {
+        row.style.transform = `translateX(${Math.max(currentX, -90)}px)`;
+      }
+    });
+    const resetSwipe = () => {
+      isDragging = false;
+      row.style.transition = 'transform 300ms cubic-bezier(0.34, 1.56, 0.64, 1)';
+      if (currentX < -50) {
+        row.style.transform = 'translateX(-90px)';
+      } else {
+        row.style.transform = 'translateX(0)';
+      }
+      currentX = 0;
+    };
+    row.addEventListener('mouseup', resetSwipe);
+    row.addEventListener('mouseleave', () => { if (isDragging) resetSwipe(); });
+
+    wrapper.appendChild(row);
+    list.appendChild(wrapper);
+  });
+
+  // Intersection observer for P&L pulse
+  const plEls = list.querySelectorAll('.pos-pl');
+  const obs = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('pulse-in');
+        obs.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.5 });
+  plEls.forEach(el => obs.observe(el));
+})();
+
+// ── SPY PRICE TICK ──
+(function spyTicker() {
+  let price = 478.92;
+  const container = document.getElementById('spy-price');
+  const changeEl = document.getElementById('spy-change');
+  const marketCard = document.getElementById('marketCard');
+  const candleContainer = document.getElementById('miniCandles');
+  const basePrice = 474.92;
+  let lastPriceStr = '$' + price.toFixed(2);
+  let candles = [];
+  let candleCount = 0;
+
+  // Initialize price digits
+  createPriceDigits(container, lastPriceStr);
+
+  // Initial candles
+  for (let i = 0; i < 8; i++) {
+    const open = 477 + Math.random() * 4;
+    const close = open + (Math.random() - 0.45) * 2;
+    candles.push({ open, close, high: Math.max(open, close) + Math.random(), low: Math.min(open, close) - Math.random() });
+  }
+  renderCandles();
+
+  function renderCandles() {
+    candleContainer.innerHTML = '';
+    const maxH = Math.max(...candles.map(c => c.high));
+    const minL = Math.min(...candles.map(c => c.low));
+    const range = maxH - minL || 1;
+
+    candles.forEach(c => {
+      const isGreen = c.close >= c.open;
+      const bodyTop = Math.max(c.open, c.close);
+      const bodyBot = Math.min(c.open, c.close);
+      const wickH = ((c.high - bodyTop) / range) * 28;
+      const bodyH = Math.max(2, ((bodyTop - bodyBot) / range) * 28);
+      const wickL = ((bodyBot - c.low) / range) * 28;
+
+      const candle = document.createElement('div');
+      candle.className = 'mini-candle';
+      candle.innerHTML = `
+        <div class="candle-wick" style="height:${wickH}px"></div>
+        <div class="candle-body" style="height:${bodyH}px;background:${isGreen ? 'var(--green)' : 'var(--red)'}"></div>
+        <div class="candle-wick" style="height:${wickL}px"></div>
+      `;
+      candleContainer.appendChild(candle);
+    });
+  }
+
+  setInterval(() => {
+    const oldPrice = price;
+    const delta = (Math.random() - 0.45) * 0.1;
+    price = Math.round((price + delta) * 100) / 100;
+    const newPriceStr = '$' + price.toFixed(2);
+
+    // Flash card border
+    const went_up = price > oldPrice;
+    marketCard.classList.add(went_up ? 'flash-green' : 'flash-red');
+    setTimeout(() => {
+      marketCard.classList.remove('flash-green', 'flash-red');
+    }, 150);
+
+    // Roll digits
+    updatePriceDigits(container, newPriceStr, lastPriceStr);
+    lastPriceStr = newPriceStr;
+
+    // Update change
+    const pct = ((price - basePrice) / basePrice * 100).toFixed(2);
+    changeEl.textContent = (pct >= 0 ? '+' : '') + pct + '%';
+    changeEl.style.color = pct >= 0 ? 'var(--green)' : 'var(--red)';
+
+    // Update candles
+    candleCount++;
+    if (candleCount % 3 === 0) {
+      candles.shift();
+      const last = candles[candles.length - 1];
+      candles.push({ open: last.close, close: price, high: Math.max(last.close, price) + Math.random() * 0.3, low: Math.min(last.close, price) - Math.random() * 0.3 });
+    } else {
+      const last = candles[candles.length - 1];
+      last.close = price;
+      last.high = Math.max(last.high, price);
+      last.low = Math.min(last.low, price);
+    }
+    renderCandles();
+  }, 2000);
+})();
+
+// ── COPY TRADE BUTTON ──
+(function setupCopyBtn() {
+  const btn = document.getElementById('copyBtn');
+  const signalCard = document.getElementById('signalCard');
+
+  btn.addEventListener('click', function(e) {
+    // Confetti burst
+    const rect = btn.getBoundingClientRect();
+    const colors = ['#7A5AF8', '#12B76A', '#2E90FA', '#F79009', '#F04438', '#A78BFA', '#34D399', '#FBBF24'];
+    for (let i = 0; i < 8; i++) {
+      const conf = document.createElement('div');
+      conf.className = 'confetti';
+      conf.style.background = colors[i];
+      conf.style.left = '50%';
+      conf.style.top = '50%';
+      const angle = (i / 8) * Math.PI * 2;
+      const dist = 40 + Math.random() * 30;
+      const tx = Math.cos(angle) * dist;
+      const ty = Math.sin(angle) * dist - 20;
+      conf.style.animation = 'none';
+      conf.animate([
+        { transform: 'translate(-50%, -50%) scale(1)', opacity: 1 },
+        { transform: `translate(calc(-50% + ${tx}px), calc(-50% + ${ty}px)) scale(0.3) rotate(${Math.random()*360}deg)`, opacity: 0 }
+      ], { duration: 700, easing: 'ease-out', fill: 'forwards' });
+      btn.style.position = 'relative';
+      btn.appendChild(conf);
+      setTimeout(() => conf.remove(), 700);
+    }
+
+    // Green success pulse on card
+    const pulse = document.createElement('div');
+    pulse.className = 'success-pulse';
+    signalCard.style.position = 'relative';
+    signalCard.appendChild(pulse);
+    setTimeout(() => pulse.remove(), 500);
+
+    // Button morph: rectangle -> circle with checkmark -> back
+    btn.textContent = '\u2713';
+    btn.classList.add('copied');
+    setTimeout(() => {
+      btn.classList.remove('copied');
+      btn.textContent = 'Copy Trade';
+    }, 2000);
+  });
+})();
+
+// ── AI TYPEWRITER ──
+(function typewriterAI() {
+  const bubble = document.getElementById('chatBubble');
+  const indicator = document.getElementById('typingIndicator');
+  const text = 'NVDA looks strong for a $410 put at current IV levels. Premium decay is favorable with 28 DTE.';
+  let idx = 0;
+  bubble.textContent = '';
+
+  function typeChar() {
+    if (idx < text.length) {
+      bubble.textContent += text[idx];
+      idx++;
+      setTimeout(typeChar, 25 + Math.random() * 35);
+    } else {
+      // Show typing indicator after message completes
+      setTimeout(() => {
+        indicator.classList.add('show');
+      }, 500);
+    }
+  }
+
+  // Start after loading choreography
+  setTimeout(typeChar, 1800);
+})();
+
+// ── LIVE CLOCK ──
+(function liveClock() {
+  const el = document.getElementById('liveClock');
+  function tick() {
+    el.textContent = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  }
+  tick();
+  setInterval(tick, 1000);
+})();
+
+// ── LOADING CHOREOGRAPHY ──
+(function loadingSequence() {
+  const body = document.body;
+  const header = document.getElementById('mainHeader');
+  const cards = document.querySelectorAll('.card');
+
+  // Phase 1: Dot grid radial wipe (0-400ms)
+  setTimeout(() => {
+    body.classList.remove('loading');
+    body.classList.add('dot-reveal');
+  }, 50);
+
+  // Phase 2: Header slides in (200-500ms)
+  setTimeout(() => {
+    header.classList.add('visible');
+  }, 200);
+
+  // Phase 3: Cards deal in from stacked (400-1200ms)
+  cards.forEach((card, i) => {
+    const delay = 400 + i * 70;
+    setTimeout(() => {
+      card.classList.add('dealt');
+    }, delay);
+  });
+
+  // Phase 4: Portfolio value count up (800-1600ms)
+  setTimeout(() => {
+    createDigitRoller(document.getElementById('portfolioValue'), '$147,832');
+  }, 600);
+
+  // Phase 5: Rings/bars animate (1000-1800ms)
+  setTimeout(() => {
+    animateWinRing();
+    animateDteRing();
+    animateBars();
+  }, 1000);
+
+  // Phase 6: Sparkline draw (1200-2000ms)
+  setTimeout(() => {
+    animateSparkline();
+  }, 1200);
+})();
+
+// ── SCROLL REVEAL FOR CARDS BELOW FOLD ──
+(function scrollReveal() {
+  const cards = document.querySelectorAll('.card');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('in-view');
+      }
+    });
+  }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+
+  // Only observe cards that are likely below fold
+  cards.forEach((card, i) => {
+    if (i > 5) {
+      card.classList.add('scroll-reveal');
+      observer.observe(card);
+    }
+  });
+})();
+
+// ── BUTTON CLICK FLASH (global) ──
+document.addEventListener('click', e => {
+  const btn = e.target.closest('button');
+  if (!btn) return;
+  const flash = document.createElement('div');
+  flash.className = 'click-flash';
+  flash.style.width = '30px';
+  flash.style.height = '30px';
+  const rect = btn.getBoundingClientRect();
+  flash.style.left = (e.clientX - rect.left - 15) + 'px';
+  flash.style.top = (e.clientY - rect.top - 15) + 'px';
+  btn.style.position = btn.style.position || 'relative';
+  btn.appendChild(flash);
+  setTimeout(() => flash.remove(), 200);
+});
+</script>
+</body>
+</html>

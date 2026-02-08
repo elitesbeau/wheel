@@ -1,0 +1,1879 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Market Elites — Paper Physics</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ========== RESET & BASE ========== */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg-deep: #08080C;
+  --bg: #0C0D10;
+  --surface-1: rgba(22,23,28,0.65);
+  --surface-1-solid: #16171C;
+  --surface-2: #1E1F26;
+  --border: rgba(255,255,255,0.06);
+  --text-primary: #F0F0F4;
+  --text-secondary: #8888A0;
+  --text-muted: #555566;
+  --accent-blue: #4F6EF7;
+  --accent-cyan: #38BDF8;
+  --green: #34D399;
+  --red: #F87171;
+  --amber: #FBBF24;
+  --accent-current: var(--accent-blue);
+  --spring: cubic-bezier(.34,1.56,.64,1);
+  --spring-soft: cubic-bezier(.22,1.2,.36,1);
+  --ease-out-expo: cubic-bezier(.16,1,.3,1);
+}
+
+html {
+  background: var(--bg-deep);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  scroll-behavior: smooth;
+  cursor: none;
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text-primary);
+  max-width: 430px;
+  margin: 0 auto;
+  min-height: 100vh;
+  overflow-x: hidden;
+  padding-bottom: 90px;
+  position: relative;
+  cursor: none;
+}
+
+/* ========== SCROLL PROGRESS BAR ========== */
+.scroll-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 0%;
+  height: 2px;
+  background: linear-gradient(90deg, var(--accent-blue), var(--accent-cyan));
+  z-index: 9999;
+  transition: width 0.05s linear;
+  box-shadow: 0 0 8px var(--accent-blue);
+}
+
+/* ========== CUSTOM CURSOR ========== */
+.cursor-dot {
+  position: fixed;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255,255,255,0.7);
+  pointer-events: none;
+  z-index: 99999;
+  transform: translate(-50%, -50%);
+  transition: width 0.3s cubic-bezier(.22,1.2,.36,1),
+              height 0.3s cubic-bezier(.22,1.2,.36,1),
+              border-color 0.3s ease,
+              background 0.3s ease;
+  mix-blend-mode: difference;
+  will-change: transform, width, height;
+}
+
+.cursor-dot.expanded {
+  width: 40px;
+  height: 40px;
+  border-color: var(--accent-blue);
+  background: rgba(79,110,247,0.15);
+  mix-blend-mode: screen;
+}
+
+/* ========== CURSOR GLOW ========== */
+.cursor-glow {
+  position: fixed;
+  width: 300px;
+  height: 300px;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 1;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle, var(--accent-blue) 0%, transparent 70%);
+  opacity: 0.07;
+  will-change: transform;
+}
+
+/* ========== GRADIENT MESH BACKGROUND ========== */
+.bg-mesh {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0;
+  transition: opacity 0.6s ease;
+}
+
+.bg-mesh.visible { opacity: 1; }
+
+.bg-mesh::before {
+  content: '';
+  position: absolute;
+  top: -20%;
+  left: -20%;
+  width: 60%;
+  height: 60%;
+  background: radial-gradient(ellipse, rgba(79,110,247,0.06) 0%, transparent 70%);
+}
+
+.bg-mesh::after {
+  content: '';
+  position: absolute;
+  bottom: -10%;
+  right: -10%;
+  width: 50%;
+  height: 50%;
+  background: radial-gradient(ellipse, rgba(56,189,248,0.04) 0%, transparent 70%);
+}
+
+.bg-mesh-extra {
+  position: fixed;
+  top: 40%;
+  left: 50%;
+  width: 40%;
+  height: 40%;
+  background: radial-gradient(ellipse, rgba(99,102,241,0.04) 0%, transparent 65%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ========== NOISE TEXTURE ========== */
+.noise-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.025;
+}
+
+/* ========== CONTEXT HEADER ========== */
+.context-header {
+  position: fixed;
+  top: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-muted);
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  background: rgba(12,13,16,0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  padding: 4px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  opacity: 0;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  pointer-events: none;
+}
+
+.context-header.visible {
+  opacity: 1;
+}
+
+/* ========== GREETING ========== */
+.time-greeting {
+  padding: 14px 24px 0;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+/* ========== ENTRANCE ANIMATIONS ========== */
+@keyframes breathe {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+@keyframes pulseRing {
+  0% { transform: scale(1); opacity: 0.6; }
+  50% { transform: scale(1.6); opacity: 0; }
+  100% { transform: scale(1.6); opacity: 0; }
+}
+
+@keyframes pulseDot {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+  50% { transform: translate(-50%, -50%) scale(1.3); opacity: 0.8; }
+}
+
+@keyframes progressFill {
+  from { width: 0%; }
+}
+
+@keyframes sparkDraw {
+  from { stroke-dashoffset: 100; }
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+@keyframes wobble {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(3deg); }
+  75% { transform: rotate(-3deg); }
+}
+
+@keyframes badgeBreathePulse {
+  0%, 100% { opacity: 0.6; transform: rotate(0deg); }
+  25% { opacity: 0.9; transform: rotate(2.5deg); }
+  50% { opacity: 1; transform: rotate(0deg); }
+  75% { opacity: 0.9; transform: rotate(-2.5deg); }
+}
+
+@keyframes rippleExpand {
+  0% { transform: translate(-50%, -50%) scale(0); opacity: 0.5; }
+  100% { transform: translate(-50%, -50%) scale(4); opacity: 0; }
+}
+
+/* ========== HERO CARD ========== */
+.hero-card {
+  position: relative;
+  background: linear-gradient(165deg, #1a1d2e 0%, #111320 40%, var(--bg) 100%);
+  padding: 48px 24px 0 24px;
+  overflow: hidden;
+  perspective: 800px;
+  opacity: 0;
+  z-index: 2;
+}
+
+.hero-card::before {
+  content: '';
+  position: absolute;
+  top: -60%;
+  right: -30%;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(79,110,247,0.12) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.hero-inner {
+  transition: transform 0.15s ease-out;
+  will-change: transform;
+}
+
+.hero-value-label {
+  font-family: 'Inter', system-ui;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.hero-value {
+  font-family: 'Space Grotesk', system-ui;
+  font-size: 36px;
+  font-weight: 800;
+  line-height: 1.1;
+  margin-bottom: 10px;
+  cursor: pointer;
+  position: relative;
+  display: inline-block;
+  /* Text gradient */
+  background: linear-gradient(135deg, #FFFFFF 0%, #C7D2FE 50%, #FFFFFF 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hero-value .decimals {
+  opacity: 0.5;
+}
+
+/* Shimmer sweep */
+.hero-value::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.15) 50%, transparent 100%);
+  background-size: 200% 100%;
+  animation: shimmer 8s ease-in-out infinite;
+  pointer-events: none;
+  -webkit-background-clip: text;
+  background-clip: text;
+  mix-blend-mode: overlay;
+}
+
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(52,211,153,0.12);
+  color: var(--green);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 5px 12px;
+  border-radius: 100px;
+  margin-bottom: 24px;
+}
+
+.hero-badge svg {
+  width: 12px;
+  height: 12px;
+}
+
+.hero-chart-container {
+  position: relative;
+  width: calc(100% + 48px);
+  margin-left: -24px;
+  height: 140px;
+}
+
+.hero-chart {
+  width: 100%;
+  height: 100%;
+}
+
+.hero-chart .chart-line {
+  stroke-dasharray: 1000;
+  stroke-dashoffset: 1000;
+}
+
+.hero-chart .chart-area {
+  opacity: 0;
+}
+
+.chart-pulse-dot {
+  position: absolute;
+  right: 24px;
+  top: 32px;
+  width: 10px;
+  height: 10px;
+}
+
+.chart-pulse-dot::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 10px;
+  height: 10px;
+  background: var(--accent-blue);
+  border-radius: 50%;
+  animation: pulseDot 2s ease-in-out infinite;
+}
+
+.chart-pulse-dot::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 10px;
+  height: 10px;
+  background: rgba(79,110,247,0.4);
+  border-radius: 50%;
+  animation: pulseRing 2s ease-out infinite;
+}
+
+.hero-hint {
+  text-align: center;
+  font-size: 11px;
+  color: var(--text-primary);
+  opacity: 0.25;
+  padding: 12px 0 20px;
+  letter-spacing: 0.5px;
+}
+
+.hero-hint svg {
+  display: block;
+  margin: 0 auto 4px;
+  opacity: 0.5;
+}
+
+/* ========== QUICK STATS ROW ========== */
+.stats-section {
+  padding: 24px 0 8px;
+  opacity: 0;
+  z-index: 2;
+  position: relative;
+}
+
+.stats-scroll {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding: 0 20px;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.stats-scroll::-webkit-scrollbar { display: none; }
+
+.stats-scroll:hover .stat-pill,
+.stats-scroll:focus-within .stat-pill {
+  opacity: 0.4;
+  filter: blur(1px);
+  transition: opacity 0.2s ease, filter 0.2s ease, transform 0.3s var(--spring);
+}
+
+.stats-scroll:hover .stat-pill:hover,
+.stats-scroll:focus-within .stat-pill:focus {
+  opacity: 1 !important;
+  filter: blur(0px) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.4), 0 0 20px rgba(79,110,247,0.08);
+}
+
+.stat-pill {
+  flex-shrink: 0;
+  scroll-snap-align: start;
+  background: var(--surface-1);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px 16px;
+  min-width: 140px;
+  cursor: pointer;
+  transition: opacity 0.2s ease, filter 0.2s ease, transform 0.3s var(--spring), box-shadow 0.3s ease;
+  will-change: transform, opacity;
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-pill::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  border-radius: 14px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.stat-pill:hover::before {
+  opacity: 1;
+}
+
+.stat-pill:hover {
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+}
+
+.stat-pill-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.stat-icon {
+  width: 16px;
+  height: 16px;
+  opacity: 0.6;
+}
+
+.stat-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  font-weight: 500;
+}
+
+.stat-value-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.stat-value {
+  font-family: 'Space Grotesk', system-ui;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.stat-sparkline {
+  flex-shrink: 0;
+  width: 48px;
+  height: 20px;
+}
+
+.stat-sparkline polyline {
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+}
+
+/* ========== SECTION LABEL ========== */
+.section-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  padding: 20px 24px 14px;
+}
+
+/* ========== POSITION CARDS ========== */
+.positions-section {
+  opacity: 0;
+  z-index: 2;
+  position: relative;
+}
+
+.positions-list {
+  padding: 0 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.position-card {
+  background: var(--surface-1);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 16px;
+  cursor: pointer;
+  will-change: transform;
+  opacity: 0;
+  transform: translateY(40px);
+  position: relative;
+  overflow: hidden;
+  transition: box-shadow 0.3s ease;
+}
+
+.position-card:hover {
+  box-shadow: 0 8px 30px rgba(0,0,0,0.35), 0 0 20px rgba(79,110,247,0.08);
+}
+
+/* Ripple container */
+.position-card .ripple, .signal-card .ripple, .stat-pill .ripple {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.12);
+  width: 60px;
+  height: 60px;
+  animation: rippleExpand 0.6s ease-out forwards;
+  pointer-events: none;
+}
+
+.position-card.glow-highlight {
+  box-shadow: 0 0 30px rgba(79,110,247,0.3), 0 0 60px rgba(79,110,247,0.15) !important;
+  border-color: rgba(79,110,247,0.3) !important;
+  transition: box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+.position-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ticker-circle {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Space Grotesk', system-ui;
+  font-weight: 700;
+  font-size: 14px;
+  color: white;
+  flex-shrink: 0;
+}
+
+.ticker-circle.aapl { background: linear-gradient(135deg, #555577, #333355); }
+.ticker-circle.nvda { background: linear-gradient(135deg, #2d6e3f, #1a4528); }
+.ticker-circle.msft { background: linear-gradient(135deg, #3a5ca8, #243b6e); }
+
+.position-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.position-ticker {
+  font-family: 'Space Grotesk', system-ui;
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--text-primary);
+  margin-bottom: 3px;
+}
+
+.position-detail {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.position-strike {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.position-type {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 6px;
+  letter-spacing: 0.5px;
+}
+
+.type-csp {
+  background: rgba(52,211,153,0.1);
+  color: var(--green);
+}
+
+.type-cc {
+  background: rgba(79,110,247,0.1);
+  color: var(--accent-blue);
+}
+
+.position-pnl {
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.pnl-value {
+  font-family: 'Space Grotesk', system-ui;
+  font-weight: 700;
+  font-size: 15px;
+  transition: transform 0.3s var(--spring), color 0.3s ease;
+}
+
+.pnl-value.positive { color: var(--green); }
+.pnl-value.negative { color: var(--red); }
+
+.pnl-pct {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  margin-top: 2px;
+}
+
+.pnl-pct.positive { color: rgba(52,211,153,0.7); }
+.pnl-pct.negative { color: rgba(248,113,113,0.7); }
+
+.position-progress {
+  margin-top: 12px;
+  height: 3px;
+  background: rgba(255,255,255,0.04);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.position-progress-bar {
+  height: 100%;
+  border-radius: 3px;
+  width: 0;
+  transition: width 1s cubic-bezier(.34,1.56,.64,1);
+}
+
+.progress-high {
+  background: linear-gradient(90deg, var(--accent-blue), rgba(79,110,247,0.2));
+}
+
+.progress-mid {
+  background: linear-gradient(90deg, var(--accent-cyan), rgba(56,189,248,0.2));
+}
+
+.progress-low {
+  background: linear-gradient(90deg, var(--amber), rgba(251,191,36,0.2));
+}
+
+.position-progress-label {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 5px;
+  font-size: 10px;
+  color: var(--text-muted);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* ========== SIGNALS SECTION ========== */
+.signals-section {
+  opacity: 0;
+  z-index: 2;
+  position: relative;
+}
+
+.signals-list {
+  padding: 0 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.signal-card {
+  background: var(--surface-1);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 16px 16px 14px;
+  border-left: 4px solid;
+  border-image: linear-gradient(to bottom, var(--accent-blue), var(--accent-cyan)) 1;
+  border-left-width: 4px;
+  overflow: hidden;
+  opacity: 0;
+  transform: translateX(-30px);
+  position: relative;
+}
+
+.signal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.signal-ticker {
+  font-family: 'Space Grotesk', system-ui;
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--text-primary);
+}
+
+.signal-new-badge {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--accent-cyan);
+  background: rgba(56,189,248,0.12);
+  padding: 3px 8px;
+  border-radius: 6px;
+  letter-spacing: 1px;
+  animation: badgeBreathePulse 3s ease-in-out infinite;
+  display: inline-block;
+}
+
+.signal-context {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+  line-height: 1.5;
+}
+
+.signal-range {
+  margin-bottom: 14px;
+}
+
+.signal-range-label {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-bottom: 5px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.signal-range-bar {
+  height: 6px;
+  background: rgba(255,255,255,0.04);
+  border-radius: 6px;
+  position: relative;
+  overflow: visible;
+}
+
+.signal-range-fill {
+  height: 100%;
+  border-radius: 6px;
+  background: linear-gradient(90deg, rgba(79,110,247,0.3), var(--accent-blue));
+}
+
+.signal-range-dot {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 12px;
+  height: 12px;
+  background: var(--accent-blue);
+  border: 2px solid var(--surface-1-solid);
+  border-radius: 50%;
+  box-shadow: 0 0 8px rgba(79,110,247,0.5);
+}
+
+.copy-trade-btn {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--accent-blue), #6366F1);
+  color: white;
+  font-family: 'Inter', system-ui;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  will-change: transform;
+  transition: box-shadow 0.3s ease;
+}
+
+.copy-trade-btn:hover {
+  box-shadow: 0 4px 20px rgba(79,110,247,0.3), 0 0 30px rgba(79,110,247,0.15);
+}
+
+.copy-trade-btn.copied {
+  background: linear-gradient(135deg, var(--green), #059669);
+}
+
+.copy-trade-btn .btn-text {
+  display: inline-block;
+  pointer-events: none;
+}
+
+/* Copy particles */
+.copy-particle {
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* ========== CONFETTI ========== */
+.confetti-piece {
+  position: fixed;
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  pointer-events: none;
+  z-index: 99998;
+}
+
+/* ========== BOTTOM NAV ========== */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%) translateY(80px);
+  width: 100%;
+  max-width: 430px;
+  background: rgba(12,13,16,0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid var(--border);
+  padding: 8px 0;
+  padding-bottom: max(8px, env(safe-area-inset-bottom));
+  z-index: 100;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  opacity: 0;
+}
+
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 16px;
+  cursor: pointer;
+  position: relative;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+.nav-item.active .nav-icon {
+  color: var(--accent-blue);
+}
+
+.nav-item.active::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 4px;
+  background: var(--accent-blue);
+  border-radius: 50%;
+}
+
+.nav-icon {
+  width: 22px;
+  height: 22px;
+  color: var(--text-muted);
+  transition: color 0.2s ease;
+}
+
+.nav-label {
+  font-size: 10px;
+  color: var(--text-muted);
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.nav-item.active .nav-label {
+  color: var(--accent-blue);
+}
+
+/* ========== MAGNETIC BUTTON STYLES ========== */
+.magnetic-btn {
+  will-change: transform;
+}
+
+/* ========== UTILITIES ========== */
+.mono { font-family: 'JetBrains Mono', monospace; }
+</style>
+</head>
+<body>
+
+<!-- ==================== AMBIENT LAYERS ==================== -->
+<div class="scroll-progress" id="scrollProgress"></div>
+<div class="cursor-dot" id="cursorDot"></div>
+<div class="cursor-glow" id="cursorGlow"></div>
+<div class="bg-mesh" id="bgMesh"></div>
+<div class="bg-mesh-extra"></div>
+<div class="context-header" id="contextHeader">Dashboard</div>
+
+<!-- SVG noise filter -->
+<svg style="position:fixed;width:0;height:0;pointer-events:none">
+  <filter id="noiseFilter">
+    <feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch"/>
+    <feColorMatrix type="saturate" values="0"/>
+  </filter>
+</svg>
+<div class="noise-overlay" style="filter:url(#noiseFilter)"></div>
+
+<!-- ==================== GREETING ==================== -->
+<div class="time-greeting" id="timeGreeting"></div>
+
+<!-- ==================== HERO CARD ==================== -->
+<div class="hero-card" id="heroCard" data-section="Portfolio">
+  <div class="hero-inner" id="heroInner">
+    <div class="hero-value-label">Portfolio Value</div>
+    <div class="hero-value" id="heroValue">$0<span class="decimals">.00</span></div>
+    <div class="hero-badge">
+      <svg viewBox="0 0 12 12" fill="none"><path d="M6 2v8M3 5l3-3 3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      +$2,847.20 (+1.96%)
+    </div>
+    <div class="hero-chart-container" id="heroChartContainer">
+      <svg class="hero-chart" viewBox="0 0 430 140" preserveAspectRatio="none" fill="none">
+        <defs>
+          <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#4F6EF7" stop-opacity="0.3"/>
+            <stop offset="100%" stop-color="#4F6EF7" stop-opacity="0"/>
+          </linearGradient>
+        </defs>
+        <path class="chart-area" id="chartArea" d="M0,95 C30,90 60,85 90,80 C120,75 140,92 170,88 C200,84 220,60 250,55 C280,50 310,65 340,52 C360,44 380,38 400,32 L400,140 L0,140 Z" fill="url(#chartGrad)"/>
+        <path class="chart-line" id="chartLine" d="M0,95 C30,90 60,85 90,80 C120,75 140,92 170,88 C200,84 220,60 250,55 C280,50 310,65 340,52 C360,44 380,38 400,32" stroke="#4F6EF7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <div class="chart-pulse-dot"></div>
+    </div>
+  </div>
+  <div class="hero-hint">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 10V4M4 7l3-3 3 3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    Pull up for details
+  </div>
+</div>
+
+<!-- ==================== QUICK STATS ==================== -->
+<div class="stats-section" id="statsSection" data-section="Stats">
+  <div class="stats-scroll" id="statsScroll">
+
+    <div class="stat-pill magnetic-btn">
+      <div class="stat-pill-header">
+        <svg class="stat-icon" viewBox="0 0 16 16" fill="none"><path d="M2 14l4-5 3 3 5-8" stroke="#34D399" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span class="stat-label">Win Rate</span>
+      </div>
+      <div class="stat-value-row">
+        <span class="stat-value counter-value" data-target="87" data-suffix="%" style="color:var(--green)">0%</span>
+        <svg class="stat-sparkline" viewBox="0 0 48 20"><polyline points="0,16 8,14 16,12 24,13 32,9 40,7 48,4" fill="none" stroke="#34D399" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+    </div>
+
+    <div class="stat-pill magnetic-btn">
+      <div class="stat-pill-header">
+        <svg class="stat-icon" viewBox="0 0 16 16" fill="none"><rect x="1" y="6" width="3" height="8" rx="1" fill="#4F6EF7" opacity="0.5"/><rect x="6.5" y="3" width="3" height="11" rx="1" fill="#4F6EF7" opacity="0.7"/><rect x="12" y="1" width="3" height="13" rx="1" fill="#4F6EF7"/></svg>
+        <span class="stat-label">Monthly P&L</span>
+      </div>
+      <div class="stat-value-row">
+        <span class="stat-value counter-value" data-target="4280" data-prefix="$" data-comma="true" style="color:var(--accent-blue)">$0</span>
+        <svg class="stat-sparkline" viewBox="0 0 48 20"><polyline points="0,14 8,12 16,15 24,10 32,8 40,9 48,5" fill="none" stroke="#4F6EF7" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+    </div>
+
+    <div class="stat-pill magnetic-btn">
+      <div class="stat-pill-header">
+        <svg class="stat-icon" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="#FBBF24" stroke-width="1.5"/><circle cx="8" cy="8" r="2" fill="#FBBF24"/></svg>
+        <span class="stat-label">Open Positions</span>
+      </div>
+      <div class="stat-value-row">
+        <span class="stat-value counter-value" data-target="8" style="color:var(--amber)">0</span>
+        <svg class="stat-sparkline" viewBox="0 0 48 20"><polyline points="0,10 8,11 16,10 24,9 32,10 40,10 48,9" fill="none" stroke="#FBBF24" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+    </div>
+
+    <div class="stat-pill magnetic-btn">
+      <div class="stat-pill-header">
+        <svg class="stat-icon" viewBox="0 0 16 16" fill="none"><path d="M8 2v6l3 3" stroke="#38BDF8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="8" cy="8" r="6" stroke="#38BDF8" stroke-width="1.5"/></svg>
+        <span class="stat-label">Avg DTE</span>
+      </div>
+      <div class="stat-value-row">
+        <span class="stat-value counter-value" data-target="22" data-suffix="d" style="color:var(--accent-cyan)">0d</span>
+        <svg class="stat-sparkline" viewBox="0 0 48 20"><polyline points="0,6 8,8 16,7 24,10 32,9 40,12 48,11" fill="none" stroke="#38BDF8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ==================== ACTIVE POSITIONS ==================== -->
+<div class="positions-section" id="positionsSection" data-section="Positions">
+  <div class="section-label">Positions</div>
+  <div class="positions-list">
+
+    <div class="position-card magnetic-btn" data-position="1">
+      <div class="position-top">
+        <div class="ticker-circle aapl">AA</div>
+        <div class="position-info">
+          <div class="position-ticker">AAPL</div>
+          <div class="position-detail">
+            <span class="position-strike">$185P &middot; 02/21</span>
+            <span class="position-type type-csp">CSP</span>
+          </div>
+        </div>
+        <div class="position-pnl">
+          <div class="pnl-value positive">+$420</div>
+          <div class="pnl-pct positive">+12.3%</div>
+        </div>
+      </div>
+      <div class="position-progress">
+        <div class="position-progress-bar progress-high" data-target-width="35"></div>
+      </div>
+      <div class="position-progress-label">
+        <span>23 DTE remaining</span>
+        <span>35%</span>
+      </div>
+    </div>
+
+    <div class="position-card magnetic-btn" data-position="2">
+      <div class="position-top">
+        <div class="ticker-circle nvda">NV</div>
+        <div class="position-info">
+          <div class="position-ticker">NVDA</div>
+          <div class="position-detail">
+            <span class="position-strike">$950C &middot; 03/14</span>
+            <span class="position-type type-cc">CC</span>
+          </div>
+        </div>
+        <div class="position-pnl">
+          <div class="pnl-value positive">+$680</div>
+          <div class="pnl-pct positive">+8.7%</div>
+        </div>
+      </div>
+      <div class="position-progress">
+        <div class="position-progress-bar progress-mid" data-target-width="58"></div>
+      </div>
+      <div class="position-progress-label">
+        <span>44 DTE remaining</span>
+        <span>58%</span>
+      </div>
+    </div>
+
+    <div class="position-card magnetic-btn" data-position="3">
+      <div class="position-top">
+        <div class="ticker-circle msft">MS</div>
+        <div class="position-info">
+          <div class="position-ticker">MSFT</div>
+          <div class="position-detail">
+            <span class="position-strike">$400P &middot; 02/28</span>
+            <span class="position-type type-csp">CSP</span>
+          </div>
+        </div>
+        <div class="position-pnl">
+          <div class="pnl-value negative">-$115</div>
+          <div class="pnl-pct negative">-3.2%</div>
+        </div>
+      </div>
+      <div class="position-progress">
+        <div class="position-progress-bar progress-low" data-target-width="18"></div>
+      </div>
+      <div class="position-progress-label">
+        <span>30 DTE remaining</span>
+        <span>18%</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ==================== SIGNALS FEED ==================== -->
+<div class="signals-section" id="signalsSection" data-section="Signals">
+  <div class="section-label">Live Signals</div>
+  <div class="signals-list">
+
+    <div class="signal-card">
+      <div class="signal-header">
+        <span class="signal-ticker">AMZN $210P CSP</span>
+        <span class="signal-new-badge">NEW</span>
+      </div>
+      <div class="signal-context">Premium $5.20 &middot; Delta 0.22 &middot; 28 DTE</div>
+      <div class="signal-range">
+        <div class="signal-range-label">
+          <span>30d Premium Range</span>
+          <span class="mono" style="font-size:10px">$3.10 — $7.40</span>
+        </div>
+        <div class="signal-range-bar">
+          <div class="signal-range-fill" style="width:49%"></div>
+          <div class="signal-range-dot" style="left:49%"></div>
+        </div>
+      </div>
+      <button class="copy-trade-btn magnetic-btn" id="copyBtn1">
+        <span class="btn-text">Copy Trade</span>
+      </button>
+    </div>
+
+    <div class="signal-card">
+      <div class="signal-header">
+        <span class="signal-ticker">GOOGL $175P CSP</span>
+        <span class="signal-new-badge">NEW</span>
+      </div>
+      <div class="signal-context">Premium $4.80 &middot; Delta 0.18 &middot; 35 DTE</div>
+      <div class="signal-range">
+        <div class="signal-range-label">
+          <span>30d Premium Range</span>
+          <span class="mono" style="font-size:10px">$2.80 — $6.90</span>
+        </div>
+        <div class="signal-range-bar">
+          <div class="signal-range-fill" style="width:49%"></div>
+          <div class="signal-range-dot" style="left:49%"></div>
+        </div>
+      </div>
+      <button class="copy-trade-btn magnetic-btn" id="copyBtn2">
+        <span class="btn-text">Copy Trade</span>
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<!-- ==================== BOTTOM NAV ==================== -->
+<nav class="bottom-nav" id="bottomNav">
+  <div class="nav-item active magnetic-btn" data-tab="dashboard">
+    <svg class="nav-icon" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="7" rx="2" stroke="currentColor" stroke-width="1.8"/><rect x="14" y="3" width="7" height="7" rx="2" stroke="currentColor" stroke-width="1.8"/><rect x="3" y="14" width="7" height="7" rx="2" stroke="currentColor" stroke-width="1.8"/><rect x="14" y="14" width="7" height="7" rx="2" stroke="currentColor" stroke-width="1.8"/></svg>
+    <span class="nav-label">Dashboard</span>
+  </div>
+  <div class="nav-item magnetic-btn" data-tab="positions">
+    <svg class="nav-icon" viewBox="0 0 24 24" fill="none"><path d="M3 12h4l3-9 4 18 3-9h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <span class="nav-label">Positions</span>
+  </div>
+  <div class="nav-item magnetic-btn" data-tab="signals">
+    <svg class="nav-icon" viewBox="0 0 24 24" fill="none"><path d="M12 20V10M18 20V4M6 20v-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <span class="nav-label">Signals</span>
+  </div>
+  <div class="nav-item magnetic-btn" data-tab="learn">
+    <svg class="nav-icon" viewBox="0 0 24 24" fill="none"><path d="M4 19.5A2.5 2.5 0 016.5 17H20" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <span class="nav-label">Learn</span>
+  </div>
+  <div class="nav-item magnetic-btn" data-tab="profile">
+    <svg class="nav-icon" viewBox="0 0 24 24" fill="none"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="1.8"/></svg>
+    <span class="nav-label">Profile</span>
+  </div>
+</nav>
+
+<script>
+// ================================================================
+//  OVERKILL MODE - Every pixel alive
+// ================================================================
+
+(function() {
+  'use strict';
+
+  // ==================== SPRING PHYSICS ENGINE ====================
+  class Spring {
+    constructor(stiffness = 0.15, damping = 0.75) {
+      this.stiffness = stiffness;
+      this.damping = damping;
+      this.current = 0;
+      this.target = 0;
+      this.velocity = 0;
+    }
+    setTarget(t) { this.target = t; }
+    step() {
+      this.velocity += (this.target - this.current) * this.stiffness;
+      this.velocity *= this.damping;
+      this.current += this.velocity;
+      return this.current;
+    }
+    isSettled() {
+      return Math.abs(this.velocity) < 0.001 && Math.abs(this.target - this.current) < 0.01;
+    }
+  }
+
+  // ==================== TIME OF DAY AWARENESS ====================
+  const hour = new Date().getHours();
+  let greeting, tintClass;
+  if (hour >= 6 && hour < 12) {
+    greeting = 'Good morning, Beau';
+    document.documentElement.style.setProperty('--accent-current', '#F97316'); // warm orange
+  } else if (hour >= 12 && hour < 17) {
+    greeting = 'Good afternoon, Beau';
+    document.documentElement.style.setProperty('--accent-current', '#4F6EF7'); // blue
+  } else if (hour >= 17 && hour < 22) {
+    greeting = 'Good evening, Beau';
+    document.documentElement.style.setProperty('--accent-current', '#8B5CF6'); // purple
+  } else {
+    greeting = 'Late night trading?';
+    document.documentElement.style.setProperty('--accent-current', '#3B82F6'); // deep blue
+  }
+
+  // Apply time-based tint to background mesh
+  const bgMesh = document.getElementById('bgMesh');
+  const greetingEl = document.getElementById('timeGreeting');
+  greetingEl.textContent = greeting;
+
+  // ==================== CUSTOM CURSOR (lerp) ====================
+  const cursorDot = document.getElementById('cursorDot');
+  const cursorGlow = document.getElementById('cursorGlow');
+  let mouseX = -100, mouseY = -100;
+  let cursorX = -100, cursorY = -100;
+  let glowX = -100, glowY = -100;
+
+  document.addEventListener('mousemove', (e) => {
+    mouseX = e.clientX;
+    mouseY = e.clientY;
+  });
+
+  // Expand cursor on interactive elements
+  const interactiveSelectors = 'button, .nav-item, .stat-pill, .position-card, .signal-card, a, .hero-value';
+  document.addEventListener('mouseover', (e) => {
+    if (e.target.closest(interactiveSelectors)) {
+      cursorDot.classList.add('expanded');
+    }
+  });
+  document.addEventListener('mouseout', (e) => {
+    if (e.target.closest(interactiveSelectors)) {
+      cursorDot.classList.remove('expanded');
+    }
+  });
+
+  function updateCursor() {
+    // Lerp the cursor position
+    cursorX += (mouseX - cursorX) * 0.15;
+    cursorY += (mouseY - cursorY) * 0.15;
+    cursorDot.style.left = cursorX + 'px';
+    cursorDot.style.top = cursorY + 'px';
+
+    // Glow follows even more lazily
+    glowX += (mouseX - glowX) * 0.08;
+    glowY += (mouseY - glowY) * 0.08;
+    cursorGlow.style.left = glowX + 'px';
+    cursorGlow.style.top = glowY + 'px';
+
+    requestAnimationFrame(updateCursor);
+  }
+  requestAnimationFrame(updateCursor);
+
+  // ==================== MAGNETIC BUTTONS ====================
+  const magneticBtns = document.querySelectorAll('.magnetic-btn');
+  const magneticSprings = new Map();
+
+  magneticBtns.forEach(btn => {
+    magneticSprings.set(btn, {
+      x: new Spring(0.12, 0.7),
+      y: new Spring(0.12, 0.7)
+    });
+  });
+
+  function updateMagnetics() {
+    magneticBtns.forEach(btn => {
+      const rect = btn.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+      const dx = mouseX - cx;
+      const dy = mouseY - cy;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      const springs = magneticSprings.get(btn);
+
+      if (dist < 80) {
+        const pull = (1 - dist / 80) * 6;
+        springs.x.setTarget(dx > 0 ? Math.min(pull, 6) : Math.max(-pull, -6));
+        springs.y.setTarget(dy > 0 ? Math.min(pull, 6) : Math.max(-pull, -6));
+      } else {
+        springs.x.setTarget(0);
+        springs.y.setTarget(0);
+      }
+
+      const sx = springs.x.step();
+      const sy = springs.y.step();
+
+      // Only set transform if there is meaningful displacement
+      if (!springs.x.isSettled() || !springs.y.isSettled()) {
+        btn.style.transform = `translate(${sx}px, ${sy}px)`;
+      } else if (sx === 0 && sy === 0) {
+        btn.style.transform = '';
+      }
+    });
+    requestAnimationFrame(updateMagnetics);
+  }
+  requestAnimationFrame(updateMagnetics);
+
+  // ==================== SPRING-DRIVEN CARD HOVER ====================
+  const positionCards = document.querySelectorAll('.position-card');
+  const cardSprings = new Map();
+
+  positionCards.forEach(card => {
+    const s = new Spring(0.12, 0.72);
+    cardSprings.set(card, s);
+
+    card.addEventListener('mouseenter', () => { s.setTarget(-6); });
+    card.addEventListener('mouseleave', () => { s.setTarget(0); });
+
+    // P&L pulse on hover
+    const pnlVal = card.querySelector('.pnl-value');
+    card.addEventListener('mouseenter', () => {
+      if (pnlVal) {
+        pnlVal.style.transition = 'transform 0.15s ease';
+        pnlVal.style.transform = 'scale(1.15)';
+        pnlVal.style.filter = 'brightness(1.3)';
+        setTimeout(() => {
+          pnlVal.style.transition = 'transform 0.4s cubic-bezier(.22,1.2,.36,1), filter 0.4s ease';
+          pnlVal.style.transform = 'scale(1)';
+          pnlVal.style.filter = 'brightness(1)';
+        }, 150);
+      }
+    });
+  });
+
+  function updateCardSprings() {
+    cardSprings.forEach((spring, card) => {
+      const y = spring.step();
+      if (!spring.isSettled()) {
+        card.style.transform = `translateY(${y}px)`;
+      }
+    });
+    requestAnimationFrame(updateCardSprings);
+  }
+  requestAnimationFrame(updateCardSprings);
+
+  // ==================== BUTTON PRESS SPRING (squash & stretch) ====================
+  const allButtons = document.querySelectorAll('.copy-trade-btn, .nav-item');
+  allButtons.forEach(btn => {
+    const pressSpringX = new Spring(0.2, 0.65);
+    const pressSpringY = new Spring(0.2, 0.65);
+    pressSpringX.current = 1;
+    pressSpringX.target = 1;
+    pressSpringY.current = 1;
+    pressSpringY.target = 1;
+
+    let animating = false;
+
+    function animatePress() {
+      const sx = pressSpringX.step();
+      const sy = pressSpringY.step();
+      btn.style.transform = `scale(${sx}, ${sy})`;
+      if (!pressSpringX.isSettled() || !pressSpringY.isSettled()) {
+        requestAnimationFrame(animatePress);
+      } else {
+        btn.style.transform = '';
+        animating = false;
+      }
+    }
+
+    btn.addEventListener('mousedown', () => {
+      pressSpringX.current = 1;
+      pressSpringY.current = 1;
+      pressSpringX.velocity = 0;
+      pressSpringY.velocity = 0;
+      pressSpringX.setTarget(1.0);
+      pressSpringY.setTarget(0.95);
+      animating = true;
+      requestAnimationFrame(animatePress);
+    });
+
+    btn.addEventListener('mouseup', () => {
+      pressSpringX.setTarget(0.98);
+      pressSpringY.setTarget(1.03);
+      setTimeout(() => {
+        pressSpringX.setTarget(1);
+        pressSpringY.setTarget(1);
+      }, 80);
+      if (!animating) {
+        animating = true;
+        requestAnimationFrame(animatePress);
+      }
+    });
+
+    btn.addEventListener('mouseleave', () => {
+      pressSpringX.setTarget(1);
+      pressSpringY.setTarget(1);
+      if (!animating) {
+        animating = true;
+        requestAnimationFrame(animatePress);
+      }
+    });
+  });
+
+  // ==================== SCROLL PROGRESS ====================
+  const scrollProgressEl = document.getElementById('scrollProgress');
+  window.addEventListener('scroll', () => {
+    const scrolled = window.scrollY;
+    const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+    const pct = maxScroll > 0 ? (scrolled / maxScroll) * 100 : 0;
+    scrollProgressEl.style.width = pct + '%';
+  }, { passive: true });
+
+  // ==================== CONTEXT-AWARE HEADER ====================
+  const contextHeader = document.getElementById('contextHeader');
+  const sections = document.querySelectorAll('[data-section]');
+  let lastSection = '';
+
+  const sectionObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const name = entry.target.getAttribute('data-section');
+        if (name !== lastSection) {
+          lastSection = name;
+          contextHeader.textContent = name;
+          contextHeader.classList.add('visible');
+        }
+      }
+    });
+  }, { threshold: 0.3, rootMargin: '-60px 0px -60px 0px' });
+
+  sections.forEach(s => sectionObserver.observe(s));
+
+  // Hide header at top
+  window.addEventListener('scroll', () => {
+    if (window.scrollY < 50) {
+      contextHeader.classList.remove('visible');
+    } else {
+      contextHeader.classList.add('visible');
+    }
+  }, { passive: true });
+
+  // ==================== PARALLAX ON SCROLL ====================
+  const heroInner = document.getElementById('heroInner');
+  const heroChartContainer = document.getElementById('heroChartContainer');
+  const heroValue = document.getElementById('heroValue');
+
+  window.addEventListener('scroll', () => {
+    const scrolled = window.scrollY;
+    if (scrolled < 400) {
+      const slow = scrolled * 0.3;
+      const fast = scrolled * 0.6;
+      if (heroValue) heroValue.style.transform = `translateY(${slow}px)`;
+      if (heroChartContainer) heroChartContainer.style.transform = `translateY(-${fast * 0.3}px)`;
+    }
+  }, { passive: true });
+
+  // ==================== SECTION REVEAL WITH SPRING (IntersectionObserver) ====================
+  function springReveal(el, direction, delay) {
+    return new Promise(resolve => {
+      const s = new Spring(0.1, 0.72);
+      const opSpring = new Spring(0.08, 0.8);
+      let startX = 0, startY = 0;
+
+      if (direction === 'up') startY = 40;
+      else if (direction === 'left') startX = -40;
+      else if (direction === 'right') startX = 40;
+      else if (direction === 'down') startY = -30;
+
+      s.current = 1; // starts at 1 (full offset)
+      s.target = 0;
+      opSpring.current = 0;
+      opSpring.target = 1;
+
+      setTimeout(() => {
+        function step() {
+          const val = s.step();
+          const op = opSpring.step();
+          el.style.transform = `translate(${startX * val}px, ${startY * val}px)`;
+          el.style.opacity = op;
+          if (!s.isSettled() || !opSpring.isSettled()) {
+            requestAnimationFrame(step);
+          } else {
+            el.style.transform = '';
+            el.style.opacity = '1';
+            resolve();
+          }
+        }
+        requestAnimationFrame(step);
+      }, delay);
+    });
+  }
+
+  // ==================== RIPPLE EFFECT ====================
+  function createRipple(e, container) {
+    const rect = container.getBoundingClientRect();
+    const ripple = document.createElement('div');
+    ripple.className = 'ripple';
+    ripple.style.left = (e.clientX - rect.left) + 'px';
+    ripple.style.top = (e.clientY - rect.top) + 'px';
+    container.appendChild(ripple);
+    setTimeout(() => ripple.remove(), 600);
+  }
+
+  document.querySelectorAll('.position-card, .signal-card, .stat-pill').forEach(card => {
+    card.addEventListener('click', (e) => createRipple(e, card));
+  });
+
+  // ==================== COPY TRADE WITH PARTICLE BURST ====================
+  function emitParticles(btn) {
+    const rect = btn.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    const colors = ['#4F6EF7', '#38BDF8', '#34D399', '#8B5CF6', '#6366F1'];
+    const count = 10;
+
+    for (let i = 0; i < count; i++) {
+      const p = document.createElement('div');
+      p.className = 'copy-particle';
+      p.style.position = 'fixed';
+      p.style.left = cx + 'px';
+      p.style.top = cy + 'px';
+      p.style.background = colors[Math.floor(Math.random() * colors.length)];
+      p.style.width = (3 + Math.random() * 4) + 'px';
+      p.style.height = p.style.width;
+      document.body.appendChild(p);
+
+      const angle = (Math.PI * 2 / count) * i + (Math.random() - 0.5) * 0.5;
+      const speed = 60 + Math.random() * 80;
+      const vx = Math.cos(angle) * speed;
+      const vy = Math.sin(angle) * speed;
+      let px = cx, py = cy, op = 1;
+      const gravity = 120;
+      let t = 0;
+
+      function animP() {
+        t += 0.016;
+        px += vx * 0.016;
+        py += vy * 0.016 + gravity * t * 0.016;
+        op -= 0.025;
+        p.style.left = px + 'px';
+        p.style.top = py + 'px';
+        p.style.opacity = Math.max(0, op);
+        if (op > 0) {
+          requestAnimationFrame(animP);
+        } else {
+          p.remove();
+        }
+      }
+      requestAnimationFrame(animP);
+    }
+  }
+
+  function handleCopy(btn) {
+    if (btn.classList.contains('copied')) return;
+    const textEl = btn.querySelector('.btn-text');
+    btn.classList.add('copied');
+    textEl.textContent = '\u2713 Copied';
+    emitParticles(btn);
+
+    setTimeout(() => {
+      btn.classList.remove('copied');
+      textEl.textContent = 'Copy Trade';
+    }, 2000);
+  }
+
+  document.querySelectorAll('.copy-trade-btn').forEach(btn => {
+    btn.addEventListener('click', () => handleCopy(btn));
+  });
+
+  // ==================== HERO PARALLAX TILT ====================
+  const heroCard = document.getElementById('heroCard');
+
+  heroCard.addEventListener('mousemove', (e) => {
+    const rect = heroCard.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width - 0.5;
+    const y = (e.clientY - rect.top) / rect.height - 0.5;
+    heroInner.style.transform = `perspective(800px) rotateY(${x * 4}deg) rotateX(${-y * 4}deg)`;
+  });
+
+  heroCard.addEventListener('mouseleave', () => {
+    heroInner.style.transform = 'perspective(800px) rotateY(0deg) rotateX(0deg)';
+  });
+
+  // ==================== BOTTOM NAV TAB SWITCHING ====================
+  document.querySelectorAll('.nav-item').forEach(item => {
+    item.addEventListener('click', function() {
+      document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+      this.classList.add('active');
+      const icon = this.querySelector('.nav-icon');
+      icon.style.transform = 'scale(1.2)';
+      icon.style.transition = 'transform 0.35s cubic-bezier(.34,1.56,.64,1)';
+      setTimeout(() => { icon.style.transform = 'scale(1)'; }, 180);
+    });
+  });
+
+  // ==================== FOCUS BY NEGATION ====================
+  const statsScroll = document.getElementById('statsScroll');
+  const pills = statsScroll.querySelectorAll('.stat-pill');
+
+  pills.forEach(pill => {
+    pill.addEventListener('mouseenter', () => {
+      pills.forEach(p => {
+        if (p !== pill) {
+          p.style.opacity = '0.4';
+          p.style.filter = 'blur(1px)';
+        } else {
+          p.style.opacity = '1';
+          p.style.filter = 'blur(0px)';
+        }
+      });
+    });
+  });
+
+  statsScroll.addEventListener('mouseleave', () => {
+    pills.forEach(p => {
+      p.style.opacity = '1';
+      p.style.filter = 'blur(0px)';
+    });
+  });
+
+  // ==================== SPRING NUMBER COUNTER ====================
+  function springCountTo(el, target, duration) {
+    const prefix = el.dataset.prefix || '';
+    const suffix = el.dataset.suffix || '';
+    const useComma = el.dataset.comma === 'true';
+    const spring = new Spring(0.06, 0.82);
+    spring.current = 0;
+    spring.target = target;
+
+    function formatNum(n) {
+      const rounded = Math.round(n);
+      let str = rounded.toString();
+      if (useComma) {
+        str = rounded.toLocaleString();
+      }
+      return prefix + str + suffix;
+    }
+
+    function step() {
+      const val = spring.step();
+      el.textContent = formatNum(val);
+      if (!spring.isSettled()) {
+        requestAnimationFrame(step);
+      } else {
+        el.textContent = formatNum(target);
+      }
+    }
+    requestAnimationFrame(step);
+  }
+
+  // Hero value spring counter
+  function animateHeroValue() {
+    const el = document.getElementById('heroValue');
+    const target = 147832.50;
+    const spring = new Spring(0.04, 0.85);
+    spring.current = 0;
+    spring.target = target;
+
+    function step() {
+      const val = spring.step();
+      const whole = Math.floor(val);
+      const dec = Math.floor((val - whole) * 100);
+      el.innerHTML = '$' + whole.toLocaleString() + '<span class="decimals">.' + String(dec).padStart(2, '0') + '</span>';
+      if (!spring.isSettled()) {
+        requestAnimationFrame(step);
+      } else {
+        el.innerHTML = '$147,832<span class="decimals">.50</span>';
+      }
+    }
+    requestAnimationFrame(step);
+  }
+
+  // ==================== COUNTER VIEWPORT TRIGGER ====================
+  const counterEls = document.querySelectorAll('.counter-value');
+  const counterTriggered = new Set();
+
+  const counterObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting && !counterTriggered.has(entry.target)) {
+        counterTriggered.add(entry.target);
+        const target = parseInt(entry.target.dataset.target);
+        springCountTo(entry.target, target, 1000);
+      }
+    });
+  }, { threshold: 0.5 });
+
+  counterEls.forEach(el => counterObserver.observe(el));
+
+  // ==================== CONFETTI EASTER EGG (triple click portfolio) ====================
+  let clickTimes = [];
+  document.getElementById('heroValue').addEventListener('click', () => {
+    const now = Date.now();
+    clickTimes.push(now);
+    clickTimes = clickTimes.filter(t => now - t < 800);
+    if (clickTimes.length >= 3) {
+      clickTimes = [];
+      spawnConfetti();
+    }
+  });
+
+  function spawnConfetti() {
+    const colors = ['#4F6EF7', '#38BDF8', '#34D399', '#F87171', '#FBBF24', '#8B5CF6', '#6366F1', '#EC4899'];
+    for (let i = 0; i < 30; i++) {
+      const piece = document.createElement('div');
+      piece.className = 'confetti-piece';
+      piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+      piece.style.left = (window.innerWidth / 2 + (Math.random() - 0.5) * 200) + 'px';
+      piece.style.top = (window.innerHeight / 3) + 'px';
+      piece.style.width = (5 + Math.random() * 6) + 'px';
+      piece.style.height = (5 + Math.random() * 6) + 'px';
+      piece.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+      document.body.appendChild(piece);
+
+      const vx = (Math.random() - 0.5) * 400;
+      const vy = -200 - Math.random() * 300;
+      let px = parseFloat(piece.style.left);
+      let py = parseFloat(piece.style.top);
+      let op = 1;
+      let rotation = Math.random() * 360;
+      const rotSpeed = (Math.random() - 0.5) * 600;
+      const gravity = 600;
+      let t = 0;
+
+      function animC() {
+        t += 0.016;
+        px += vx * 0.016;
+        py += vy * 0.016 + gravity * t * 0.016;
+        rotation += rotSpeed * 0.016;
+        op -= 0.012;
+        piece.style.left = px + 'px';
+        piece.style.top = py + 'px';
+        piece.style.transform = `rotate(${rotation}deg)`;
+        piece.style.opacity = Math.max(0, op);
+        if (op > 0 && py < window.innerHeight + 50) {
+          requestAnimationFrame(animC);
+        } else {
+          piece.remove();
+        }
+      }
+      requestAnimationFrame(animC);
+    }
+  }
+
+  // ==================== KEYBOARD SHORTCUTS (1-5 highlight cards) ====================
+  document.addEventListener('keydown', (e) => {
+    const num = parseInt(e.key);
+    if (num >= 1 && num <= 5) {
+      const card = document.querySelector(`.position-card[data-position="${num}"]`);
+      if (card) {
+        card.classList.add('glow-highlight');
+        setTimeout(() => card.classList.remove('glow-highlight'), 1200);
+      }
+    }
+  });
+
+  // ==================== CHOREOGRAPHED ENTRANCE SEQUENCE ====================
+  function runEntrance() {
+    // 1. Background mesh fades in (0-300ms)
+    setTimeout(() => {
+      bgMesh.classList.add('visible');
+    }, 0);
+
+    // 1b. Greeting fades in
+    setTimeout(() => {
+      springReveal(greetingEl, 'up', 0);
+    }, 100);
+
+    // 2. Hero card fades in and value counts up (300-1200ms)
+    setTimeout(() => {
+      springReveal(heroCard, 'up', 0).then(() => {});
+      animateHeroValue();
+    }, 300);
+
+    // 3. Chart line draws in (1000-2000ms)
+    setTimeout(() => {
+      const chartLine = document.getElementById('chartLine');
+      const chartArea = document.getElementById('chartArea');
+      chartLine.style.transition = 'stroke-dashoffset 1.5s ease-out';
+      chartLine.style.strokeDashoffset = '0';
+      setTimeout(() => {
+        chartArea.style.transition = 'opacity 0.8s ease-out';
+        chartArea.style.opacity = '1';
+      }, 400);
+    }, 1000);
+
+    // 4. Stats pills slide in from left with stagger (800-1200ms)
+    const statsSection = document.getElementById('statsSection');
+    setTimeout(() => {
+      springReveal(statsSection, 'left', 0);
+      // Animate sparklines
+      setTimeout(() => {
+        document.querySelectorAll('.stat-sparkline polyline').forEach((pl, i) => {
+          setTimeout(() => {
+            pl.style.transition = 'stroke-dashoffset 0.8s ease-out';
+            pl.style.strokeDashoffset = '0';
+          }, i * 100);
+        });
+      }, 200);
+    }, 800);
+
+    // 5. Position cards cascade with spring (1200-1800ms)
+    setTimeout(() => {
+      const posSection = document.getElementById('positionsSection');
+      posSection.style.opacity = '1';
+      const cards = posSection.querySelectorAll('.position-card');
+      cards.forEach((card, i) => {
+        springReveal(card, 'up', i * 80);
+      });
+      // Animate progress bars
+      setTimeout(() => {
+        document.querySelectorAll('.position-progress-bar').forEach(bar => {
+          const target = bar.dataset.targetWidth;
+          bar.style.width = target + '%';
+        });
+      }, 300);
+    }, 1200);
+
+    // 6. Signal cards slide in from left (1600-2200ms)
+    setTimeout(() => {
+      const sigSection = document.getElementById('signalsSection');
+      sigSection.style.opacity = '1';
+      const cards = sigSection.querySelectorAll('.signal-card');
+      cards.forEach((card, i) => {
+        springReveal(card, 'left', i * 120);
+      });
+    }, 1600);
+
+    // 7. Bottom nav fades up (2000-2400ms)
+    setTimeout(() => {
+      const nav = document.getElementById('bottomNav');
+      nav.style.opacity = '1';
+      nav.style.transition = 'transform 0.6s cubic-bezier(.22,1.2,.36,1)';
+      nav.style.transform = 'translateX(-50%) translateY(0)';
+    }, 2000);
+  }
+
+  // Start entrance
+  requestAnimationFrame(() => {
+    requestAnimationFrame(runEntrance);
+  });
+
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Design Skills Showcase</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0c0c0f;
+    --surface: #16161a;
+    --surface2: #1e1e24;
+    --border: #2a2925;
+    --text: #e8e6e3;
+    --text2: #9b9792;
+    --text3: #6b6760;
+    --gold: #c9a962;
+    --gold-bg: rgba(201,169,98,.1);
+    --green: #4cce92;
+    --green-bg: rgba(76,206,146,.08);
+    --red: #e05252;
+    --red-bg: rgba(224,82,82,.08);
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 48px 20px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1 {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 28px;
+    font-weight: 400;
+    letter-spacing: -0.3px;
+    margin-bottom: 8px;
+    text-align: center;
+  }
+  .subtitle {
+    color: var(--text3);
+    font-size: 13px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 48px;
+    text-align: center;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    max-width: 720px;
+    width: 100%;
+  }
+
+  /* === PRINCIPLE 1: Glassmorphism Depth (Granola) === */
+  .glass-card {
+    background: rgba(22,22,26,.7);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 0.5px solid rgba(201,169,98,.12);
+    border-radius: 12px;
+    padding: 24px;
+    transition: all .3s ease-out;
+    position: relative;
+    overflow: hidden;
+  }
+  .glass-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(201,169,98,.2), transparent);
+  }
+  .glass-card:hover {
+    border-color: rgba(201,169,98,.25);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(0,0,0,.3), 0 0 1px rgba(201,169,98,.15);
+  }
+
+  /* === PRINCIPLE 2: Typography Hierarchy (Frank Rausch) === */
+  .card-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 2.5px;
+    color: var(--text3);
+    margin-bottom: 12px;
+    font-weight: 400;
+  }
+  .card-value {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 32px;
+    font-weight: 400;
+    letter-spacing: -0.5px;
+    margin-bottom: 8px;
+  }
+  .card-change {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 4px 10px;
+    border-radius: 4px;
+    display: inline-block;
+  }
+  .card-change.up { background: var(--green-bg); color: var(--green); }
+  .card-change.down { background: var(--red-bg); color: var(--red); }
+
+  /* === PRINCIPLE 3: Skeleton Loading (Psychology of Waiting) === */
+  .skeleton {
+    background: linear-gradient(90deg, var(--surface2) 25%, #2a2a30 50%, var(--surface2) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s ease-in-out infinite;
+    border-radius: 6px;
+  }
+  @keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+  .skel-line { height: 12px; margin-bottom: 8px; }
+  .skel-line:nth-child(1) { width: 40%; }
+  .skel-line:nth-child(2) { width: 70%; height: 28px; margin-bottom: 12px; }
+  .skel-line:nth-child(3) { width: 30%; height: 20px; }
+  .skeleton-card { padding: 24px; }
+
+  /* === PRINCIPLE 4: Micro-Interactions (Design Spells) === */
+  .position-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all .2s ease-out;
+    border: 0.5px solid transparent;
+  }
+  .position-row:hover {
+    background: rgba(201,169,98,.04);
+    border-color: rgba(201,169,98,.1);
+  }
+  .position-row:active {
+    transform: scale(0.98);
+  }
+  .pos-icon {
+    width: 36px; height: 36px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 700;
+    background: linear-gradient(135deg, var(--gold), #a8893e);
+    color: var(--bg);
+    flex-shrink: 0;
+  }
+  .pos-info { flex: 1; }
+  .pos-ticker { font-size: 14px; font-weight: 600; }
+  .pos-detail { font-size: 11px; color: var(--text3); margin-top: 2px; }
+  .pos-pnl {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .pos-pnl.up { color: var(--green); }
+
+  /* === PRINCIPLE 5: Focus by Negation (Kevin Powell) === */
+  .focus-demo {
+    grid-column: 1 / -1;
+    display: flex;
+    gap: 12px;
+    perspective: 800px;
+  }
+  .focus-item {
+    flex: 1;
+    padding: 20px;
+    border-radius: 10px;
+    border: 0.5px solid var(--border);
+    background: var(--surface);
+    text-align: center;
+    transition: all .35s ease-out;
+    cursor: pointer;
+  }
+  .focus-item .fi-value {
+    font-family: 'Playfair Display', serif;
+    font-size: 24px;
+    margin-bottom: 4px;
+  }
+  .focus-item .fi-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--text3);
+  }
+  .focus-demo:hover .focus-item {
+    opacity: 0.35;
+    filter: blur(1px);
+    transform: scale(0.97);
+  }
+  .focus-demo:hover .focus-item:hover {
+    opacity: 1;
+    filter: blur(0);
+    transform: scale(1.03);
+    border-color: var(--gold);
+    box-shadow: 0 4px 24px rgba(201,169,98,.12);
+  }
+
+  /* === PRINCIPLE 6: Spring/Bouncy Button (Facebook Paper physics) === */
+  .cta-row {
+    grid-column: 1 / -1;
+    display: flex;
+    gap: 12px;
+  }
+  .btn-spring {
+    flex: 1;
+    padding: 16px 24px;
+    border: none;
+    border-radius: 8px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .25s cubic-bezier(.34,1.56,.64,1);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .btn-spring:hover {
+    transform: translateY(-3px);
+  }
+  .btn-spring:active {
+    transform: scale(0.95);
+    transition-duration: .1s;
+  }
+  .btn-gold {
+    background: linear-gradient(135deg, #c9a962, #a8893e);
+    color: #0c0c0f;
+    box-shadow: 0 4px 20px rgba(201,169,98,.2);
+  }
+  .btn-gold:hover {
+    box-shadow: 0 8px 32px rgba(201,169,98,.35);
+  }
+  .btn-ghost {
+    background: transparent;
+    color: var(--gold);
+    border: 0.5px solid rgba(201,169,98,.25);
+  }
+  .btn-ghost:hover {
+    background: rgba(201,169,98,.06);
+    border-color: rgba(201,169,98,.4);
+  }
+
+  /* === PRINCIPLE 7: Cursor-Following Glow (Luma) === */
+  .glow-card {
+    grid-column: 1 / -1;
+    position: relative;
+    border-radius: 12px;
+    padding: 32px;
+    border: 0.5px solid var(--border);
+    background: var(--surface);
+    overflow: hidden;
+    cursor: default;
+  }
+  .glow-card .glow-orb {
+    position: absolute;
+    width: 200px; height: 200px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(201,169,98,.12) 0%, transparent 70%);
+    pointer-events: none;
+    transform: translate(-50%, -50%);
+    transition: opacity .3s;
+    opacity: 0;
+  }
+  .glow-card:hover .glow-orb { opacity: 1; }
+  .glow-card .glow-content { position: relative; z-index: 1; }
+  .glow-card .glow-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 20px;
+    margin-bottom: 8px;
+  }
+  .glow-card .glow-text {
+    font-size: 13px;
+    color: var(--text2);
+    line-height: 1.6;
+    max-width: 500px;
+  }
+
+  /* === PRINCIPLE 8: Dense Data Layout (UI Density) === */
+  .dense-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+  }
+  .dense-table th {
+    text-align: left;
+    padding: 6px 8px;
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text3);
+    font-weight: 500;
+    border-bottom: 0.5px solid var(--border);
+  }
+  .dense-table td {
+    padding: 8px;
+    border-bottom: 0.5px solid rgba(42,41,37,.5);
+    transition: background .15s;
+  }
+  .dense-table tr:hover td {
+    background: rgba(201,169,98,.03);
+  }
+  .dense-table .mono { font-weight: 600; }
+  .dense-table .green { color: var(--green); }
+  .dense-table .red { color: var(--red); }
+  .dense-table .gold { color: var(--gold); }
+
+  .tag-label {
+    display: inline-block;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 2px 6px;
+    border-radius: 3px;
+    margin-top: 16px;
+    color: var(--gold);
+    background: var(--gold-bg);
+    border: 0.5px solid rgba(201,169,98,.2);
+  }
+
+  @media (max-width: 600px) {
+    .grid { grid-template-columns: 1fr; }
+    .focus-demo { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<h1>Design Principles in Action</h1>
+<p class="subtitle">From your Are.na boards</p>
+
+<div class="grid">
+
+  <!-- Glassmorphism + Typography Hierarchy -->
+  <div class="glass-card">
+    <div class="card-label">Portfolio Value</div>
+    <div class="card-value">$47,280</div>
+    <span class="card-change up">+$1,840 (4.05%)</span>
+    <div class="tag-label">Glassmorphism + Typography Hierarchy</div>
+  </div>
+
+  <!-- Skeleton Loading State -->
+  <div class="glass-card skeleton-card">
+    <div class="card-label">Loading State</div>
+    <div class="skeleton skel-line"></div>
+    <div class="skeleton skel-line"></div>
+    <div class="skeleton skel-line"></div>
+    <div class="tag-label" style="margin-top:24px">Skeleton Screen (not spinner)</div>
+  </div>
+
+  <!-- Micro-Interactions on List Items -->
+  <div class="glass-card" style="padding:16px 8px">
+    <div class="card-label" style="padding:0 16px">Micro-Interactions</div>
+    <div class="position-row">
+      <div class="pos-icon">AA</div>
+      <div class="pos-info">
+        <div class="pos-ticker">AAPL $185P</div>
+        <div class="pos-detail">Dec 20 · 32 DTE</div>
+      </div>
+      <div class="pos-pnl up">+$284</div>
+    </div>
+    <div class="position-row">
+      <div class="pos-icon">NV</div>
+      <div class="pos-info">
+        <div class="pos-ticker">NVDA $420P</div>
+        <div class="pos-detail">Jan 17 · 60 DTE</div>
+      </div>
+      <div class="pos-pnl up">+$512</div>
+    </div>
+    <div class="position-row">
+      <div class="pos-icon">MS</div>
+      <div class="pos-info">
+        <div class="pos-ticker">MSFT $370C</div>
+        <div class="pos-detail">Dec 27 · 39 DTE</div>
+      </div>
+      <div class="pos-pnl up">+$176</div>
+    </div>
+    <div class="tag-label" style="margin-left:16px">Hover = subtle bg + border shift</div>
+  </div>
+
+  <!-- Dense Data Table (UI Density) -->
+  <div class="glass-card" style="padding:16px">
+    <div class="card-label">Dense Data Layout</div>
+    <table class="dense-table">
+      <tr><th>Strike</th><th>Bid</th><th>Ask</th><th>Delta</th><th>IV</th></tr>
+      <tr><td class="mono gold">$185</td><td class="green">2.45</td><td>2.68</td><td>0.28</td><td>32%</td></tr>
+      <tr><td class="mono">$180</td><td class="green">1.82</td><td>1.96</td><td>0.22</td><td>30%</td></tr>
+      <tr><td class="mono">$175</td><td class="green">1.24</td><td>1.38</td><td>0.16</td><td>28%</td></tr>
+      <tr><td class="mono">$170</td><td class="green">0.78</td><td>0.92</td><td>0.11</td><td>27%</td></tr>
+    </table>
+    <div class="tag-label">Data-ink ratio maximized</div>
+  </div>
+
+  <!-- Focus by Negation -->
+  <div class="focus-demo">
+    <div class="focus-item">
+      <div class="fi-value">84%</div>
+      <div class="fi-label">Win Rate</div>
+    </div>
+    <div class="focus-item">
+      <div class="fi-value">$3.2k</div>
+      <div class="fi-label">Monthly</div>
+    </div>
+    <div class="focus-item">
+      <div class="fi-value">12</div>
+      <div class="fi-label">Positions</div>
+    </div>
+    <div class="focus-item">
+      <div class="fi-value">28d</div>
+      <div class="fi-label">Avg DTE</div>
+    </div>
+  </div>
+  <div style="grid-column:1/-1;text-align:center;margin-top:-8px"><span class="tag-label">Focus by Negation — hover one, others blur</span></div>
+
+  <!-- Cursor-Following Glow -->
+  <div class="glow-card" id="glowCard">
+    <div class="glow-orb" id="glowOrb"></div>
+    <div class="glow-content">
+      <div class="glow-title">Cursor-Following Light</div>
+      <div class="glow-text">Move your cursor over this card. The radial glow follows your mouse position, creating a subtle spotlight effect inspired by Luma's button interactions from your Are.na board.</div>
+    </div>
+    <div class="tag-label">Luma-style cursor tracking</div>
+  </div>
+
+  <!-- Spring Physics Buttons -->
+  <div class="cta-row">
+    <button class="btn-spring btn-gold">Spring Bounce</button>
+    <button class="btn-spring btn-ghost">Ghost Hover</button>
+  </div>
+  <div style="grid-column:1/-1;text-align:center;margin-top:-8px"><span class="tag-label">Facebook Paper physics — cubic-bezier(.34,1.56,.64,1)</span></div>
+
+</div>
+
+<script>
+// Cursor-following glow (Luma pattern)
+const card = document.getElementById('glowCard');
+const orb = document.getElementById('glowOrb');
+card.addEventListener('mousemove', e => {
+  const rect = card.getBoundingClientRect();
+  orb.style.left = (e.clientX - rect.left) + 'px';
+  orb.style.top = (e.clientY - rect.top) + 'px';
+});
+</script>
+</body>
+</html>
