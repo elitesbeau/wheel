@@ -3735,7 +3735,7 @@ async function sellCCOnWheel(wheelId) {
     </div>
   </div>`;
   document.body.appendChild(modal);
-  setTimeout(() => modal.classList.add('active'), 10);
+  setTimeout(() => modal.classList.add('show'), 10);
 
   // Fetch quote + chain
   try {
@@ -3839,7 +3839,7 @@ function updateCCTotal() {
 
 function closeCCSellModal() {
   const m = $('ccSellModal');
-  if (m) { m.classList.remove('active'); setTimeout(() => m.remove(), 200); }
+  if (m) { m.classList.remove('show'); setTimeout(() => m.remove(), 200); }
   ccWheelId = null;
   ccChainData = null;
 }
@@ -4266,6 +4266,10 @@ function markPostAssigned(postId, postRef) {
   try {
   const post = postRef || (S.adminPosts || []).find(p => p.id === postId);
   if (!post) { alert('markPostAssigned: post not found'); return; }
+
+  // Guard: don't assign twice
+  if (post.status === 'assigned' || post.wheelId) { showToast('Already assigned', 'error'); return; }
+  if ((S.wheelPositions || []).find(w => w.cspSignalId === post.id)) { showToast('Wheel position already exists for this CSP', 'error'); return; }
 
   // adminAction already closed the admin modal
   // Fetch live stock price first, then prompt for contracts
