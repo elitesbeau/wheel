@@ -1,0 +1,1028 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Signal Dark — Market Elites Wheel Strategy</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  :root {
+    --bg: #111113;
+    --surface: #1B1B1F;
+    --card: #222228;
+    --card-border: rgba(255,255,255,0.06);
+    --primary: #7C5CFC;
+    --mint: #22D3A7;
+    --negative: #F5455C;
+    --amber: #F5A623;
+    --text-primary: #EDEDF0;
+    --text-secondary: #78788C;
+    --gradient: linear-gradient(135deg, #7C5CFC, #22D3A7);
+    --gradient-reverse: linear-gradient(135deg, #22D3A7, #7C5CFC);
+    --radius-card: 14px;
+    --radius-btn: 10px;
+    --radius-input: 8px;
+  }
+
+  html {
+    background: #000;
+  }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg);
+    color: var(--text-primary);
+    max-width: 430px;
+    margin: 0 auto;
+    min-height: 100vh;
+    position: relative;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  .mono {
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* ====== TOP BAR ====== */
+  .top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(17,17,19,0.85);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+  }
+
+  .top-bar-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .logo-circle {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--gradient);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 900;
+    font-size: 13px;
+    letter-spacing: -0.5px;
+    color: #fff;
+    flex-shrink: 0;
+  }
+
+  .brand-name {
+    font-weight: 700;
+    font-size: 16px;
+    letter-spacing: -0.3px;
+  }
+
+  .top-bar-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .notification-btn {
+    position: relative;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+  }
+
+  .notification-btn svg {
+    width: 22px;
+    height: 22px;
+    color: var(--text-secondary);
+    transition: color 0.2s;
+  }
+
+  .notification-btn:hover svg {
+    color: var(--text-primary);
+  }
+
+  .notif-dot {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--negative);
+    border: 2px solid var(--bg);
+  }
+
+  .avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--card);
+    border: 2px solid rgba(124,92,252,0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 12px;
+    color: var(--primary);
+    cursor: pointer;
+    transition: border-color 0.2s;
+  }
+
+  .avatar:hover {
+    border-color: var(--primary);
+  }
+
+  /* ====== SCROLLABLE CONTENT ====== */
+  .content {
+    padding: 0 20px 100px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  /* ====== HERO CARD ====== */
+  .hero-card {
+    position: relative;
+    background: var(--surface);
+    border-radius: var(--radius-card);
+    padding: 24px;
+    margin-top: 8px;
+    overflow: hidden;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+    cursor: default;
+  }
+
+  .hero-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: var(--radius-card);
+    padding: 1px;
+    background: linear-gradient(135deg, rgba(124,92,252,0.5), rgba(34,211,167,0.3), rgba(124,92,252,0.1));
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+
+  .hero-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px rgba(124,92,252,0.12);
+  }
+
+  .hero-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+
+  .hero-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    letter-spacing: 0.02em;
+  }
+
+  .hero-period {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    background: rgba(255,255,255,0.05);
+    padding: 4px 10px;
+    border-radius: 6px;
+  }
+
+  .hero-value {
+    font-size: 42px;
+    font-weight: 800;
+    letter-spacing: -2px;
+    line-height: 1.1;
+    margin-bottom: 10px;
+    background: linear-gradient(135deg, #fff 30%, rgba(237,237,240,0.7));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .hero-change {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 14px;
+    background: linear-gradient(135deg, rgba(124,92,252,0.2), rgba(34,211,167,0.15));
+    color: var(--mint);
+    margin-bottom: 20px;
+  }
+
+  .hero-change svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .hero-chart {
+    width: 100%;
+    height: 80px;
+    margin-top: 4px;
+  }
+
+  /* ====== STATS STRIP ====== */
+  .stats-strip {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .stats-strip::-webkit-scrollbar {
+    display: none;
+  }
+
+  .stat-pill {
+    flex-shrink: 0;
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius-card);
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 120px;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+    cursor: default;
+  }
+
+  .stat-pill:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+  }
+
+  .stat-pill::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 8px;
+    bottom: 8px;
+    width: 3px;
+    border-radius: 0 3px 3px 0;
+  }
+
+  .stat-pill.accent-purple::before { background: var(--primary); }
+  .stat-pill.accent-mint::before { background: var(--mint); }
+  .stat-pill.accent-amber::before { background: var(--amber); }
+  .stat-pill.accent-red::before { background: var(--negative); }
+
+  .stat-pill-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .stat-pill-value {
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+  }
+
+  /* ====== SECTION ====== */
+  .section {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .section-title {
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: -0.2px;
+  }
+
+  .section-link {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--primary);
+    text-decoration: none;
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+
+  .section-link:hover {
+    opacity: 0.8;
+  }
+
+  /* ====== CATEGORY BREAKDOWN ====== */
+  .breakdown-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius-card);
+    padding: 20px;
+  }
+
+  .breakdown-item {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .breakdown-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .breakdown-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  .breakdown-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .breakdown-amount {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  .breakdown-pct {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    background: rgba(255,255,255,0.05);
+    padding: 2px 8px;
+    border-radius: 5px;
+  }
+
+  .breakdown-bar-track {
+    width: 100%;
+    height: 6px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .breakdown-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 1s ease;
+  }
+
+  .fill-purple { background: linear-gradient(90deg, #7C5CFC, #9B7FFF); }
+  .fill-mint { background: linear-gradient(90deg, #22D3A7, #4CECC6); }
+  .fill-amber { background: linear-gradient(90deg, #F5A623, #FFCA57); }
+
+  /* ====== POSITION CARDS ====== */
+  .positions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .position-card {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius-card);
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+    cursor: pointer;
+  }
+
+  .position-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+  }
+
+  .position-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .position-top-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+
+  .position-ticker {
+    font-size: 16px;
+    font-weight: 800;
+    letter-spacing: -0.3px;
+  }
+
+  .badge {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 6px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .badge-csp {
+    background: var(--gradient);
+    color: #fff;
+  }
+
+  .badge-cc {
+    background: transparent;
+    color: var(--mint);
+    border: 1.5px solid rgba(34,211,167,0.4);
+  }
+
+  .position-detail {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--text-secondary);
+    font-weight: 500;
+  }
+
+  .position-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+  }
+
+  .position-pnl {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 15px;
+    font-weight: 700;
+  }
+
+  .pnl-positive { color: var(--mint); }
+  .pnl-negative { color: var(--negative); }
+
+  .sparkline-container {
+    width: 60px;
+    height: 24px;
+  }
+
+  /* ====== SIGNAL CARDS ====== */
+  .signals-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .signal-card {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius-card);
+    padding: 16px 16px 16px 20px;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+    cursor: default;
+  }
+
+  .signal-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+  }
+
+  .signal-card::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: var(--gradient);
+  }
+
+  .signal-top-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .badge-new {
+    font-size: 9px;
+    font-weight: 800;
+    padding: 3px 7px;
+    border-radius: 5px;
+    background: rgba(124,92,252,0.2);
+    color: var(--primary);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    animation: pulse-badge 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse-badge {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+  }
+
+  .signal-ticker {
+    font-size: 17px;
+    font-weight: 800;
+    letter-spacing: -0.3px;
+  }
+
+  .signal-type {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+  }
+
+  .signal-details {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  .signal-detail-item {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .signal-detail-label {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .signal-detail-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  .copy-trade-btn {
+    width: 100%;
+    padding: 10px;
+    border: none;
+    border-radius: var(--radius-btn);
+    background: var(--gradient);
+    color: #fff;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.2s, box-shadow 0.2s;
+  }
+
+  .copy-trade-btn:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(124,92,252,0.3);
+  }
+
+  .copy-trade-btn:active {
+    transform: translateY(0);
+    opacity: 0.95;
+  }
+
+  /* ====== BOTTOM NAV ====== */
+  .bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: 430px;
+    background: rgba(27,27,31,0.92);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border-top: 1px solid rgba(255,255,255,0.06);
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    padding: 8px 0 max(8px, env(safe-area-inset-bottom));
+    z-index: 200;
+  }
+
+  .nav-tab {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 12px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    position: relative;
+    transition: opacity 0.2s;
+  }
+
+  .nav-tab svg {
+    width: 22px;
+    height: 22px;
+    color: var(--text-secondary);
+    transition: color 0.2s;
+  }
+
+  .nav-tab-label {
+    font-family: 'Inter', sans-serif;
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    transition: color 0.2s, font-weight 0.2s;
+  }
+
+  .nav-tab.active svg {
+    color: var(--text-primary);
+  }
+
+  .nav-tab.active .nav-tab-label {
+    color: var(--text-primary);
+    font-weight: 700;
+  }
+
+  .nav-tab.active::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 20px;
+    height: 3px;
+    border-radius: 0 0 3px 3px;
+    background: var(--gradient);
+  }
+
+  /* ====== ANIMATIONS ====== */
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(16px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-in {
+    animation: fadeInUp 0.5s ease forwards;
+    opacity: 0;
+  }
+
+  .delay-1 { animation-delay: 0.05s; }
+  .delay-2 { animation-delay: 0.1s; }
+  .delay-3 { animation-delay: 0.15s; }
+  .delay-4 { animation-delay: 0.2s; }
+  .delay-5 { animation-delay: 0.25s; }
+  .delay-6 { animation-delay: 0.3s; }
+</style>
+</head>
+<body>
+
+<!-- ====== TOP BAR ====== -->
+<header class="top-bar">
+  <div class="top-bar-left">
+    <div class="logo-circle">ME</div>
+    <span class="brand-name">Market Elites</span>
+  </div>
+  <div class="top-bar-right">
+    <button class="notification-btn" aria-label="Notifications">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+        <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+      </svg>
+      <span class="notif-dot"></span>
+    </button>
+    <div class="avatar">B</div>
+  </div>
+</header>
+
+<main class="content">
+
+  <!-- ====== HERO CARD ====== -->
+  <div class="hero-card animate-in delay-1">
+    <div class="hero-card-header">
+      <span class="hero-label">Portfolio Value</span>
+      <span class="hero-period">7D</span>
+    </div>
+    <div class="hero-value">$47,280</div>
+    <div class="hero-change">
+      <svg viewBox="0 0 14 14" fill="none"><path d="M7 2.5v9M3.5 6L7 2.5 10.5 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      +$2,140 (4.7%)
+    </div>
+    <svg class="hero-chart" viewBox="0 0 380 80" preserveAspectRatio="none">
+      <defs>
+        <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#7C5CFC" stop-opacity="0.35"/>
+          <stop offset="100%" stop-color="#7C5CFC" stop-opacity="0"/>
+        </linearGradient>
+        <linearGradient id="lineGrad" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stop-color="#7C5CFC"/>
+          <stop offset="100%" stop-color="#22D3A7"/>
+        </linearGradient>
+      </defs>
+      <path d="M0,60 C30,55 50,50 80,42 C110,34 130,38 160,30 C190,22 210,35 240,28 C270,20 290,15 320,18 C340,20 360,8 380,5 L380,80 L0,80 Z" fill="url(#chartGrad)"/>
+      <path d="M0,60 C30,55 50,50 80,42 C110,34 130,38 160,30 C190,22 210,35 240,28 C270,20 290,15 320,18 C340,20 360,8 380,5" fill="none" stroke="url(#lineGrad)" stroke-width="2.5" stroke-linecap="round"/>
+      <circle cx="380" cy="5" r="4" fill="#22D3A7"/>
+      <circle cx="380" cy="5" r="7" fill="rgba(34,211,167,0.2)"/>
+    </svg>
+  </div>
+
+  <!-- ====== STATS STRIP ====== -->
+  <div class="stats-strip animate-in delay-2">
+    <div class="stat-pill accent-mint">
+      <span class="stat-pill-label">Win Rate</span>
+      <span class="stat-pill-value">84%</span>
+    </div>
+    <div class="stat-pill accent-purple">
+      <span class="stat-pill-label">Monthly</span>
+      <span class="stat-pill-value">$3.2K</span>
+    </div>
+    <div class="stat-pill accent-amber">
+      <span class="stat-pill-label">Positions</span>
+      <span class="stat-pill-value">12</span>
+    </div>
+    <div class="stat-pill accent-red">
+      <span class="stat-pill-label">Avg DTE</span>
+      <span class="stat-pill-value">28d</span>
+    </div>
+  </div>
+
+  <!-- ====== CATEGORY BREAKDOWN ====== -->
+  <div class="section animate-in delay-3">
+    <div class="section-header">
+      <h2 class="section-title">Category Breakdown</h2>
+      <a class="section-link">Details</a>
+    </div>
+    <div class="breakdown-list">
+      <div class="breakdown-item">
+        <div class="breakdown-top">
+          <span class="breakdown-label">CSP Income</span>
+          <div class="breakdown-meta">
+            <span class="breakdown-amount">$2,080</span>
+            <span class="breakdown-pct">65%</span>
+          </div>
+        </div>
+        <div class="breakdown-bar-track">
+          <div class="breakdown-bar-fill fill-purple" style="width: 0%" data-target="65"></div>
+        </div>
+      </div>
+      <div class="breakdown-item">
+        <div class="breakdown-top">
+          <span class="breakdown-label">CC Income</span>
+          <div class="breakdown-meta">
+            <span class="breakdown-amount">$800</span>
+            <span class="breakdown-pct">25%</span>
+          </div>
+        </div>
+        <div class="breakdown-bar-track">
+          <div class="breakdown-bar-fill fill-mint" style="width: 0%" data-target="25"></div>
+        </div>
+      </div>
+      <div class="breakdown-item">
+        <div class="breakdown-top">
+          <span class="breakdown-label">Share Gains</span>
+          <div class="breakdown-meta">
+            <span class="breakdown-amount">$320</span>
+            <span class="breakdown-pct">10%</span>
+          </div>
+        </div>
+        <div class="breakdown-bar-track">
+          <div class="breakdown-bar-fill fill-amber" style="width: 0%" data-target="10"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== OPEN POSITIONS ====== -->
+  <div class="section animate-in delay-4">
+    <div class="section-header">
+      <h2 class="section-title">Open Positions</h2>
+      <a class="section-link">View All</a>
+    </div>
+    <div class="positions-list">
+
+      <!-- Position 1 -->
+      <div class="position-card">
+        <div class="position-info">
+          <div class="position-top-row">
+            <span class="position-ticker">AAPL</span>
+            <span class="badge badge-csp">CSP</span>
+          </div>
+          <span class="position-detail mono">$185P &middot; Feb 21</span>
+        </div>
+        <div class="position-right">
+          <span class="position-pnl pnl-positive mono">+$420</span>
+          <div class="sparkline-container">
+            <svg viewBox="0 0 60 24" width="60" height="24" preserveAspectRatio="none">
+              <polyline points="0,18 8,16 16,14 24,17 32,12 40,10 48,8 56,4 60,3" fill="none" stroke="#22D3A7" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Position 2 -->
+      <div class="position-card">
+        <div class="position-info">
+          <div class="position-top-row">
+            <span class="position-ticker">NVDA</span>
+            <span class="badge badge-cc">CC</span>
+          </div>
+          <span class="position-detail mono">$950C &middot; Mar 07</span>
+        </div>
+        <div class="position-right">
+          <span class="position-pnl pnl-positive mono">+$680</span>
+          <div class="sparkline-container">
+            <svg viewBox="0 0 60 24" width="60" height="24" preserveAspectRatio="none">
+              <polyline points="0,20 10,15 18,18 26,12 34,14 42,8 50,6 60,2" fill="none" stroke="#22D3A7" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Position 3 -->
+      <div class="position-card">
+        <div class="position-info">
+          <div class="position-top-row">
+            <span class="position-ticker">AMD</span>
+            <span class="badge badge-csp">CSP</span>
+          </div>
+          <span class="position-detail mono">$140P &middot; Feb 28</span>
+        </div>
+        <div class="position-right">
+          <span class="position-pnl pnl-negative mono">-$115</span>
+          <div class="sparkline-container">
+            <svg viewBox="0 0 60 24" width="60" height="24" preserveAspectRatio="none">
+              <polyline points="0,6 10,8 18,10 26,7 34,12 42,15 50,14 60,19" fill="none" stroke="#F5455C" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ====== LIVE SIGNALS ====== -->
+  <div class="section animate-in delay-5">
+    <div class="section-header">
+      <h2 class="section-title">Live Signals</h2>
+      <a class="section-link">History</a>
+    </div>
+    <div class="signals-list">
+
+      <!-- Signal 1 -->
+      <div class="signal-card">
+        <div class="signal-top-row">
+          <span class="badge-new">NEW</span>
+          <span class="signal-ticker">MSFT</span>
+          <span class="signal-type">&middot; Cash Secured Put</span>
+        </div>
+        <div class="signal-details">
+          <div class="signal-detail-item">
+            <span class="signal-detail-label">Strike</span>
+            <span class="signal-detail-value">$400P</span>
+          </div>
+          <div class="signal-detail-item">
+            <span class="signal-detail-label">Premium</span>
+            <span class="signal-detail-value">$5.20</span>
+          </div>
+          <div class="signal-detail-item">
+            <span class="signal-detail-label">Delta</span>
+            <span class="signal-detail-value">0.22</span>
+          </div>
+        </div>
+        <button class="copy-trade-btn" onclick="this.textContent='Copied!'; setTimeout(()=>this.textContent='Copy Trade', 1200)">Copy Trade</button>
+      </div>
+
+      <!-- Signal 2 -->
+      <div class="signal-card">
+        <div class="signal-top-row">
+          <span class="badge-new">NEW</span>
+          <span class="signal-ticker">AMZN</span>
+          <span class="signal-type">&middot; Covered Call</span>
+        </div>
+        <div class="signal-details">
+          <div class="signal-detail-item">
+            <span class="signal-detail-label">Strike</span>
+            <span class="signal-detail-value">$210C</span>
+          </div>
+          <div class="signal-detail-item">
+            <span class="signal-detail-label">Premium</span>
+            <span class="signal-detail-value">$3.85</span>
+          </div>
+          <div class="signal-detail-item">
+            <span class="signal-detail-label">Delta</span>
+            <span class="signal-detail-value">0.28</span>
+          </div>
+        </div>
+        <button class="copy-trade-btn" onclick="this.textContent='Copied!'; setTimeout(()=>this.textContent='Copy Trade', 1200)">Copy Trade</button>
+      </div>
+
+    </div>
+  </div>
+
+</main>
+
+<!-- ====== BOTTOM NAV ====== -->
+<nav class="bottom-nav">
+  <button class="nav-tab active" aria-label="Dashboard">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="3" width="7" height="7" rx="1"/>
+      <rect x="14" y="3" width="7" height="7" rx="1"/>
+      <rect x="3" y="14" width="7" height="7" rx="1"/>
+      <rect x="14" y="14" width="7" height="7" rx="1"/>
+    </svg>
+    <span class="nav-tab-label">Dashboard</span>
+  </button>
+  <button class="nav-tab" aria-label="Positions">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+    </svg>
+    <span class="nav-tab-label">Positions</span>
+  </button>
+  <button class="nav-tab" aria-label="Signals">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+    </svg>
+    <span class="nav-tab-label">Signals</span>
+  </button>
+  <button class="nav-tab" aria-label="Analytics">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="18" y1="20" x2="18" y2="10"/>
+      <line x1="12" y1="20" x2="12" y2="4"/>
+      <line x1="6" y1="20" x2="6" y2="14"/>
+    </svg>
+    <span class="nav-tab-label">Analytics</span>
+  </button>
+  <button class="nav-tab" aria-label="Settings">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="3"/>
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+    </svg>
+    <span class="nav-tab-label">Settings</span>
+  </button>
+</nav>
+
+<script>
+  // Animate progress bars on load
+  document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(() => {
+      document.querySelectorAll('.breakdown-bar-fill').forEach(bar => {
+        bar.style.width = bar.dataset.target + '%';
+      });
+    }, 400);
+  });
+
+  // Bottom nav interaction
+  document.querySelectorAll('.nav-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+    });
+  });
+</script>
+
+</body>
+</html>

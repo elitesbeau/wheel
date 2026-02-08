@@ -1,0 +1,2495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Market Elites — Neubrutalist Dashboard</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #FFFDF8;
+    --card-bg: #fff4da;
+    --input-bg: #E8F0FE;
+    --results-bg: #fafafa;
+    --btn-primary: #ffc480;
+    --btn-loading: #ffb14d;
+    --tag-bg: #EBDBB7;
+    --red: #FE4A60;
+    --green: #5CF1A4;
+    --star: #ffc480;
+    --text: #111827;
+    --text-secondary: #4B5563;
+    --text-muted: #6B7280;
+    --border: #111827;
+    --border-w: 3px;
+    --radius-card: 12px;
+    --radius-sm: 4px;
+    --shadow-lg: 8px;
+    --shadow-sm: 4px;
+    --font: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    --spring: cubic-bezier(0.34,1.56,0.64,1);
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    cursor: none;
+    overflow-x: hidden;
+  }
+
+  /* ===================== SVG FILTERS ===================== */
+  .svg-filters {
+    position: absolute;
+    width: 0;
+    height: 0;
+    overflow: hidden;
+  }
+
+  /* ===================== PAPER / CARDBOARD TEXTURE ===================== */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 0.04;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='1.1 0 0 0 0.05 0 1 0 0 0.03 0 0 0.9 0 0 0 0 0 1 0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+    background-repeat: repeat;
+  }
+
+  /* Warm grain overlay for cardboard feel */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 9998;
+    opacity: 0.015;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='turbulence' baseFrequency='1.5' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23g)' opacity='1'/%3E%3C/svg%3E");
+    background-repeat: repeat;
+  }
+
+  /* ===================== CUSTOM CURSOR ===================== */
+  #cursor-dot {
+    position: fixed;
+    top: 0; left: 0;
+    width: 10px; height: 10px;
+    background: var(--text);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 100000;
+    transform: translate(-50%, -50%);
+    transition: width 0.2s var(--spring), height 0.2s var(--spring), background 0.2s;
+  }
+  #cursor-ring {
+    position: fixed;
+    top: 0; left: 0;
+    width: 36px; height: 36px;
+    border: 2.5px solid var(--btn-primary);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 99999;
+    transform: translate(-50%, -50%);
+    transition: width 0.3s var(--spring), height 0.3s var(--spring), border-color 0.2s, opacity 0.2s;
+  }
+
+  /* ===================== RUBBER STAMP EFFECT ===================== */
+  .stamp-impression {
+    position: fixed;
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    background: rgba(17,24,39,0.18);
+    pointer-events: none;
+    z-index: 99998;
+    transform: translate(-50%, -50%) scale(0.2);
+    animation: stampFade 0.7s ease-out forwards;
+  }
+  @keyframes stampFade {
+    0% { transform: translate(-50%, -50%) scale(0.2); opacity: 1; }
+    40% { transform: translate(-50%, -50%) scale(0.9); opacity: 0.6; }
+    100% { transform: translate(-50%, -50%) scale(1.4); opacity: 0; }
+  }
+
+  /* ===================== SCROLL PROGRESS (block bar) ===================== */
+  #scroll-progress {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%;
+    height: 7px;
+    z-index: 10001;
+    display: flex;
+    gap: 2px;
+    padding: 0 1px;
+    pointer-events: none;
+  }
+  .scroll-block {
+    flex: 1;
+    height: 100%;
+    background: var(--tag-bg);
+    border-bottom: 1px solid var(--border);
+    transition: background 0.12s, transform 0.2s var(--spring);
+  }
+  .scroll-block.filled {
+    background: var(--btn-primary);
+    transform: scaleY(1.3);
+    transform-origin: top;
+  }
+
+  /* ===================== INK SPLATTERS ===================== */
+  .ink-dot {
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  /* ===================== UTILITY CLASSES ===================== */
+
+  .nb-shadow-lg { position: relative; }
+  .nb-shadow-lg::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--border);
+    border-radius: inherit;
+    z-index: -1;
+    transform: translate(8px, 8px);
+    transition: transform 0.4s var(--spring), filter 0.4s;
+    filter: blur(0px);
+  }
+
+  .nb-shadow-sm { position: relative; }
+  .nb-shadow-sm::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--border);
+    border-radius: inherit;
+    z-index: -1;
+    transform: translate(4px, 4px);
+    transition: transform 0.4s var(--spring), filter 0.4s;
+    filter: blur(0px);
+  }
+
+  .nb-card-lg {
+    background: var(--card-bg);
+    border: var(--border-w) solid var(--border);
+    border-radius: var(--radius-card);
+    position: relative;
+    transition: transform 0.4s var(--spring);
+    will-change: transform;
+  }
+  .nb-card-lg::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--border);
+    border-radius: inherit;
+    z-index: -1;
+    transform: translate(8px, 8px);
+    transition: transform 0.4s var(--spring), filter 0.4s;
+    filter: blur(0px);
+  }
+  .nb-card-lg:hover {
+    transform: translate(-2px, -5px);
+  }
+  .nb-card-lg:hover::after {
+    transform: translate(10px, 13px);
+    filter: blur(2px);
+  }
+
+  .nb-card-sm {
+    background: #fff;
+    border: var(--border-w) solid var(--border);
+    border-radius: var(--radius-sm);
+    position: relative;
+    transition: transform 0.35s var(--spring);
+    will-change: transform;
+    transform-style: preserve-3d;
+    perspective: 800px;
+  }
+  .nb-card-sm::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--border);
+    border-radius: inherit;
+    z-index: -1;
+    transform: translate(4px, 4px);
+    transition: transform 0.35s var(--spring), filter 0.35s;
+    filter: blur(0px);
+  }
+  .nb-card-sm:hover {
+    transform: translate(-2px, -4px);
+  }
+  .nb-card-sm:hover::after {
+    transform: translate(6px, 8px);
+    filter: blur(1.5px);
+  }
+
+  /* ===================== BUTTONS (squash + stretch + full press) ===================== */
+  .nb-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    background: var(--btn-primary);
+    border: var(--border-w) solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 8px 18px;
+    font-family: var(--font);
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    cursor: none;
+    position: relative;
+    transition: transform 0.35s var(--spring);
+    white-space: nowrap;
+    transform-origin: center bottom;
+  }
+  .nb-btn::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--border);
+    border-radius: inherit;
+    z-index: -1;
+    transform: translate(4px, 4px);
+    transition: transform 0.35s var(--spring);
+  }
+  .nb-btn:hover { transform: translate(-1px, -1px); }
+  .nb-btn:hover::after { transform: translate(5px, 5px); }
+
+  .nb-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: var(--tag-bg);
+    border: var(--border-w) solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 4px 12px;
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  .nb-badge {
+    display: inline-flex;
+    align-items: center;
+    border: var(--border-w) solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 2px 8px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 2px 2px 0 0 rgba(0,0,0,1);
+  }
+
+  .mono { font-family: var(--mono); }
+
+  /* ===================== HEADER ===================== */
+
+  .header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: var(--bg);
+    border-bottom: var(--border-w) solid var(--border);
+    height: 64px;
+    opacity: 0;
+    transform: translateY(-100%);
+  }
+  .header-inner {
+    max-width: 896px;
+    margin: 0 auto;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+  }
+  .logo {
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    user-select: none;
+  }
+  .logo-red { color: var(--red); }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .spy-pill {
+    background: var(--tag-bg);
+    border: var(--border-w) solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 4px 12px;
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 600;
+    position: relative;
+    transition: border-color 0.3s, box-shadow 0.3s;
+  }
+  .spy-pill::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--border);
+    border-radius: inherit;
+    z-index: -1;
+    transform: translate(3px, 3px);
+  }
+  .spy-pill.flash { border-color: var(--btn-primary); box-shadow: 0 0 0 3px rgba(255,196,128,0.5); }
+  .spy-green { color: #059669; }
+  .bell-btn {
+    width: 36px; height: 36px;
+    border: var(--border-w) solid var(--border);
+    border-radius: var(--radius-sm);
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: none;
+    position: relative;
+    font-size: 16px;
+    transition: transform 0.2s var(--spring);
+  }
+  .bell-btn:hover { transform: translate(-1px, -1px); }
+  .bell-dot {
+    position: absolute;
+    top: -3px; right: -3px;
+    width: 10px; height: 10px;
+    background: var(--red);
+    border-radius: 9999px;
+    border: 2px solid var(--bg);
+    animation: bellPulse 2s ease-in-out infinite;
+  }
+  @keyframes bellPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.3); }
+  }
+  .avatar {
+    width: 36px; height: 36px;
+    border: var(--border-w) solid var(--border);
+    border-radius: 9999px;
+    background: var(--btn-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: none;
+    transition: transform 0.2s var(--spring);
+  }
+  .avatar:hover { transform: scale(1.1) rotate(-5deg); }
+
+  /* ===================== MAIN ===================== */
+
+  .main {
+    max-width: 896px;
+    margin: 0 auto;
+    padding: 0 20px 80px;
+    position: relative;
+  }
+
+  /* ===================== HERO ===================== */
+
+  .hero {
+    text-align: center;
+    padding: 56px 0 48px;
+    position: relative;
+    opacity: 0;
+  }
+  .hero-title {
+    font-size: 60px;
+    font-weight: 700;
+    letter-spacing: -0.05em;
+    line-height: 1.05;
+    color: var(--text);
+    overflow: hidden;
+  }
+  .hero-title .char {
+    display: inline-block;
+    opacity: 0;
+    transform: translateY(-30px) scaleY(1.4) scaleX(0.9);
+    transition: none;
+  }
+  .hero-title .char.stamped {
+    opacity: 1;
+    transform: translateY(0) scaleY(1) scaleX(1);
+    animation: charStamp 0.18s ease-out;
+  }
+  @keyframes charStamp {
+    0% { transform: translateY(-30px) scaleY(1.4) scaleX(0.9); }
+    45% { transform: translateY(3px) scaleY(0.85) scaleX(1.08); }
+    70% { transform: translateY(-1px) scaleY(1.05) scaleX(0.98); }
+    100% { transform: translateY(0) scaleY(1) scaleX(1); }
+  }
+  .hero-subtitle {
+    font-size: 18px;
+    color: var(--text-secondary);
+    max-width: 560px;
+    margin: 16px auto 0;
+    line-height: 1.6;
+    opacity: 0;
+    transition: opacity 0.6s ease-out;
+  }
+  .sparkle-red {
+    position: absolute;
+    top: 32px;
+    left: 40px;
+    pointer-events: none;
+    user-select: none;
+    opacity: 0;
+    transform: translateX(-80px);
+    animation: none;
+  }
+  .sparkle-red.active {
+    opacity: 1;
+    transform: translateX(0);
+    animation: sparkleFloatIn 0.5s var(--spring) forwards, rotateSlow 60s linear infinite;
+  }
+  .sparkle-green {
+    position: absolute;
+    bottom: 28px;
+    right: 40px;
+    pointer-events: none;
+    user-select: none;
+    opacity: 0;
+    transform: translateX(80px);
+  }
+  .sparkle-green.active {
+    opacity: 1;
+    transform: translateX(0);
+    animation: sparkleFloatIn 0.5s var(--spring) forwards, rotateSlowReverse 45s linear infinite;
+  }
+  @keyframes sparkleFloatIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes rotateSlow {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+  @keyframes rotateSlowReverse {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(-360deg); }
+  }
+
+  @media (max-width: 640px) {
+    .hero-title { font-size: 48px; }
+    .sparkle-red, .sparkle-green { display: none; }
+  }
+  @media (min-width: 1024px) {
+    .hero-title { font-size: 72px; }
+  }
+
+  /* ===================== HAND-DRAWN UNDERLINES ===================== */
+  .hand-underline {
+    position: relative;
+    display: inline-block;
+  }
+  .hand-underline svg {
+    position: absolute;
+    bottom: -6px;
+    left: -4px;
+    width: calc(100% + 8px);
+    height: 8px;
+    pointer-events: none;
+  }
+
+  /* ===================== PORTFOLIO CARD ===================== */
+
+  .portfolio-section {
+    margin-bottom: 48px;
+    opacity: 0;
+    transform: translateY(60px);
+  }
+  .portfolio-card {
+    padding: 40px;
+    position: relative;
+    overflow: hidden;
+  }
+  /* Fold lines - multiple creases for paper craft feel */
+  .portfolio-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%;
+    height: 100%;
+    background:
+      linear-gradient(135deg, transparent 48%, rgba(17,24,39,0.02) 49%, rgba(17,24,39,0.02) 51%, transparent 52%),
+      linear-gradient(45deg, transparent 48%, rgba(17,24,39,0.015) 49%, rgba(17,24,39,0.015) 51%, transparent 52%),
+      linear-gradient(90deg, transparent 30%, rgba(17,24,39,0.008) 30.5%, transparent 31%),
+      linear-gradient(0deg, transparent 65%, rgba(17,24,39,0.008) 65.5%, transparent 66%);
+    pointer-events: none;
+    z-index: 2;
+  }
+  .portfolio-deco {
+    position: absolute;
+    left: -10px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+  }
+  @media (max-width: 640px) {
+    .portfolio-card { padding: 24px; }
+    .portfolio-deco { display: none; }
+  }
+  .portfolio-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+  }
+  .portfolio-value {
+    font-size: 42px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+    cursor: none;
+  }
+  .portfolio-change {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 8px;
+    flex-wrap: wrap;
+  }
+  .change-badge {
+    background: var(--green);
+    border: var(--border-w) solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 3px 10px;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: var(--mono);
+    position: relative;
+    transition: transform 0.2s var(--spring);
+  }
+  .change-badge::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--border);
+    border-radius: inherit;
+    z-index: -1;
+    transform: translate(2px, 2px);
+  }
+  .change-badge:hover { transform: translate(-1px, -1px) rotate(-2deg); }
+  .change-pct {
+    font-size: 14px;
+    font-weight: 600;
+    color: #059669;
+    font-family: var(--mono);
+  }
+
+  .stats-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 20px;
+  }
+  .stat-pill {
+    background: var(--tag-bg);
+    border: var(--border-w) solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 6px 14px;
+    font-size: 13px;
+    font-weight: 500;
+    opacity: 0;
+    transform: translateX(-30px);
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.2s var(--spring);
+  }
+  .stat-pill:hover { transform: translateY(-2px) rotate(-1deg); }
+  /* Halftone overlay - newspaper aesthetic */
+  .stat-pill::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(circle, rgba(17,24,39,0.07) 1px, transparent 1px);
+    background-size: 4px 4px;
+    pointer-events: none;
+    z-index: 1;
+  }
+  .stat-pill strong {
+    font-weight: 700;
+    margin-right: 2px;
+    position: relative;
+    z-index: 2;
+  }
+  .stat-pill span {
+    position: relative;
+    z-index: 2;
+  }
+
+  .chart-area {
+    margin-top: 28px;
+    width: 100%;
+    overflow: visible;
+    position: relative;
+  }
+  .chart-area svg {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  /* ===================== CHART TOOLTIP (sticky note style) ===================== */
+  #chartTooltip {
+    display: none;
+    position: absolute;
+    background: #FFF9C4;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 10px 16px;
+    border: 2.5px solid var(--border);
+    border-radius: 2px;
+    pointer-events: none;
+    white-space: nowrap;
+    box-shadow: 4px 4px 0 0 rgba(17,24,39,0.75);
+    transform: translateX(-50%) rotate(-2.5deg);
+    z-index: 50;
+    font-weight: 600;
+    line-height: 1.4;
+  }
+  /* Tape strip on sticky note */
+  #chartTooltip::before {
+    content: '';
+    position: absolute;
+    top: -6px;
+    left: 50%;
+    transform: translateX(-50%) rotate(1deg);
+    width: 30px;
+    height: 10px;
+    background: rgba(200,200,180,0.6);
+    border: 1px solid rgba(17,24,39,0.15);
+  }
+
+  /* ===================== SECTION HEADERS ===================== */
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .section-title {
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    position: relative;
+  }
+  .count-badge {
+    background: var(--btn-primary);
+    border: var(--border-w) solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 1px 8px;
+    font-size: 13px;
+    font-weight: 700;
+    box-shadow: 2px 2px 0 0 rgba(0,0,0,1);
+  }
+  .new-badge {
+    background: var(--red);
+    color: #fff;
+    border: var(--border-w) solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 2px 8px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 2px 2px 0 0 rgba(0,0,0,1);
+    display: inline-block;
+    animation: wobbleBadge 2s ease-in-out infinite;
+    transform-origin: center center;
+  }
+  @keyframes wobbleBadge {
+    0%, 100% { transform: rotate(-4deg); }
+    25% { transform: rotate(0deg); }
+    50% { transform: rotate(4deg); }
+    75% { transform: rotate(0deg); }
+  }
+
+  /* ===================== POSITIONS ===================== */
+
+  .positions-section {
+    margin-bottom: 48px;
+    opacity: 0;
+  }
+  .positions-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+  @media (max-width: 640px) {
+    .positions-grid { grid-template-columns: 1fr; }
+  }
+
+  .pos-card {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    cursor: none;
+    user-select: none;
+    opacity: 0;
+    transform: translateY(-80px) rotate(8deg);
+  }
+  .pos-top {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .pos-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-sm);
+    border: var(--border-w) solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 16px;
+    color: #fff;
+    flex-shrink: 0;
+    transition: transform 0.3s var(--spring);
+  }
+  .pos-card:hover .pos-icon { transform: rotate(-8deg) scale(1.1); }
+  .pos-info {
+    flex: 1;
+    min-width: 0;
+  }
+  .pos-ticker {
+    font-weight: 700;
+    font-size: 15px;
+    letter-spacing: -0.01em;
+    cursor: none;
+    transition: color 0.15s;
+  }
+  .pos-ticker:hover { color: var(--red); }
+  .pos-detail {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 1px;
+  }
+  .pos-type {
+    background: var(--tag-bg);
+    border: 2px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 0px 6px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+  }
+  .pos-pnl {
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 15px;
+    white-space: nowrap;
+  }
+  .pos-pnl.green { color: #059669; }
+  .pos-pnl.red { color: var(--red); }
+
+  .dte-bar {
+    width: 100%;
+    height: 8px;
+    background: var(--tag-bg);
+    border: 2px solid var(--border);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    display: flex;
+    gap: 1px;
+  }
+  .dte-segment {
+    height: 100%;
+    background: var(--btn-primary);
+    border-radius: 1px;
+    opacity: 0;
+    flex-shrink: 0;
+    transition: opacity 0.08s ease-out, transform 0.15s var(--spring);
+  }
+  .dte-segment.stamped {
+    opacity: 1;
+    animation: segmentStamp 0.15s var(--spring);
+  }
+  @keyframes segmentStamp {
+    0% { transform: scaleY(0.3); opacity: 0; }
+    50% { transform: scaleY(1.4); }
+    100% { transform: scaleY(1); opacity: 1; }
+  }
+  .dte-label {
+    font-size: 10px;
+    color: var(--text-muted);
+    font-family: var(--mono);
+    margin-top: -2px;
+  }
+
+  /* ===================== SIGNALS ===================== */
+
+  .signals-section {
+    margin-bottom: 48px;
+    opacity: 0;
+  }
+  .signals-grid {
+    display: grid;
+    gap: 16px;
+  }
+  .signal-card {
+    padding: 32px;
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  @media (max-width: 640px) {
+    .signal-card { padding: 20px; }
+  }
+  .signal-ticker {
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 6px;
+  }
+  .signal-desc {
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-bottom: 14px;
+    overflow: hidden;
+    min-height: 22px;
+  }
+  .signal-desc .char-reveal {
+    opacity: 0;
+    transition: opacity 0.03s;
+  }
+  .signal-desc .char-reveal.visible {
+    opacity: 1;
+  }
+  .signal-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 18px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+  .signal-stat {
+    background: var(--tag-bg);
+    border: 2px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 3px 10px;
+    transition: transform 0.2s var(--spring);
+  }
+  .signal-stat:hover { transform: translateY(-2px) rotate(-1deg); }
+  .copy-btn {
+    background: var(--btn-primary);
+    border: var(--border-w) solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 8px 20px;
+    font-family: var(--font);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: none;
+    position: relative;
+    transition: transform 0.35s var(--spring);
+    transform-origin: center bottom;
+  }
+  .copy-btn::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--border);
+    border-radius: inherit;
+    z-index: -1;
+    transform: translate(4px, 4px);
+    transition: transform 0.35s var(--spring);
+  }
+  .copy-btn:hover { transform: translate(-1px, -1px); }
+  .copy-btn:hover::after { transform: translate(5px, 5px); }
+  .copy-btn .check {
+    display: inline-block;
+    transform: scale(0);
+    transition: transform 150ms ease-in-out;
+    transform-origin: bottom left;
+  }
+  .copy-btn.copied .check { transform: scale(1); }
+
+  /* ===================== CONFETTI ===================== */
+  .confetti-piece {
+    position: fixed;
+    pointer-events: none;
+    z-index: 100001;
+  }
+  @keyframes confettiFall {
+    0% { transform: translateY(0) rotate(0deg) scale(1); opacity: 1; }
+    100% { transform: translateY(250px) rotate(720deg) scale(0.2); opacity: 0; }
+  }
+  @keyframes confettiSpin {
+    0% { transform: translateY(0) rotateX(0deg) rotateZ(0deg) scale(1); opacity: 1; }
+    100% { transform: translateY(220px) rotateX(720deg) rotateZ(360deg) scale(0.15); opacity: 0; }
+  }
+
+  /* ===================== QUICK ACTIONS ===================== */
+
+  .actions-section {
+    margin-bottom: 48px;
+    opacity: 0;
+  }
+  .actions-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .action-pill {
+    background: var(--tag-bg);
+    border: var(--border-w) solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 22px;
+    font-family: var(--font);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: none;
+    position: relative;
+    transition: transform 0.35s var(--spring), background-color 200ms;
+    transform-origin: center bottom;
+  }
+  .action-pill::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--border);
+    border-radius: inherit;
+    z-index: -1;
+    transform: translate(4px, 4px);
+    transition: transform 0.35s var(--spring);
+  }
+  .action-pill:hover {
+    background: var(--btn-primary);
+    transform: translate(-1px, -1px);
+  }
+  .action-pill:hover::after { transform: translate(5px, 5px); }
+
+  /* ===================== TOOLTIP (neubrutalist) ===================== */
+  .nb-tooltip {
+    position: absolute;
+    bottom: calc(100% + 12px);
+    left: 50%;
+    transform: translateX(-50%) scale(0.8) rotate(-1deg);
+    background: var(--card-bg);
+    border: 3px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 6px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s, transform 0.25s var(--spring);
+    box-shadow: 3px 3px 0 0 var(--border);
+    z-index: 1000;
+  }
+  .nb-tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0; height: 0;
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    border-top: 8px solid var(--border);
+  }
+  .nb-tooltip::before {
+    content: '';
+    position: absolute;
+    top: calc(100% - 3px);
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0; height: 0;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-top: 6px solid var(--card-bg);
+    z-index: 1;
+  }
+  .action-pill:hover .nb-tooltip,
+  .bell-btn:hover .nb-tooltip {
+    opacity: 1;
+    transform: translateX(-50%) scale(1) rotate(0deg);
+  }
+
+  /* ===================== CONTEXT MENU ===================== */
+  .nb-context-menu {
+    position: fixed;
+    background: var(--card-bg);
+    border: 3px solid var(--border);
+    border-radius: var(--radius-sm);
+    box-shadow: 6px 6px 0 0 var(--border);
+    padding: 6px 0;
+    z-index: 100002;
+    min-width: 200px;
+    display: none;
+    animation: contextPop 0.2s var(--spring);
+  }
+  @keyframes contextPop {
+    from { transform: scale(0.8) rotate(-3deg); opacity: 0; }
+    to { transform: scale(1) rotate(0); opacity: 1; }
+  }
+  .nb-context-menu .ctx-item {
+    padding: 10px 18px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: none;
+    transition: background 0.12s, padding-left 0.15s;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+    font-family: var(--font);
+    color: var(--text);
+    display: block;
+  }
+  .nb-context-menu .ctx-item:hover {
+    background: var(--btn-primary);
+    padding-left: 24px;
+  }
+  .nb-context-menu .ctx-divider {
+    height: 2px;
+    background: var(--border);
+    margin: 4px 0;
+  }
+
+  /* ===================== FUN FACT MODAL ===================== */
+  .fun-fact-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 100003;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(17,24,39,0.3);
+    backdrop-filter: blur(3px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+  }
+  .fun-fact-modal.show {
+    opacity: 1;
+    pointer-events: all;
+  }
+  .fun-fact-box {
+    background: var(--card-bg);
+    border: 4px solid var(--border);
+    border-radius: var(--radius-card);
+    padding: 36px;
+    max-width: 400px;
+    width: 90%;
+    box-shadow: 8px 8px 0 0 var(--border);
+    transform: scale(0.7) rotate(-5deg);
+    transition: transform 0.5s var(--spring);
+    text-align: center;
+    position: relative;
+  }
+  /* Corner fold */
+  .fun-fact-box::before {
+    content: '';
+    position: absolute;
+    top: 0; right: 0;
+    width: 30px; height: 30px;
+    background: linear-gradient(225deg, var(--bg) 50%, var(--tag-bg) 50%);
+    border-left: 2px solid var(--border);
+    border-bottom: 2px solid var(--border);
+    border-radius: 0 12px 0 0;
+  }
+  .fun-fact-modal.show .fun-fact-box {
+    transform: scale(1) rotate(0deg);
+  }
+  .fun-fact-box h3 {
+    font-size: 18px;
+    margin-bottom: 12px;
+  }
+  .fun-fact-box p {
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-bottom: 20px;
+  }
+  .fun-fact-close {
+    background: var(--btn-primary);
+    border: 3px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 8px 24px;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: none;
+    box-shadow: 3px 3px 0 0 var(--border);
+    font-family: var(--font);
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .fun-fact-close:active {
+    box-shadow: 0 0 0 0 var(--border);
+    transform: translate(3px, 3px);
+  }
+
+  /* ===================== FOOTER ===================== */
+
+  .footer {
+    border-top: var(--border-w) solid var(--border);
+    background: var(--bg);
+  }
+  .footer-inner {
+    max-width: 896px;
+    margin: 0 auto;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .footer-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 14px;
+    color: var(--text);
+  }
+  .footer-left a { color: var(--text); transition: opacity 200ms, transform 0.2s; cursor: none; display: inline-block; }
+  .footer-left a:hover { opacity: 0.7; transform: rotate(-5deg) scale(1.1); }
+  .footer-right {
+    font-size: 14px;
+    color: var(--text);
+  }
+
+  /* ===================== ENTRANCE BOUNCE KEYFRAMES ===================== */
+  @keyframes bounceIn {
+    0% { transform: translateY(-80px); opacity: 0; }
+    25% { transform: translateY(10px); opacity: 1; }
+    42% { transform: translateY(-6px); }
+    58% { transform: translateY(3px); }
+    72% { transform: translateY(-1px); }
+    100% { transform: translateY(0); }
+  }
+  @keyframes headerSlam {
+    0% { transform: translateY(-100%); opacity: 0; }
+    25% { transform: translateY(6px); opacity: 1; }
+    40% { transform: translateY(-3px); }
+    55% { transform: translateY(2px); }
+    70% { transform: translateY(-1px); }
+    100% { transform: translateY(0); }
+  }
+  @keyframes cardDeal {
+    0% { opacity: 0; transform: translateY(-90px) rotate(10deg) scale(0.9); }
+    30% { opacity: 1; transform: translateY(8px) rotate(-3deg) scale(1.02); }
+    50% { transform: translateY(-4px) rotate(1.5deg) scale(0.99); }
+    70% { transform: translateY(2px) rotate(-0.5deg) scale(1.005); }
+    100% { opacity: 1; transform: translateY(0) rotate(0deg) scale(1); }
+  }
+  @keyframes signalThud {
+    0% { opacity: 0; transform: translateY(50px) scale(0.92); }
+    25% { opacity: 1; transform: translateY(-8px) scale(1.03); }
+    45% { transform: translateY(4px) scale(0.98); }
+    65% { transform: translateY(-2px) scale(1.01); }
+    100% { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  @keyframes sectionFadeIn {
+    0% { opacity: 0; }
+    100% { opacity: 1; }
+  }
+  @keyframes dominoSlide {
+    0% { opacity: 0; transform: translateX(-30px) rotate(5deg); }
+    35% { opacity: 1; transform: translateX(5px) rotate(-1deg); }
+    55% { transform: translateX(-2px) rotate(0.5deg); }
+    100% { opacity: 1; transform: translateX(0) rotate(0); }
+  }
+
+  /* ===================== AMBIENT SHADOW SWAY ===================== */
+  @keyframes shadowSway {
+    0%, 100% { transform: translate(4px, 4px); filter: blur(0px); }
+    33% { transform: translate(4.5px, 3.5px); filter: blur(0.3px); }
+    66% { transform: translate(3.5px, 4.5px); filter: blur(0.2px); }
+  }
+
+  /* ===================== KONAMI SPIN ===================== */
+  @keyframes konamiSpin {
+    0% { transform: translateY(0) rotate(0deg) scale(1); }
+    20% { transform: translateY(-40px) rotate(90deg) scale(1.05); }
+    50% { transform: translateY(-50px) rotate(200deg) scale(1.08); }
+    70% { transform: translateY(-30px) rotate(320deg) scale(1.03); }
+    100% { transform: translateY(0) rotate(360deg) scale(1); }
+  }
+  .konami-spin {
+    animation: konamiSpin 1.2s var(--spring) forwards !important;
+  }
+
+  /* ===================== DRAGGABLE CARD STATES ===================== */
+  .dragging {
+    z-index: 1000;
+    cursor: grabbing !important;
+    transition: none !important;
+  }
+  .dragging::after {
+    transition: none !important;
+  }
+
+  /* ===================== CARD SCROLL ROTATION ===================== */
+  .scroll-rotate {
+    transition: transform 0.3s ease-out;
+  }
+</style>
+</head>
+<body>
+
+<!-- SVG FILTERS -->
+<svg class="svg-filters" aria-hidden="true">
+  <defs>
+    <filter id="handDrawn">
+      <feTurbulence type="turbulence" baseFrequency="0.03" numOctaves="3" result="turbulence" seed="2"/>
+      <feDisplacementMap in="SourceGraphic" in2="turbulence" scale="2" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+    <filter id="paperNoise">
+      <feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="4" stitchTiles="stitch"/>
+      <feColorMatrix type="saturate" values="0"/>
+    </filter>
+  </defs>
+</svg>
+
+<!-- CUSTOM CURSOR -->
+<div id="cursor-dot"></div>
+<div id="cursor-ring"></div>
+
+<!-- SCROLL PROGRESS -->
+<div id="scroll-progress"></div>
+
+<!-- CONTEXT MENU -->
+<div class="nb-context-menu" id="contextMenu">
+  <button class="ctx-item" onclick="alert('Copied: $147,832')">&#128203; Copy Value</button>
+  <button class="ctx-item" onclick="alert('Opening full report...')">&#128200; View Full Report</button>
+  <div class="ctx-divider"></div>
+  <button class="ctx-item" onclick="alert('Exporting CSV...')">&#128190; Export as CSV</button>
+  <button class="ctx-item" onclick="alert('Period set to YTD')">&#128197; Show YTD</button>
+  <div class="ctx-divider"></div>
+  <button class="ctx-item" onclick="alert('Refreshing data...')">&#128260; Refresh Data</button>
+</div>
+
+<!-- FUN FACT MODAL -->
+<div class="fun-fact-modal" id="funFactModal">
+  <div class="fun-fact-box">
+    <h3 id="funFactTitle">Fun Fact</h3>
+    <p id="funFactText"></p>
+    <button class="fun-fact-close" onclick="document.getElementById('funFactModal').classList.remove('show')">Got It</button>
+  </div>
+</div>
+
+<!-- ======================== HEADER ======================== -->
+<header class="header" id="header">
+  <div class="header-inner">
+    <div class="logo">Market<span class="logo-red">Elites</span></div>
+    <div class="header-right">
+      <div class="spy-pill" id="spyPill">
+        <span>SPY</span>
+        <span id="spy-price" class="mono" style="margin-left:4px;">$478.92</span>
+        <span class="spy-green mono" style="margin-left:2px;">+0.84%</span>
+      </div>
+      <button class="bell-btn" aria-label="Notifications" style="position:relative;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <span class="bell-dot"></span>
+        <span class="nb-tooltip">3 new alerts</span>
+      </button>
+      <div class="avatar">B</div>
+    </div>
+  </div>
+</header>
+
+<!-- ======================== MAIN ======================== -->
+<main class="main" id="mainContent">
+
+  <!-- HERO -->
+  <section class="hero" id="heroSection">
+    <svg class="sparkle-red" id="sparkleRed" width="48" height="48" viewBox="0 0 48 48" fill="none">
+      <path d="M24 4 L28 20 L44 24 L28 28 L24 44 L20 28 L4 24 L20 20 Z" fill="#FE4A60" stroke="#111827" stroke-width="2"/>
+      <line x1="24" y1="0" x2="24" y2="8" stroke="#FE4A60" stroke-width="2"/>
+      <line x1="48" y1="24" x2="40" y2="24" stroke="#FE4A60" stroke-width="2"/>
+      <line x1="24" y1="48" x2="24" y2="40" stroke="#FE4A60" stroke-width="2"/>
+      <line x1="0" y1="24" x2="8" y2="24" stroke="#FE4A60" stroke-width="2"/>
+    </svg>
+    <svg class="sparkle-green" id="sparkleGreen" width="36" height="36" viewBox="0 0 36 36" fill="none">
+      <path d="M18 3 L21 15 L33 18 L21 21 L18 33 L15 21 L3 18 L15 15 Z" fill="#5CF1A4" stroke="#111827" stroke-width="2"/>
+      <line x1="18" y1="0" x2="18" y2="6" stroke="#5CF1A4" stroke-width="1.5"/>
+      <line x1="36" y1="18" x2="30" y2="18" stroke="#5CF1A4" stroke-width="1.5"/>
+    </svg>
+
+    <h1 class="hero-title" id="heroTitle"></h1>
+    <p class="hero-subtitle" id="heroSubtitle">Track your wheel strategy positions, signals, and P&L in one place.</p>
+  </section>
+
+  <!-- PORTFOLIO CARD -->
+  <section class="portfolio-section" id="portfolioSection">
+    <div class="portfolio-card nb-card-lg" id="portfolioCard">
+      <svg class="portfolio-deco" width="28" height="80" viewBox="0 0 28 80" fill="none">
+        <rect x="8" y="0" width="12" height="80" rx="6" fill="#FE4A60" opacity="0.15"/>
+        <rect x="14" y="12" width="10" height="56" rx="5" fill="#ffc480" opacity="0.2"/>
+      </svg>
+
+      <div class="portfolio-label">PORTFOLIO VALUE</div>
+      <div class="portfolio-value" id="portfolioValue" oncontextmenu="showContextMenu(event); return false;">$147,832</div>
+      <div class="portfolio-change">
+        <span class="change-badge">+$2,847 today</span>
+        <span class="change-pct">1.96%</span>
+      </div>
+
+      <div class="stats-row" id="statsRow">
+        <span class="stat-pill"><strong>Win Rate</strong> <span>87%</span></span>
+        <span class="stat-pill"><strong>Monthly</strong> <span>$4.2K</span></span>
+        <span class="stat-pill"><strong>Open</strong> <span>8</span></span>
+        <span class="stat-pill"><strong>Avg DTE</strong> <span>22d</span></span>
+      </div>
+
+      <!-- 30-Day P&L Chart (hand-drawn style) -->
+      <div class="chart-area" id="chartArea">
+        <svg viewBox="0 0 800 200" preserveAspectRatio="none">
+          <defs>
+            <filter id="chartWobble">
+              <feTurbulence type="turbulence" baseFrequency="0.015" numOctaves="2" result="turb" seed="5"/>
+              <feDisplacementMap in="SourceGraphic" in2="turb" scale="3" xChannelSelector="R" yChannelSelector="G"/>
+            </filter>
+          </defs>
+          <!-- Y-axis labels -->
+          <text x="4" y="20" fill="#6B7280" font-family="ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace" font-size="11">$150K</text>
+          <text x="4" y="70" fill="#6B7280" font-family="ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace" font-size="11">$148K</text>
+          <text x="4" y="120" fill="#6B7280" font-family="ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace" font-size="11">$146K</text>
+          <text x="4" y="170" fill="#6B7280" font-family="ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace" font-size="11">$144K</text>
+
+          <!-- X-axis labels -->
+          <text x="60" y="196" fill="#6B7280" font-family="ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace" font-size="11">Jan 1</text>
+          <text x="220" y="196" fill="#6B7280" font-family="ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace" font-size="11">Jan 8</text>
+          <text x="390" y="196" fill="#6B7280" font-family="ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace" font-size="11">Jan 15</text>
+          <text x="555" y="196" fill="#6B7280" font-family="ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace" font-size="11">Jan 22</text>
+          <text x="720" y="196" fill="#6B7280" font-family="ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace" font-size="11">Jan 29</text>
+
+          <!-- Grid lines -->
+          <line x1="55" y1="15" x2="790" y2="15" stroke="#EBDBB7" stroke-width="1"/>
+          <line x1="55" y1="65" x2="790" y2="65" stroke="#EBDBB7" stroke-width="1"/>
+          <line x1="55" y1="115" x2="790" y2="115" stroke="#EBDBB7" stroke-width="1"/>
+          <line x1="55" y1="165" x2="790" y2="165" stroke="#EBDBB7" stroke-width="1"/>
+
+          <!-- Area fill (hand-drawn) -->
+          <path id="chartFill" d="M60,140 L90,130 L120,125 L150,135 L180,120 L210,110 L240,115 L270,100 L300,95 L330,105 L360,90 L390,80 L420,85 L450,70 L480,65 L510,75 L540,60 L570,50 L600,55 L630,45 L660,40 L690,35 L720,30 L750,25 L780,20 L780,180 L60,180 Z" fill="rgba(254,74,96,0.1)" filter="url(#chartWobble)" opacity="0"/>
+
+          <!-- Line (hand-drawn) -->
+          <path id="chartLine" d="M60,140 L90,130 L120,125 L150,135 L180,120 L210,110 L240,115 L270,100 L300,95 L330,105 L360,90 L390,80 L420,85 L450,70 L480,65 L510,75 L540,60 L570,50 L600,55 L630,45 L660,40 L690,35 L720,30 L750,25 L780,20" fill="none" stroke="#FE4A60" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" filter="url(#chartWobble)" stroke-dasharray="2000" stroke-dashoffset="2000"/>
+
+          <!-- X marks for data points -->
+          <g id="chartXMarks" filter="url(#chartWobble)" opacity="0">
+          </g>
+
+          <!-- Tooltip dot (hidden by default) -->
+          <circle id="chartDot" cx="0" cy="0" r="5" fill="#FE4A60" stroke="#111827" stroke-width="2" style="display:none;"/>
+        </svg>
+        <div id="chartTooltip"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- POSITIONS -->
+  <section class="positions-section" id="positionsSection">
+    <div class="section-header">
+      <h2 class="section-title">
+        <span class="hand-underline">Open Positions
+          <svg viewBox="0 0 120 8" preserveAspectRatio="none"><path d="M0,5 Q10,2 20,5 T40,5 T60,4 T80,6 T100,4 T120,5" fill="none" stroke="#FE4A60" stroke-width="2.5" stroke-linecap="round"/></svg>
+        </span>
+      </h2>
+      <span class="count-badge">8</span>
+    </div>
+    <div class="positions-grid" id="positionsGrid"></div>
+  </section>
+
+  <!-- SIGNALS -->
+  <section class="signals-section" id="signalsSection">
+    <div class="section-header">
+      <h2 class="section-title">
+        <span class="hand-underline">Latest Signals
+          <svg viewBox="0 0 120 8" preserveAspectRatio="none"><path d="M0,4 Q15,7 30,4 T60,5 T90,3 T120,5" fill="none" stroke="#5CF1A4" stroke-width="2.5" stroke-linecap="round"/></svg>
+        </span>
+      </h2>
+      <span class="new-badge">NEW</span>
+    </div>
+    <div class="signals-grid" id="signalsGrid">
+      <!-- Signal 1 -->
+      <div class="signal-card nb-card-lg" data-signal>
+        <div class="signal-ticker">NVDA $420P CSP</div>
+        <div class="signal-desc" data-text="Strong support at $400, IV rank 42%. Premium $5.80 at 0.22 delta. High probability setup with solid risk/reward profile."></div>
+        <div class="signal-stats">
+          <span class="signal-stat">Premium $5.80</span>
+          <span class="signal-stat">Delta 0.22</span>
+          <span class="signal-stat">DTE 28</span>
+          <span class="signal-stat">Prob OTM 78%</span>
+        </div>
+        <button class="copy-btn" onclick="copyTrade(this)">Copy Trade <span class="check"></span></button>
+      </div>
+      <!-- Signal 2 -->
+      <div class="signal-card nb-card-lg" data-signal>
+        <div class="signal-ticker">AAPL $185P CSP</div>
+        <div class="signal-desc" data-text="Bounced off 200-day MA, IV rank 38%. Premium $3.40 at 0.18 delta. Conservative play on a blue-chip name."></div>
+        <div class="signal-stats">
+          <span class="signal-stat">Premium $3.40</span>
+          <span class="signal-stat">Delta 0.18</span>
+          <span class="signal-stat">DTE 35</span>
+          <span class="signal-stat">Prob OTM 82%</span>
+        </div>
+        <button class="copy-btn" onclick="copyTrade(this)">Copy Trade <span class="check"></span></button>
+      </div>
+    </div>
+  </section>
+
+  <!-- QUICK ACTIONS -->
+  <section class="actions-section" id="actionsSection">
+    <div class="section-header">
+      <h2 class="section-title">
+        <span class="hand-underline">Quick Actions
+          <svg viewBox="0 0 120 8" preserveAspectRatio="none"><path d="M0,5 Q8,2 16,5 T32,4 T48,6 T64,4 T80,5 T96,4 T112,5 T120,4" fill="none" stroke="#ffc480" stroke-width="2.5" stroke-linecap="round"/></svg>
+        </span>
+      </h2>
+    </div>
+    <div class="actions-row">
+      <button class="action-pill" style="position:relative;">+ Add Position<span class="nb-tooltip">Open new wheel position</span></button>
+      <button class="action-pill" style="position:relative;">View Scanner<span class="nb-tooltip">Scan for opportunities</span></button>
+      <button class="action-pill" style="position:relative;">Learn<span class="nb-tooltip">Strategy tutorials</span></button>
+      <button class="action-pill" style="position:relative;">Settings<span class="nb-tooltip">Dashboard preferences</span></button>
+    </div>
+  </section>
+
+</main>
+
+<!-- ======================== FOOTER ======================== -->
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-left">
+      <span>Market Elites v2.0</span>
+      <a href="#" aria-label="Discord">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/></svg>
+      </a>
+    </div>
+    <div class="footer-right">Made with &#127919; for wheel traders</div>
+  </div>
+</footer>
+
+<script>
+// ================================================================
+// SPRING PHYSICS UTILITY
+// ================================================================
+class Spring {
+  constructor(stiffness = 180, damping = 12, mass = 1) {
+    this.stiffness = stiffness;
+    this.damping = damping;
+    this.mass = mass;
+    this.value = 0;
+    this.target = 0;
+    this.velocity = 0;
+  }
+  update(dt = 1/60) {
+    const force = -this.stiffness * (this.value - this.target);
+    const dampForce = -this.damping * this.velocity;
+    const accel = (force + dampForce) / this.mass;
+    this.velocity += accel * dt;
+    this.value += this.velocity * dt;
+    return this.value;
+  }
+  isSettled() {
+    return Math.abs(this.value - this.target) < 0.001 && Math.abs(this.velocity) < 0.001;
+  }
+}
+
+// ================================================================
+// POSITIONS DATA
+// ================================================================
+const positions = [
+  { ticker: 'AAPL', strike: '$185P', type: 'CSP', expiry: 'Feb 21', pnl: '+$420', pnlClass: 'green', color: '#3B82F6', dte: 23, maxDte: 35 },
+  { ticker: 'NVDA', strike: '$420P', type: 'CSP', expiry: 'Feb 14', pnl: '+$280', pnlClass: 'green', color: '#10B981', dte: 16, maxDte: 30 },
+  { ticker: 'MSFT', strike: '$400P', type: 'CSP', expiry: 'Feb 28', pnl: '+$195', pnlClass: 'green', color: '#8B5CF6', dte: 30, maxDte: 45 },
+  { ticker: 'AMD',  strike: '$140P', type: 'CSP', expiry: 'Feb 7',  pnl: '-$45',  pnlClass: 'red',   color: '#EF4444', dte: 9, maxDte: 30 },
+  { ticker: 'GOOGL', strike: '$165P', type: 'CSP', expiry: 'Feb 21', pnl: '+$310', pnlClass: 'green', color: '#F59E0B', dte: 23, maxDte: 35 },
+  { ticker: 'TSLA', strike: '$250C', type: 'CC',  expiry: 'Mar 7',  pnl: '+$680', pnlClass: 'green', color: '#EC4899', dte: 37, maxDte: 45 },
+  { ticker: 'AMZN', strike: '$210C', type: 'CC',  expiry: 'Feb 7',  pnl: '-$115', pnlClass: 'red',   color: '#F97316', dte: 9, maxDte: 28 },
+  { ticker: 'META', strike: '$500C', type: 'CC',  expiry: 'Feb 21', pnl: '+$155', pnlClass: 'green', color: '#06B6D4', dte: 23, maxDte: 35 },
+];
+
+const funFacts = {
+  'AAPL': 'Apple was founded on April 1, 1976 \u2014 April Fools\' Day. The original Apple I computer sold for $666.66.',
+  'NVDA': 'NVIDIA\'s name comes from "invidia" \u2014 Latin for "envy." Jensen Huang co-founded it in 1993 at a Denny\'s restaurant.',
+  'MSFT': 'Microsoft\'s first product was a BASIC interpreter for the Altair 8800. Bill Gates dropped out of Harvard to build it.',
+  'AMD': 'AMD was founded in 1969 by Jerry Sanders, who famously said "Real men have fabs." They\'ve since gone fabless.',
+  'GOOGL': 'Google\'s original name was "BackRub." The name "Google" is a play on "googol" \u2014 the number 1 followed by 100 zeros.',
+  'TSLA': 'Tesla\'s first car, the Roadster, was based on a Lotus Elise chassis. It could do 0-60 in 3.7 seconds back in 2008.',
+  'AMZN': 'Jeff Bezos originally wanted to name Amazon "Cadabra" \u2014 as in "abracadabra." His lawyer talked him out of it.',
+  'META': 'Facebook was originally called "TheFacebook" and was limited to Harvard students. Zuckerberg coded the first version in PHP.',
+};
+
+const tickerClickCounts = {};
+
+// ================================================================
+// BUILD POSITIONS GRID
+// ================================================================
+const grid = document.getElementById('positionsGrid');
+positions.forEach((p, i) => {
+  const pctDte = Math.round((p.dte / p.maxDte) * 100);
+  const numSegments = 10;
+  const filledSegments = Math.round(pctDte / 10);
+  const daysLeft = p.dte;
+  const card = document.createElement('div');
+  card.className = 'pos-card nb-card-sm';
+  card.dataset.index = i;
+  card.dataset.ticker = p.ticker;
+
+  let segmentsHTML = '';
+  for (let s = 0; s < numSegments; s++) {
+    const w = (100 / numSegments) - 0.5;
+    segmentsHTML += `<div class="dte-segment" data-fill="${s < filledSegments ? '1' : '0'}" style="width:${w}%;"></div>`;
+  }
+
+  card.innerHTML = `
+    <div class="pos-top">
+      <div class="pos-icon" style="background:${p.color};">${p.ticker[0]}</div>
+      <div class="pos-info">
+        <div class="pos-ticker" data-ticker="${p.ticker}">${p.ticker}</div>
+        <div class="pos-detail">
+          <span>${p.strike} ${p.expiry}</span>
+          <span class="pos-type">${p.type}</span>
+        </div>
+      </div>
+      <div class="pos-pnl ${p.pnlClass}" data-pnl="${p.pnl}">${p.pnl}</div>
+    </div>
+    <div class="dte-bar">${segmentsHTML}</div>
+    <div class="dte-label">${daysLeft}d remaining</div>
+  `;
+  grid.appendChild(card);
+});
+
+// ================================================================
+// CHART X MARKS
+// ================================================================
+const chartPoints = [
+  {x:60,y:140,d:'Jan 1',v:'$144,200'},
+  {x:90,y:130,d:'Jan 2',v:'$144,800'},
+  {x:120,y:125,d:'Jan 3',v:'$145,100'},
+  {x:150,y:135,d:'Jan 4',v:'$144,500'},
+  {x:180,y:120,d:'Jan 6',v:'$145,400'},
+  {x:210,y:110,d:'Jan 7',v:'$146,000'},
+  {x:240,y:115,d:'Jan 8',v:'$145,700'},
+  {x:270,y:100,d:'Jan 9',v:'$146,600'},
+  {x:300,y:95,d:'Jan 10',v:'$146,900'},
+  {x:330,y:105,d:'Jan 11',v:'$146,300'},
+  {x:360,y:90,d:'Jan 13',v:'$147,200'},
+  {x:390,y:80,d:'Jan 14',v:'$147,800'},
+  {x:420,y:85,d:'Jan 15',v:'$147,500'},
+  {x:450,y:70,d:'Jan 16',v:'$148,400'},
+  {x:480,y:65,d:'Jan 17',v:'$148,700'},
+  {x:510,y:75,d:'Jan 18',v:'$148,100'},
+  {x:540,y:60,d:'Jan 20',v:'$149,000'},
+  {x:570,y:50,d:'Jan 21',v:'$149,600'},
+  {x:600,y:55,d:'Jan 22',v:'$149,300'},
+  {x:630,y:45,d:'Jan 23',v:'$149,900'},
+  {x:660,y:40,d:'Jan 24',v:'$150,200'},
+  {x:690,y:35,d:'Jan 27',v:'$150,500'},
+  {x:720,y:30,d:'Jan 28',v:'$150,800'},
+  {x:750,y:25,d:'Jan 29',v:'$151,100'},
+  {x:780,y:20,d:'Jan 29',v:'$147,832'},
+];
+
+// Render X marks
+const xMarksGroup = document.getElementById('chartXMarks');
+chartPoints.forEach(pt => {
+  const sz = 4;
+  const line1 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+  line1.setAttribute('x1', pt.x - sz); line1.setAttribute('y1', pt.y - sz);
+  line1.setAttribute('x2', pt.x + sz); line1.setAttribute('y2', pt.y + sz);
+  line1.setAttribute('stroke', '#FE4A60'); line1.setAttribute('stroke-width', '2.5');
+  line1.setAttribute('stroke-linecap', 'round');
+
+  const line2 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+  line2.setAttribute('x1', pt.x + sz); line2.setAttribute('y1', pt.y - sz);
+  line2.setAttribute('x2', pt.x - sz); line2.setAttribute('y2', pt.y + sz);
+  line2.setAttribute('stroke', '#FE4A60'); line2.setAttribute('stroke-width', '2.5');
+  line2.setAttribute('stroke-linecap', 'round');
+
+  xMarksGroup.appendChild(line1);
+  xMarksGroup.appendChild(line2);
+});
+
+// ================================================================
+// SCROLL PROGRESS BAR (block-based)
+// ================================================================
+const scrollProgressEl = document.getElementById('scroll-progress');
+const SCROLL_BLOCKS = 40;
+for (let i = 0; i < SCROLL_BLOCKS; i++) {
+  const block = document.createElement('div');
+  block.className = 'scroll-block';
+  scrollProgressEl.appendChild(block);
+}
+const scrollBlocks = scrollProgressEl.querySelectorAll('.scroll-block');
+
+function updateScrollProgress() {
+  const scrollTop = window.scrollY;
+  const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+  const pct = docHeight > 0 ? scrollTop / docHeight : 0;
+  const filled = Math.round(pct * SCROLL_BLOCKS);
+  scrollBlocks.forEach((b, i) => {
+    b.classList.toggle('filled', i < filled);
+  });
+}
+window.addEventListener('scroll', updateScrollProgress, { passive: true });
+
+// ================================================================
+// INK SPLATTERS (20-30 scattered dots)
+// ================================================================
+function createInkSplatters() {
+  const main = document.getElementById('mainContent');
+  const colors = ['#111827', '#FE4A60', '#ffc480', '#5CF1A4', '#4B5563', '#8B5CF6'];
+  const count = 20 + Math.floor(Math.random() * 11); // 20-30
+  for (let i = 0; i < count; i++) {
+    const dot = document.createElement('div');
+    dot.className = 'ink-dot';
+    const size = 2 + Math.random() * 3;
+    dot.style.width = size + 'px';
+    dot.style.height = size + 'px';
+    dot.style.background = colors[Math.floor(Math.random() * colors.length)];
+    dot.style.opacity = (0.04 + Math.random() * 0.02).toFixed(3);
+    dot.style.left = (Math.random() * 100) + '%';
+    dot.style.top = (Math.random() * 100) + '%';
+    // Slight shape variation
+    if (Math.random() > 0.7) {
+      dot.style.borderRadius = (30 + Math.random() * 40) + '% ' + (30 + Math.random() * 40) + '%';
+    }
+    main.appendChild(dot);
+  }
+}
+createInkSplatters();
+
+// ================================================================
+// CUSTOM CURSOR WITH SPRING PHYSICS
+// ================================================================
+const cursorDot = document.getElementById('cursor-dot');
+const cursorRing = document.getElementById('cursor-ring');
+let cursorX = -100, cursorY = -100;
+let ringX = -100, ringY = -100;
+let cursorVisible = false;
+
+document.addEventListener('mousemove', (e) => {
+  cursorX = e.clientX;
+  cursorY = e.clientY;
+  cursorDot.style.left = cursorX + 'px';
+  cursorDot.style.top = cursorY + 'px';
+  if (!cursorVisible) {
+    cursorVisible = true;
+    cursorRing.style.opacity = '1';
+    cursorDot.style.opacity = '1';
+  }
+});
+
+document.addEventListener('mouseleave', () => {
+  cursorVisible = false;
+  cursorRing.style.opacity = '0';
+  cursorDot.style.opacity = '0';
+});
+
+function animateCursorRing() {
+  ringX += (cursorX - ringX) * 0.12;
+  ringY += (cursorY - ringY) * 0.12;
+  cursorRing.style.left = ringX + 'px';
+  cursorRing.style.top = ringY + 'px';
+  requestAnimationFrame(animateCursorRing);
+}
+animateCursorRing();
+
+// Expand ring on interactive elements + color change
+const interactiveSelector = '.nb-btn, .nb-card-sm, .nb-card-lg, .copy-btn, .action-pill, .bell-btn, .avatar, .pos-ticker, button, a';
+document.addEventListener('mouseover', (e) => {
+  const el = e.target.closest(interactiveSelector);
+  if (el) {
+    cursorRing.style.width = '52px';
+    cursorRing.style.height = '52px';
+    cursorRing.style.borderColor = 'rgba(255,196,128,0.6)';
+    // Accent color for dot
+    const bgColor = getComputedStyle(el).backgroundColor;
+    if (bgColor && bgColor !== 'rgba(0, 0, 0, 0)' && bgColor !== 'transparent') {
+      cursorDot.style.background = bgColor;
+      cursorDot.style.width = '12px';
+      cursorDot.style.height = '12px';
+    }
+  }
+});
+document.addEventListener('mouseout', (e) => {
+  const el = e.target.closest(interactiveSelector);
+  if (el) {
+    cursorRing.style.width = '36px';
+    cursorRing.style.height = '36px';
+    cursorRing.style.borderColor = 'var(--btn-primary)';
+    cursorDot.style.background = 'var(--text)';
+    cursorDot.style.width = '10px';
+    cursorDot.style.height = '10px';
+  }
+});
+
+// Rubber stamp on click (everywhere, not just cards)
+document.addEventListener('mousedown', (e) => {
+  const stamp = document.createElement('div');
+  stamp.className = 'stamp-impression';
+  stamp.style.left = e.clientX + 'px';
+  stamp.style.top = e.clientY + 'px';
+  document.body.appendChild(stamp);
+  setTimeout(() => stamp.remove(), 700);
+
+  // Pulse cursor on click
+  cursorDot.style.transition = 'width 0.08s, height 0.08s, background 0.2s';
+  cursorDot.style.width = '16px';
+  cursorDot.style.height = '16px';
+  setTimeout(() => {
+    cursorDot.style.transition = 'width 0.3s cubic-bezier(0.34,1.56,0.64,1), height 0.3s cubic-bezier(0.34,1.56,0.64,1), background 0.2s';
+    cursorDot.style.width = '10px';
+    cursorDot.style.height = '10px';
+  }, 80);
+});
+
+// ================================================================
+// CARD DRAG PHYSICS (playing card feel with wobble + spring back)
+// ================================================================
+function enableCardDrag(card) {
+  let isDragging = false;
+  let startX, startY;
+  let dx = 0, dy = 0;
+  let velocityX = 0, velocityY = 0;
+  let lastMoveX = 0, lastMoveY = 0;
+  let lastTime = 0;
+  const springX = new Spring(200, 15, 1);
+  const springY = new Spring(200, 15, 1);
+  const springRot = new Spring(150, 12, 1);
+  let animFrame = null;
+
+  card.addEventListener('mousedown', (e) => {
+    if (e.target.closest('button, a, .copy-btn')) return;
+    isDragging = true;
+    card.classList.add('dragging');
+    startX = e.clientX;
+    startY = e.clientY;
+    lastMoveX = e.clientX;
+    lastMoveY = e.clientY;
+    lastTime = performance.now();
+    dx = 0; dy = 0;
+    velocityX = 0; velocityY = 0;
+    e.preventDefault();
+  });
+
+  document.addEventListener('mousemove', (e) => {
+    if (!isDragging) return;
+    const now = performance.now();
+    const timeDelta = Math.max(now - lastTime, 1);
+    dx = e.clientX - startX;
+    dy = e.clientY - startY;
+    velocityX = (e.clientX - lastMoveX) / timeDelta * 16;
+    velocityY = (e.clientY - lastMoveY) / timeDelta * 16;
+    lastMoveX = e.clientX;
+    lastMoveY = e.clientY;
+    lastTime = now;
+
+    // Rotation based on velocity - playing card wobble
+    const rotation = Math.max(-12, Math.min(12, velocityX * 0.8));
+    const tiltY = Math.max(-5, Math.min(5, velocityY * -0.3));
+    card.style.transform = `translate(${dx}px, ${dy}px) rotate(${rotation}deg) perspective(800px) rotateX(${tiltY}deg)`;
+    card.style.transition = 'none';
+
+    // Shadow responds to lift
+    const dist = Math.sqrt(dx*dx + dy*dy);
+    const shadowDist = Math.min(dist * 0.05, 6);
+    card.style.setProperty('--drag-shadow', `translate(${4 + shadowDist}px, ${4 + shadowDist}px)`);
+    if (card.shadowStyler) {
+      card.shadowStyler(shadowDist);
+    }
+  });
+
+  document.addEventListener('mouseup', () => {
+    if (!isDragging) return;
+    isDragging = false;
+    card.classList.remove('dragging');
+
+    // Spring back with overshoot
+    springX.value = dx;
+    springX.target = 0;
+    springX.velocity = velocityX * 8;
+    springY.value = dy;
+    springY.target = 0;
+    springY.velocity = velocityY * 8;
+    springRot.value = Math.max(-12, Math.min(12, velocityX * 0.8));
+    springRot.target = 0;
+    springRot.velocity = velocityX * 2;
+
+    function animate() {
+      springX.update();
+      springY.update();
+      springRot.update();
+      card.style.transition = 'none';
+      card.style.transform = `translate(${springX.value}px, ${springY.value}px) rotate(${springRot.value}deg)`;
+
+      if (!springX.isSettled() || !springY.isSettled() || !springRot.isSettled()) {
+        animFrame = requestAnimationFrame(animate);
+      } else {
+        card.style.transform = '';
+        card.style.transition = '';
+      }
+    }
+    if (animFrame) cancelAnimationFrame(animFrame);
+    animate();
+  });
+}
+
+// ================================================================
+// 3D TILT ON POSITION CARDS (with shadow angle adjustment)
+// ================================================================
+function enable3DTilt(card) {
+  card.addEventListener('mousemove', (e) => {
+    if (card.classList.contains('dragging')) return;
+    const rect = card.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    const dx = (e.clientX - cx) / (rect.width / 2);
+    const dy = (e.clientY - cy) / (rect.height / 2);
+    const tiltX = -dy * 5;
+    const tiltY = dx * 5;
+    card.style.transform = `translate(-2px, -4px) perspective(800px) rotateX(${tiltX}deg) rotateY(${tiltY}deg)`;
+    card.style.transition = 'transform 0.1s ease-out';
+
+    // Shadow angle follows cursor (fixed light source - top left)
+    const shadowX = 4 + dx * 2;
+    const shadowY = 4 + dy * 2;
+    const shadowBlur = Math.abs(dx) + Math.abs(dy);
+    const afterStyle = card.querySelector('style');
+    // Use CSS custom properties
+    card.style.setProperty('--tilt-sx', shadowX + 'px');
+    card.style.setProperty('--tilt-sy', shadowY + 'px');
+    card.style.setProperty('--tilt-blur', shadowBlur + 'px');
+  });
+  card.addEventListener('mouseleave', () => {
+    if (card.classList.contains('dragging')) return;
+    card.style.transition = 'transform 0.5s cubic-bezier(0.34,1.56,0.64,1)';
+    card.style.transform = '';
+    card.style.removeProperty('--tilt-sx');
+    card.style.removeProperty('--tilt-sy');
+    card.style.removeProperty('--tilt-blur');
+    setTimeout(() => {
+      card.style.transition = '';
+    }, 500);
+  });
+
+  // Shadow responds to tilt via custom properties
+  const styleEl = document.createElement('style');
+  const cardIdx = card.dataset.index || Math.random().toString(36).slice(2);
+  card.id = card.id || 'card-' + cardIdx;
+  styleEl.textContent = `
+    #${card.id}::after {
+      transform: translate(var(--tilt-sx, 4px), var(--tilt-sy, 4px)) !important;
+      filter: blur(var(--tilt-blur, 0px)) !important;
+    }
+  `;
+  // We won't inject per-card styles to avoid specificity wars; instead handle in JS
+}
+
+// Apply drag + tilt to position cards
+document.querySelectorAll('.pos-card').forEach((card, i) => {
+  card.id = 'pos-card-' + i;
+  enableCardDrag(card);
+  enable3DTilt(card);
+});
+
+// Apply drag to signal cards
+document.querySelectorAll('.signal-card').forEach((card, i) => {
+  card.id = 'signal-card-' + i;
+  enableCardDrag(card);
+});
+
+// ================================================================
+// SCROLL-BASED CARD ROTATION (shuffling deck effect)
+// ================================================================
+function updateScrollEffects() {
+  const scrollY = window.scrollY;
+
+  // Card rotation based on scroll position
+  document.querySelectorAll('.pos-card').forEach(card => {
+    if (card.classList.contains('dragging')) return;
+    if (card.matches(':hover')) return;
+    const rect = card.getBoundingClientRect();
+    const viewH = window.innerHeight;
+    const centerY = rect.top + rect.height / 2;
+    const pct = (centerY / viewH - 0.5) * 2; // -1 at top, 1 at bottom
+    // Cards at top rotate away, entering cards rotate toward viewer
+    if (!card.style.transform || card.style.transform === '') {
+      // Only if not being dragged/tilted
+    }
+  });
+
+  // Sparkle parallax
+  const sparkleRed = document.getElementById('sparkleRed');
+  const sparkleGreen = document.getElementById('sparkleGreen');
+  if (sparkleRed) sparkleRed.style.marginTop = (scrollY * -0.3) + 'px';
+  if (sparkleGreen) sparkleGreen.style.marginTop = (scrollY * -0.6) + 'px';
+}
+window.addEventListener('scroll', () => {
+  updateScrollProgress();
+  updateScrollEffects();
+}, { passive: true });
+
+// ================================================================
+// P&L TYPEWRITER REVEAL (digit by digit, left to right)
+// ================================================================
+function typewriterPnL(el) {
+  const text = el.dataset.pnl;
+  if (!text || el.dataset.revealed) return;
+  el.dataset.revealed = '1';
+  el.textContent = '';
+  el.style.minWidth = '60px';
+  let i = 0;
+  function addChar() {
+    if (i < text.length) {
+      const span = document.createElement('span');
+      span.textContent = text[i];
+      span.style.display = 'inline-block';
+      span.style.animation = 'charStamp 0.12s ease-out';
+      el.appendChild(span);
+      i++;
+      setTimeout(addChar, 55 + Math.random() * 20);
+    }
+  }
+  addChar();
+}
+
+// ================================================================
+// DTE STAMPING ANIMATION (segments punch in like loyalty card)
+// ================================================================
+function stampDTE(card) {
+  if (card.dataset.dteStamped) return;
+  card.dataset.dteStamped = '1';
+  const segments = card.querySelectorAll('.dte-segment[data-fill="1"]');
+  // Stamp in chunks of 2-3
+  let idx = 0;
+  function stampChunk() {
+    if (idx >= segments.length) return;
+    const chunkSize = Math.min(2 + Math.floor(Math.random() * 2), segments.length - idx);
+    for (let j = 0; j < chunkSize; j++) {
+      segments[idx + j].classList.add('stamped');
+    }
+    idx += chunkSize;
+    setTimeout(stampChunk, 100 + Math.random() * 60);
+  }
+  stampChunk();
+}
+
+// ================================================================
+// SIGNAL DESC CHARACTER REVEAL (typewriter)
+// ================================================================
+function revealSignalDesc(card) {
+  const desc = card.querySelector('.signal-desc');
+  if (!desc || desc.dataset.revealed) return;
+  desc.dataset.revealed = '1';
+  const text = desc.dataset.text;
+  if (!text) return;
+  desc.innerHTML = '';
+  const chars = text.split('').map(ch => {
+    const span = document.createElement('span');
+    span.className = 'char-reveal';
+    span.textContent = ch;
+    desc.appendChild(span);
+    return span;
+  });
+  chars.forEach((span, i) => {
+    setTimeout(() => span.classList.add('visible'), i * 12);
+  });
+}
+
+// ================================================================
+// INTERSECTION OBSERVER (trigger animations on visibility)
+// ================================================================
+const visObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      const el = entry.target;
+      // P&L typewriter
+      const pnlEl = el.querySelector('.pos-pnl');
+      if (pnlEl) typewriterPnL(pnlEl);
+      // DTE stamping
+      if (el.classList.contains('pos-card')) stampDTE(el);
+      // Signal desc reveal
+      if (el.hasAttribute('data-signal')) revealSignalDesc(el);
+    }
+  });
+}, { threshold: 0.3 });
+
+document.querySelectorAll('.pos-card').forEach(c => visObserver.observe(c));
+document.querySelectorAll('[data-signal]').forEach(c => visObserver.observe(c));
+
+// ================================================================
+// COPY TRADE (stamp down + brutalist confetti)
+// ================================================================
+function copyTrade(btn) {
+  const origText = btn.childNodes[0].textContent;
+  btn.classList.add('copied');
+  btn.childNodes[0].textContent = 'Copied ';
+  btn.querySelector('.check').textContent = '\u2713';
+
+  // STAMP DOWN: shadow disappears = flat on surface
+  btn.style.transition = 'transform 0.05s ease-out, box-shadow 0.05s';
+  btn.style.transform = 'scaleY(0.88) scaleX(1.06) translate(4px, 4px)';
+  const afterEl = btn;
+  // Force shadow flat
+  btn.classList.add('stamp-flat');
+
+  setTimeout(() => {
+    // Spring back with overshoot
+    btn.style.transition = 'transform 0.4s cubic-bezier(0.34,1.56,0.64,1)';
+    btn.style.transform = 'scaleY(1.08) scaleX(0.95) translate(-2px, -2px)';
+    btn.classList.remove('stamp-flat');
+    setTimeout(() => {
+      btn.style.transform = '';
+    }, 200);
+  }, 80);
+
+  // Brutalist confetti (squares + triangles, NOT circles)
+  const rect = btn.getBoundingClientRect();
+  const cx = rect.left + rect.width / 2;
+  const cy = rect.top;
+  for (let i = 0; i < 25; i++) {
+    const piece = document.createElement('div');
+    piece.className = 'confetti-piece';
+    const size = 5 + Math.random() * 10;
+    const shapeRoll = Math.random();
+    const colors = ['#FE4A60', '#5CF1A4', '#ffc480', '#3B82F6', '#8B5CF6', '#111827'];
+    const color = colors[Math.floor(Math.random() * colors.length)];
+
+    if (shapeRoll > 0.5) {
+      // Triangle
+      piece.style.width = '0';
+      piece.style.height = '0';
+      piece.style.borderLeft = `${size/2}px solid transparent`;
+      piece.style.borderRight = `${size/2}px solid transparent`;
+      piece.style.borderBottom = `${size}px solid ${color}`;
+    } else {
+      // Square
+      piece.style.width = size + 'px';
+      piece.style.height = size + 'px';
+      piece.style.background = color;
+      piece.style.border = '1.5px solid #111827';
+    }
+
+    const spreadX = (Math.random() - 0.5) * 160;
+    const spreadY = -(Math.random() * 80 + 20);
+    piece.style.left = (cx + spreadX) + 'px';
+    piece.style.top = (cy + spreadY) + 'px';
+    const dur = 0.6 + Math.random() * 0.8;
+    piece.style.animation = `confettiFall ${dur}s cubic-bezier(0.25,0.46,0.45,0.94) forwards`;
+    piece.style.animationDelay = (Math.random() * 0.12) + 's';
+    document.body.appendChild(piece);
+    setTimeout(() => piece.remove(), 1800);
+  }
+
+  setTimeout(() => {
+    btn.classList.remove('copied');
+    btn.childNodes[0].textContent = origText;
+    btn.querySelector('.check').textContent = '';
+  }, 2000);
+}
+
+// ================================================================
+// SPY PRICE TICK (with flash + border animation)
+// ================================================================
+const spyEl = document.getElementById('spy-price');
+const spyPill = document.getElementById('spyPill');
+let spyPrice = 478.92;
+setInterval(() => {
+  const delta = (Math.random() - 0.45) * 0.08;
+  spyPrice = Math.round((spyPrice + delta) * 100) / 100;
+  spyEl.textContent = '$' + spyPrice.toFixed(2);
+  spyPill.classList.add('flash');
+  // Brief scale pulse
+  spyPill.style.transition = 'transform 0.1s cubic-bezier(0.34,1.56,0.64,1)';
+  spyPill.style.transform = 'scale(1.04)';
+  setTimeout(() => {
+    spyPill.style.transform = '';
+    spyPill.classList.remove('flash');
+  }, 300);
+}, 3000);
+
+// ================================================================
+// CHART TOOLTIP (sticky note style)
+// ================================================================
+(function() {
+  const chartArea = document.getElementById('chartArea');
+  const tooltip = document.getElementById('chartTooltip');
+  const dot = document.getElementById('chartDot');
+  const svg = chartArea.querySelector('svg');
+
+  chartArea.style.position = 'relative';
+
+  svg.addEventListener('mousemove', function(e) {
+    const rect = svg.getBoundingClientRect();
+    const scaleX = 800 / rect.width;
+    const mouseX = (e.clientX - rect.left) * scaleX;
+
+    let closest = chartPoints[0], minDist = Infinity;
+    chartPoints.forEach(p => {
+      const d = Math.abs(p.x - mouseX);
+      if (d < minDist) { minDist = d; closest = p; }
+    });
+
+    dot.style.display = 'block';
+    dot.setAttribute('cx', closest.x);
+    dot.setAttribute('cy', closest.y);
+    // Pulse the dot
+    dot.setAttribute('r', '6');
+
+    tooltip.style.display = 'block';
+    // Vary rotation slightly for playfulness
+    const rotDeg = -2.5 + (closest.x / 800) * 2;
+    tooltip.style.transform = `translateX(-50%) rotate(${rotDeg}deg)`;
+    tooltip.innerHTML = `<strong>${closest.d}</strong><br>${closest.v}`;
+    const tipX = (closest.x / 800) * rect.width;
+    tooltip.style.left = tipX + 'px';
+    tooltip.style.top = ((closest.y / 200) * rect.height - 55) + 'px';
+  });
+
+  svg.addEventListener('mouseleave', function() {
+    dot.style.display = 'none';
+    dot.setAttribute('r', '5');
+    tooltip.style.display = 'none';
+  });
+})();
+
+// ================================================================
+// CONTEXT MENU (on portfolio value right-click)
+// ================================================================
+const contextMenu = document.getElementById('contextMenu');
+
+function showContextMenu(e) {
+  contextMenu.style.display = 'block';
+  // Position with bounds check
+  const x = Math.min(e.clientX, window.innerWidth - 220);
+  const y = Math.min(e.clientY, window.innerHeight - 200);
+  contextMenu.style.left = x + 'px';
+  contextMenu.style.top = y + 'px';
+}
+
+document.addEventListener('click', (e) => {
+  if (!contextMenu.contains(e.target)) {
+    contextMenu.style.display = 'none';
+  }
+});
+document.addEventListener('contextmenu', (e) => {
+  if (!e.target.closest('.portfolio-value')) {
+    contextMenu.style.display = 'none';
+  }
+});
+
+// ================================================================
+// TICKER CLICK -> FUN FACT (5 clicks)
+// ================================================================
+document.addEventListener('click', (e) => {
+  const tickerEl = e.target.closest('.pos-ticker');
+  if (!tickerEl) return;
+  const ticker = tickerEl.dataset.ticker;
+  if (!ticker) return;
+
+  // Visual feedback on each click
+  tickerEl.style.transition = 'transform 0.15s cubic-bezier(0.34,1.56,0.64,1)';
+  tickerEl.style.transform = 'scale(1.15) rotate(-2deg)';
+  setTimeout(() => { tickerEl.style.transform = ''; }, 150);
+
+  tickerClickCounts[ticker] = (tickerClickCounts[ticker] || 0) + 1;
+  if (tickerClickCounts[ticker] >= 5) {
+    tickerClickCounts[ticker] = 0;
+    document.getElementById('funFactTitle').textContent = ticker + ' Fun Fact';
+    document.getElementById('funFactText').textContent = funFacts[ticker] || 'No fun fact available for this ticker.';
+    document.getElementById('funFactModal').classList.add('show');
+  }
+});
+
+// ================================================================
+// KONAMI CODE
+// ================================================================
+const konamiSeq = [38,38,40,40,37,39,37,39,66,65];
+let konamiIdx = 0;
+document.addEventListener('keydown', (e) => {
+  if (e.keyCode === konamiSeq[konamiIdx]) {
+    konamiIdx++;
+    if (konamiIdx === konamiSeq.length) {
+      konamiIdx = 0;
+      triggerKonami();
+    }
+  } else {
+    konamiIdx = 0;
+  }
+});
+
+function triggerKonami() {
+  const allCards = document.querySelectorAll('.pos-card, .signal-card, .portfolio-card');
+  allCards.forEach((card, i) => {
+    setTimeout(() => {
+      card.classList.add('konami-spin');
+      // Also momentarily lift shadow
+      card.style.setProperty('--tilt-sx', '12px');
+      card.style.setProperty('--tilt-sy', '12px');
+      setTimeout(() => {
+        card.classList.remove('konami-spin');
+        card.style.removeProperty('--tilt-sx');
+        card.style.removeProperty('--tilt-sy');
+      }, 1200);
+    }, i * 80);
+  });
+
+  // Bonus: scatter some confetti
+  for (let i = 0; i < 30; i++) {
+    setTimeout(() => {
+      const piece = document.createElement('div');
+      piece.className = 'confetti-piece';
+      const size = 6 + Math.random() * 8;
+      const colors = ['#FE4A60', '#5CF1A4', '#ffc480', '#3B82F6', '#8B5CF6'];
+      const color = colors[Math.floor(Math.random() * colors.length)];
+      if (Math.random() > 0.5) {
+        piece.style.width = '0'; piece.style.height = '0';
+        piece.style.borderLeft = `${size/2}px solid transparent`;
+        piece.style.borderRight = `${size/2}px solid transparent`;
+        piece.style.borderBottom = `${size}px solid ${color}`;
+      } else {
+        piece.style.width = size+'px'; piece.style.height = size+'px';
+        piece.style.background = color; piece.style.border = '1.5px solid #111827';
+      }
+      piece.style.left = (Math.random() * window.innerWidth) + 'px';
+      piece.style.top = '-20px';
+      piece.style.animation = `confettiFall ${1+Math.random()}s ease-in forwards`;
+      document.body.appendChild(piece);
+      setTimeout(() => piece.remove(), 2000);
+    }, i * 40);
+  }
+}
+
+// ================================================================
+// AMBIENT SHADOW SWAY (gentle breeze)
+// ================================================================
+function startAmbientSway() {
+  const cards = document.querySelectorAll('.pos-card.nb-card-sm');
+  cards.forEach((card, i) => {
+    const duration = 3000 + Math.random() * 1000;
+    const delay = Math.random() * 2000;
+    card.style.setProperty('--sway-dur', duration + 'ms');
+    card.style.setProperty('--sway-delay', delay + 'ms');
+  });
+  const style = document.createElement('style');
+  style.textContent = `
+    .pos-card.nb-card-sm.ambient::after {
+      animation: shadowSway var(--sway-dur, 3500ms) ease-in-out var(--sway-delay, 0ms) infinite;
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+// ================================================================
+// BUTTON SQUASH/STRETCH PHYSICS (with full press for actions)
+// ================================================================
+function addSquashStretch(elements, fullPress) {
+  elements.forEach(el => {
+    const springScale = new Spring(300, 14, 1);
+    let mouseIsDown = false;
+
+    el.addEventListener('mousedown', () => {
+      mouseIsDown = true;
+      if (fullPress) {
+        // Full press: completely flat, no shadow
+        el.style.transition = 'transform 0.06s ease-out';
+        el.style.transform = 'scaleY(0.88) scaleX(1.06) translate(4px, 4px)';
+        // Kill shadow
+        el.style.setProperty('--press-shadow', 'translate(0, 0)');
+      } else {
+        el.style.transition = 'transform 0.06s ease-out';
+        el.style.transform = 'scaleY(0.92) scaleX(1.04) translate(0, 2px)';
+      }
+    });
+
+    el.addEventListener('mouseup', () => {
+      if (!mouseIsDown) return;
+      mouseIsDown = false;
+      // Stretch overshoot
+      el.style.transition = 'transform 0.12s cubic-bezier(0.34,1.56,0.64,1)';
+      el.style.transform = 'scaleY(1.06) scaleX(0.97) translate(-1px, -2px)';
+      el.style.removeProperty('--press-shadow');
+      setTimeout(() => {
+        el.style.transition = 'transform 0.25s cubic-bezier(0.34,1.56,0.64,1)';
+        el.style.transform = 'scaleY(1.02) scaleX(0.99)';
+        setTimeout(() => {
+          el.style.transform = '';
+          el.style.transition = '';
+        }, 120);
+      }, 120);
+    });
+
+    el.addEventListener('mouseleave', () => {
+      if (mouseIsDown) {
+        mouseIsDown = false;
+        el.style.transition = 'transform 0.3s cubic-bezier(0.34,1.56,0.64,1)';
+        el.style.transform = '';
+        el.style.removeProperty('--press-shadow');
+      }
+    });
+  });
+}
+
+// Quick actions get FULL PRESS
+addSquashStretch(document.querySelectorAll('.action-pill'), true);
+// Copy buttons get normal squash
+addSquashStretch(document.querySelectorAll('.copy-btn'), false);
+
+// ================================================================
+// LOADING CHOREOGRAPHY (paper craft style)
+// ================================================================
+let entranceRan = false;
+function runEntrance() {
+  if (entranceRan) return;
+  entranceRan = true;
+
+  const header = document.getElementById('header');
+  const heroSection = document.getElementById('heroSection');
+  const sparkleRed = document.getElementById('sparkleRed');
+  const sparkleGreen = document.getElementById('sparkleGreen');
+  const portfolioSection = document.getElementById('portfolioSection');
+  const positionsSection = document.getElementById('positionsSection');
+  const signalsSection = document.getElementById('signalsSection');
+  const actionsSection = document.getElementById('actionsSection');
+  const statsRow = document.getElementById('statsRow');
+
+  // 1. Header SLAMS down from top with bounce (0-400ms)
+  setTimeout(() => {
+    header.style.animation = 'headerSlam 0.45s cubic-bezier(0.34,1.56,0.64,1) forwards';
+  }, 0);
+
+  // 2. Sparkles float in from sides (200-600ms)
+  setTimeout(() => {
+    sparkleRed.classList.add('active');
+  }, 200);
+  setTimeout(() => {
+    sparkleGreen.classList.add('active');
+  }, 400);
+
+  // 3. Title characters stamp one by one (typewriter slam) (400-1200ms)
+  setTimeout(() => {
+    heroSection.style.opacity = '1';
+    const titleText = "Your trading\ndashboard";
+    const titleEl = document.getElementById('heroTitle');
+    let html = '';
+    for (let i = 0; i < titleText.length; i++) {
+      if (titleText[i] === '\n') {
+        html += '<br>';
+      } else if (titleText[i] === ' ') {
+        html += '<span class="char" style="width:0.3em;display:inline-block;">&nbsp;</span>';
+      } else {
+        html += `<span class="char">${titleText[i]}</span>`;
+      }
+    }
+    titleEl.innerHTML = html;
+    const chars = titleEl.querySelectorAll('.char');
+    chars.forEach((ch, i) => {
+      setTimeout(() => ch.classList.add('stamped'), i * 30);
+    });
+    // Show subtitle after title
+    setTimeout(() => {
+      document.getElementById('heroSubtitle').style.opacity = '1';
+    }, chars.length * 30 + 100);
+  }, 400);
+
+  // 4. Portfolio card drops from above, bounces twice (800-1400ms)
+  setTimeout(() => {
+    portfolioSection.style.animation = 'bounceIn 0.65s cubic-bezier(0.34,1.56,0.64,1) forwards';
+
+    // Animate chart
+    setTimeout(() => {
+      const chartLine = document.getElementById('chartLine');
+      chartLine.style.transition = 'stroke-dashoffset 1.5s ease-out';
+      chartLine.style.strokeDashoffset = '0';
+
+      setTimeout(() => {
+        document.getElementById('chartFill').style.transition = 'opacity 0.8s ease-out';
+        document.getElementById('chartFill').style.opacity = '1';
+        document.getElementById('chartXMarks').style.transition = 'opacity 0.5s';
+        document.getElementById('chartXMarks').style.opacity = '1';
+      }, 800);
+    }, 300);
+  }, 800);
+
+  // 5. Stats pills slide left, each bumping next (dominoes) (1000-1600ms)
+  setTimeout(() => {
+    const pills = statsRow.querySelectorAll('.stat-pill');
+    pills.forEach((pill, i) => {
+      setTimeout(() => {
+        pill.style.animation = `dominoSlide 0.4s cubic-bezier(0.34,1.56,0.64,1) forwards`;
+      }, i * 110);
+    });
+  }, 1000);
+
+  // 6. Position cards dealt from deck (1200-2400ms)
+  setTimeout(() => {
+    positionsSection.style.animation = 'sectionFadeIn 0.3s forwards';
+    const cards = document.querySelectorAll('.pos-card');
+    cards.forEach((card, i) => {
+      setTimeout(() => {
+        card.style.animation = `cardDeal 0.55s cubic-bezier(0.34,1.56,0.64,1) forwards`;
+      }, i * 130);
+    });
+
+    // Start ambient sway after cards land
+    setTimeout(() => {
+      document.querySelectorAll('.pos-card').forEach(c => c.classList.add('ambient'));
+      startAmbientSway();
+    }, cards.length * 130 + 700);
+  }, 1200);
+
+  // 7. Signal cards land with heavier thud (1800-2400ms)
+  setTimeout(() => {
+    signalsSection.style.animation = 'sectionFadeIn 0.3s forwards';
+    const signalCards = document.querySelectorAll('.signal-card');
+    signalCards.forEach((card, i) => {
+      setTimeout(() => {
+        card.style.animation = `signalThud 0.55s cubic-bezier(0.34,1.56,0.64,1) forwards`;
+      }, i * 220);
+    });
+  }, 1800);
+
+  // 8. Actions section fades in
+  setTimeout(() => {
+    actionsSection.style.animation = 'sectionFadeIn 0.4s ease-out forwards';
+  }, 2200);
+}
+
+// ================================================================
+// KICK IT OFF
+// ================================================================
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', runEntrance);
+} else {
+  runEntrance();
+}
+</script>
+
+</body>
+</html>

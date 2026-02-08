@@ -1,0 +1,1405 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Market Elites — Timeline Archive</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+--bg:#191a1e;--text:rgba(255,255,255,0.7);--text-heading:rgba(255,255,255,1);
+--text-active-nav:rgba(255,255,255,0.95);--text-body:rgba(255,255,255,0.7);
+--text-label:rgba(255,255,255,0.6);--text-secondary:rgba(255,255,255,0.5);
+--text-tertiary:rgba(255,255,255,0.4);--text-muted:rgba(255,255,255,0.3);
+--text-year:rgba(255,255,255,0.2);--bg-toggle:rgba(255,255,255,0.15);
+--bg-pill-border:rgba(255,255,255,0.1);--bg-pill:rgba(255,255,255,0.08);
+--bg-border:rgba(255,255,255,0.06);--bg-header-shadow:rgba(255,255,255,0.05);
+--bg-hover:rgba(255,255,255,0.04);--bg-footer:rgba(255,255,255,0.04);
+--card-inset:rgba(255,255,255,0.06);--header-bg:rgba(0,0,0,0.2);
+--col-signals:#febe02;--col-winners:#30a14e;--col-losers:#eb4823;
+--col-assignments:#4183c4;--col-rolls:#36bdaa;--col-announcements:#b05bff;
+--col-analysis:#ea4c89;--wipe-bg:#191a1e;
+}
+[data-theme="light"]{
+--bg:#ffffff;--text:rgba(0,0,0,0.7);--text-heading:rgba(0,0,0,1);
+--text-active-nav:rgba(0,0,0,0.95);--text-body:rgba(0,0,0,0.7);
+--text-label:rgba(0,0,0,0.6);--text-secondary:rgba(0,0,0,0.5);
+--text-tertiary:rgba(0,0,0,0.4);--text-muted:rgba(0,0,0,0.3);
+--text-year:rgba(0,0,0,0.2);--bg-toggle:rgba(0,0,0,0.15);
+--bg-pill-border:rgba(0,0,0,0.1);--bg-pill:rgba(0,0,0,0.08);
+--bg-border:rgba(0,0,0,0.06);--bg-header-shadow:rgba(0,0,0,0.05);
+--bg-hover:rgba(0,0,0,0.04);--bg-footer:rgba(0,0,0,0.04);
+--card-inset:rgba(0,0,0,0.06);--header-bg:rgba(0,0,0,0.05);--wipe-bg:#ffffff;
+}
+html{scroll-behavior:smooth}
+body{
+background:var(--bg);color:var(--text-body);font-family:'Inter',Arial,sans-serif;
+font-size:15px;line-height:1.5;font-weight:300;
+-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;
+overflow-x:hidden;
+}
+/* NOISE OVERLAY */
+body::before{
+content:'';position:fixed;inset:0;z-index:9999;pointer-events:none;opacity:0.02;
+background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+/* DRIFTING BG GRADIENTS */
+body::after{
+content:'';position:fixed;inset:0;z-index:-1;pointer-events:none;
+background:
+  radial-gradient(ellipse 600px 600px at 20% 30%, rgba(100,40,180,0.03), transparent),
+  radial-gradient(ellipse 500px 500px at 80% 70%, rgba(30,60,160,0.02), transparent);
+animation:driftBg 30s ease-in-out infinite alternate;
+}
+@keyframes driftBg{
+0%{background-position:0% 0%,100% 100%}
+100%{background-position:100% 100%,0% 0%}
+}
+/* CURSOR GLOW */
+#cursorGlow{
+position:fixed;width:400px;height:400px;border-radius:50%;
+pointer-events:none;z-index:1;
+background:radial-gradient(circle,rgba(255,255,255,0.08) 0%,transparent 70%);
+transform:translate(-50%,-50%);transition:background 0.5s ease;
+will-change:left,top;
+}
+/* THEME WIPE */
+#themeWipe{
+position:fixed;inset:0;z-index:10000;pointer-events:none;
+background:var(--wipe-bg);clip-path:circle(0% at 50% 50%);
+transition:clip-path 0.5s cubic-bezier(0.4,0,0.2,1);
+}
+#themeWipe.active{clip-path:circle(150% at var(--wx,50%) var(--wy,50%))}
+.container{max-width:1024px;margin:0 auto;padding:0 20px}
+/* HEADER */
+.header{
+height:100px;background:var(--header-bg);
+box-shadow:0 1px 0 var(--bg-header-shadow);
+display:flex;align-items:center;position:sticky;top:0;z-index:100;
+transition:height 0.4s cubic-bezier(0.34,1.56,0.64,1),background 0.3s;
+}
+.header.scrolled{
+height:56px;background:rgba(25,26,30,0.85);
+backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+}
+[data-theme="light"] .header.scrolled{background:rgba(255,255,255,0.85)}
+.header-inner{
+max-width:1024px;margin:0 auto;padding:0 20px;width:100%;
+display:flex;align-items:center;justify-content:space-between;
+transition:all 0.4s cubic-bezier(0.34,1.56,0.64,1);
+}
+.header.scrolled .header-inner{
+max-width:600px;background:rgba(25,26,30,0.6);
+border:1px solid rgba(255,255,255,0.15);border-radius:34px;
+padding:0 20px;height:46px;backdrop-filter:blur(4px);
+}
+[data-theme="light"] .header.scrolled .header-inner{
+background:rgba(255,255,255,0.6);border:1px solid rgba(0,0,0,0.15);
+}
+.header-left{display:flex;align-items:center;gap:14px}
+.logo-shape{
+width:40px;height:40px;border-radius:50%;position:relative;
+display:flex;align-items:center;justify-content:center;
+overflow:hidden;flex-shrink:0;transition:all 0.3s ease;
+}
+.header.scrolled .logo-shape{width:30px;height:30px}
+.logo-shape::before{
+content:'';position:absolute;inset:0;
+background:conic-gradient(var(--col-signals),var(--col-winners),var(--col-assignments),var(--col-rolls),var(--col-announcements),var(--col-analysis),var(--col-losers),var(--col-signals));
+animation:scan 24s infinite linear;border-radius:50%;
+transition:color 0.5s ease;
+}
+.logo-shape::after{
+content:'ME';position:relative;z-index:1;font-size:13px;
+font-weight:800;color:#fff;letter-spacing:0.5px;
+}
+.header.scrolled .logo-shape::after{font-size:10px}
+@keyframes scan{to{transform:rotate(1turn)}}
+@keyframes scanFast{to{transform:rotate(1turn)}}
+.logo-text{
+font-size:15px;font-weight:600;color:var(--text-heading);
+letter-spacing:2px;white-space:nowrap;transition:all 0.3s ease;
+}
+.header.scrolled .logo-text{font-size:13px;letter-spacing:1.5px}
+.header-right{display:flex;align-items:center;gap:16px}
+.portfolio-pill{
+display:flex;align-items:center;gap:8px;
+background:rgba(48,161,78,0.12);border:1px solid rgba(48,161,78,0.25);
+border-radius:100px;padding:6px 14px;font-size:13px;
+font-weight:600;color:#30a14e;white-space:nowrap;transition:all 0.3s;
+}
+.header.scrolled .portfolio-pill{padding:4px 10px;font-size:11px}
+.theme-toggle{
+width:44px;height:24px;background:var(--bg-toggle);border-radius:12px;
+position:relative;cursor:pointer;border:none;outline:none;
+flex-shrink:0;transition:background 0.2s ease;
+}
+.theme-toggle::after{
+content:'';position:absolute;top:3px;left:3px;width:18px;height:18px;
+background:#fff;border-radius:50%;transition:transform 0.2s ease;
+}
+[data-theme="light"] .theme-toggle::after{transform:translateX(20px);background:#333}
+.theme-toggle-icon{
+position:absolute;font-size:12px;top:50%;transform:translateY(-50%);
+pointer-events:none;z-index:1;
+}
+.theme-toggle-icon.sun{left:5px}
+.theme-toggle-icon.moon{right:5px}
+.avatar{
+width:34px;height:34px;border-radius:50%;
+background:linear-gradient(135deg,var(--col-signals),var(--col-analysis));
+display:flex;align-items:center;justify-content:center;
+font-size:13px;font-weight:600;color:#fff;flex-shrink:0;transition:all 0.3s;
+}
+.header.scrolled .avatar{width:28px;height:28px;font-size:11px}
+/* FILTER PILLS */
+.filter-bar{padding:24px 0 16px;display:flex;flex-wrap:wrap;gap:8px}
+.filter-pill{
+display:inline-flex;align-items:center;gap:6px;padding:7px 16px;
+border-radius:100px;border:1px solid var(--bg-pill-border);
+background:transparent;color:var(--text-secondary);
+font-family:'Inter',Arial,sans-serif;font-size:13px;font-weight:400;
+cursor:pointer;transition:all 0.3s cubic-bezier(0.34,1.56,0.64,1);
+white-space:nowrap;outline:none;position:relative;overflow:hidden;
+}
+.filter-pill:hover{color:var(--text-heading)}
+.filter-pill .count{
+background:rgba(0,0,0,0.2);font-size:11px;padding:1px 6px;
+border-radius:12px;color:inherit;opacity:0.7;
+transition:transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+display:inline-block;
+}
+[data-theme="light"] .filter-pill .count{background:rgba(0,0,0,0.08)}
+.filter-pill.active{color:#fff;border-color:transparent}
+.filter-pill[data-filter="all"].active{background:rgba(255,255,255,0.2);color:var(--text-heading);border-color:var(--bg-pill-border)}
+.filter-pill[data-filter="signals"].active{background:var(--col-signals);box-shadow:0 0 12px rgba(254,190,2,0.5)}
+.filter-pill[data-filter="winners"].active{background:var(--col-winners);box-shadow:0 0 12px rgba(48,161,78,0.5)}
+.filter-pill[data-filter="losers"].active{background:var(--col-losers);box-shadow:0 0 12px rgba(235,72,35,0.5)}
+.filter-pill[data-filter="assignments"].active{background:var(--col-assignments);box-shadow:0 0 12px rgba(65,131,196,0.5)}
+.filter-pill[data-filter="rolls"].active{background:var(--col-rolls);box-shadow:0 0 12px rgba(54,189,170,0.5)}
+.filter-pill[data-filter="analysis"].active{background:var(--col-analysis);box-shadow:0 0 12px rgba(234,76,137,0.5)}
+.filter-pill[data-filter="announcements"].active{background:var(--col-announcements);box-shadow:0 0 12px rgba(176,91,255,0.5)}
+/* RIPPLE */
+.filter-pill .ripple{
+position:absolute;border-radius:50%;background:rgba(255,255,255,0.3);
+transform:scale(0);animation:rippleOut 0.6s ease-out;pointer-events:none;
+}
+@keyframes rippleOut{to{transform:scale(4);opacity:0}}
+/* STATS BAR */
+.stats-bar{
+display:grid;grid-template-columns:repeat(4,1fr);gap:12px;padding:8px 0 28px;
+position:sticky;top:100px;z-index:50;
+transition:top 0.3s,backdrop-filter 0.3s,background 0.3s;
+}
+.stats-bar.stuck{
+top:56px;background:rgba(25,26,30,0.7);backdrop-filter:blur(20px);
+-webkit-backdrop-filter:blur(20px);margin:0 -20px;padding:8px 20px 8px;
+border-radius:0 0 12px 12px;
+}
+[data-theme="light"] .stats-bar.stuck{background:rgba(255,255,255,0.7)}
+.stat-box{background:var(--bg-hover);border-radius:8px;padding:16px 18px;text-align:center}
+.stat-value{font-size:20px;font-weight:800;color:var(--text-heading);line-height:1.2}
+.stat-label{font-size:12px;color:var(--text-secondary);margin-top:4px}
+/* YEAR SECTIONS */
+.year-section{margin-bottom:4px}
+.year-header{
+display:flex;align-items:center;gap:14px;padding:18px 0;
+cursor:pointer;user-select:none;transition:opacity 0.2s,transform 0.2s;
+will-change:transform;
+}
+.year-header:hover{opacity:0.8}
+.year-text{font-size:24px;font-weight:800;color:var(--text-year);line-height:1}
+.year-count{font-size:13px;color:var(--text-muted);font-weight:400;transition:transform 0.3s cubic-bezier(0.34,1.56,0.64,1)}
+.year-arrow{
+margin-left:auto;font-size:14px;color:var(--text-muted);
+transition:transform 0.4s cubic-bezier(0.34,1.56,0.64,1);display:inline-block;
+}
+.year-section.collapsed .year-arrow{transform:rotate(-90deg)}
+.year-content{overflow:hidden;transition:max-height 0.5s cubic-bezier(0.34,1.56,0.64,1),opacity 0.3s;max-height:8000px;opacity:1}
+.year-section.collapsed .year-content{max-height:0;opacity:0}
+/* TIMELINE */
+.timeline{
+border-left:4px solid var(--bg-border);padding-left:40px;margin-left:16px;
+position:relative;
+}
+/* Animated gradient on timeline line */
+.timeline::before{
+content:'';position:absolute;left:-4px;top:0;bottom:0;width:4px;
+background:linear-gradient(180deg,transparent 0%,rgba(254,190,2,0.6) 15%,rgba(48,161,78,0.6) 30%,transparent 45%,transparent 100%);
+background-size:100% 300%;
+animation:energyFlow 6s linear infinite;
+pointer-events:none;
+}
+@keyframes energyFlow{0%{background-position:0% 0%}100%{background-position:0% 300%}}
+/* SPARK DOTS */
+.spark{
+position:absolute;left:-6px;width:8px;height:8px;border-radius:50%;
+background:rgba(254,190,2,0.8);box-shadow:0 0 8px rgba(254,190,2,0.6);
+animation:sparkTravel 2s ease-in forwards;pointer-events:none;z-index:2;
+}
+@keyframes sparkTravel{0%{top:0;opacity:1}100%{top:100%;opacity:0}}
+/* MONTH */
+.month-section{margin-bottom:8px}
+.month-header{
+display:flex;align-items:center;gap:10px;padding:14px 0;
+cursor:pointer;user-select:none;position:relative;
+}
+.month-header:hover{opacity:0.85}
+.month-dot{
+position:absolute;left:-50px;width:16px;height:16px;border-radius:50%;
+background:rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;
+}
+[data-theme="light"] .month-dot{background:rgba(0,0,0,0.08)}
+.month-dot::after{content:'';width:6px;height:6px;border-radius:50%;background:var(--text-secondary)}
+/* TIMELINE DOT PULSE */
+.month-dot.pulse::before{
+content:'';position:absolute;inset:-4px;border-radius:50%;
+border:2px solid var(--col-signals);
+animation:dotRingPulse 1s ease-out forwards;
+}
+@keyframes dotRingPulse{
+0%{transform:scale(0.5);opacity:1}
+100%{transform:scale(2.5);opacity:0}
+}
+.month-text{font-size:18px;font-weight:600;color:var(--text-heading)}
+.month-count{font-size:13px;color:var(--text-muted)}
+.month-arrow{
+margin-left:auto;font-size:13px;color:var(--text-muted);
+transition:transform 0.4s cubic-bezier(0.34,1.56,0.64,1);display:inline-block;
+}
+.month-section.collapsed .month-arrow{transform:rotate(-90deg)}
+.month-entries{
+overflow:hidden;
+transition:max-height 0.5s cubic-bezier(0.34,1.56,0.64,1),opacity 0.3s;
+max-height:5000px;opacity:1;
+}
+.month-section.collapsed .month-entries{max-height:0;opacity:0}
+/* ENTRY CARDS */
+.entry{
+background:transparent;border-bottom:1px solid var(--bg-border);
+padding:10px 18px 10px 0;border-radius:4px;
+transition:all 0.35s cubic-bezier(0.34,1.56,0.64,1);
+position:relative;cursor:pointer;
+border-left:3px solid transparent;
+opacity:0.7;
+}
+.entry.in-view{opacity:0.9}
+.entry:hover{
+background:var(--bg-hover);box-shadow:inset 1px 1px 0 var(--card-inset);
+padding-left:14px;
+}
+.entry.filter-match{transition:all 0.4s cubic-bezier(0.34,1.56,0.64,1)}
+.entry.filter-hide{
+opacity:0.15!important;transform:scale(0.95);
+pointer-events:none;
+transition:all 0.4s ease;
+}
+.entry.filter-glow-signals{box-shadow:inset 3px 0 0 var(--col-signals),0 0 15px rgba(254,190,2,0.1)}
+.entry.filter-glow-winners{box-shadow:inset 3px 0 0 var(--col-winners),0 0 15px rgba(48,161,78,0.1)}
+.entry.filter-glow-losers{box-shadow:inset 3px 0 0 var(--col-losers),0 0 15px rgba(235,72,35,0.1)}
+.entry.filter-glow-assignments{box-shadow:inset 3px 0 0 var(--col-assignments),0 0 15px rgba(65,131,196,0.1)}
+.entry.filter-glow-rolls{box-shadow:inset 3px 0 0 var(--col-rolls),0 0 15px rgba(54,189,170,0.1)}
+.entry.filter-glow-analysis{box-shadow:inset 3px 0 0 var(--col-analysis),0 0 15px rgba(234,76,137,0.1)}
+.entry.filter-glow-announcements{box-shadow:inset 3px 0 0 var(--col-announcements),0 0 15px rgba(176,91,255,0.1)}
+/* HOVER BORDER GLOW */
+.entry[data-category="signals"]:hover{border-left-color:var(--col-signals);box-shadow:inset 3px 0 8px rgba(254,190,2,0.2)}
+.entry[data-category="winners"]:hover{border-left-color:var(--col-winners);box-shadow:inset 3px 0 8px rgba(48,161,78,0.2)}
+.entry[data-category="losers"]:hover{border-left-color:var(--col-losers);box-shadow:inset 3px 0 8px rgba(235,72,35,0.2)}
+.entry[data-category="assignments"]:hover{border-left-color:var(--col-assignments);box-shadow:inset 3px 0 8px rgba(65,131,196,0.2)}
+.entry[data-category="rolls"]:hover{border-left-color:var(--col-rolls);box-shadow:inset 3px 0 8px rgba(54,189,170,0.2)}
+.entry[data-category="announcements"]:hover{border-left-color:var(--col-announcements);box-shadow:inset 3px 0 8px rgba(176,91,255,0.2)}
+.entry[data-category="analysis"]:hover{border-left-color:var(--col-analysis);box-shadow:inset 3px 0 8px rgba(234,76,137,0.2)}
+.entry:hover .entry-category{transform:scale(1.05);transition:transform 0.3s cubic-bezier(0.34,1.56,0.64,1)}
+/* WINNER BREATHING */
+.entry[data-category="winners"].in-view{animation:winnerBreathe 6s ease-in-out infinite}
+@keyframes winnerBreathe{
+0%,100%{background:transparent}
+50%{background:rgba(48,161,78,0.02)}
+}
+/* EXPANDED ENTRY */
+.entry-expand{
+max-height:0;overflow:hidden;opacity:0;
+transition:max-height 0.5s cubic-bezier(0.34,1.56,0.64,1),opacity 0.3s,padding 0.3s;
+padding:0 0;
+}
+.entry.expanded .entry-expand{
+max-height:200px;opacity:1;padding:12px 0;
+background:rgba(255,255,255,0.06);border-radius:6px;margin-top:8px;
+padding:12px;
+}
+.entry-expand .trade-notes{font-size:12px;color:var(--text-secondary);margin-bottom:8px}
+.mini-chart{
+height:40px;display:flex;align-items:flex-end;gap:2px;
+}
+.mini-chart .bar{
+width:4px;background:var(--col-winners);border-radius:2px 2px 0 0;
+transition:height 0.5s cubic-bezier(0.34,1.56,0.64,1);
+}
+.entry-top{display:flex;align-items:center;gap:10px;margin-bottom:4px;flex-wrap:wrap}
+.entry-title{
+font-size:16px;font-weight:600;color:var(--text-heading);text-decoration:none;
+border-bottom:1px solid rgba(255,255,255,0.2);flex:1;min-width:0;
+}
+[data-theme="light"] .entry-title{border-bottom-color:rgba(0,0,0,0.2)}
+.entry-date{
+font-size:11px;background:var(--bg-pill);color:var(--text-tertiary);
+border-radius:12px;padding:2px 10px;width:70px;text-align:center;flex-shrink:0;
+position:relative;cursor:help;
+}
+.entry-date .tooltip{
+position:absolute;bottom:100%;left:50%;transform:translateX(-50%);
+background:rgba(0,0,0,0.9);color:#fff;font-size:10px;padding:2px 8px;
+border-radius:4px;white-space:nowrap;opacity:0;pointer-events:none;
+transition:opacity 0.2s;margin-bottom:4px;
+}
+.entry-date:hover .tooltip{opacity:1}
+.entry-category{
+font-size:11px;font-weight:600;padding:2px 10px;border-radius:12px;
+border:1px solid;text-transform:uppercase;letter-spacing:0.5px;flex-shrink:0;
+transition:transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+}
+.entry-category.signals{border-color:var(--col-signals);color:var(--col-signals);background:rgba(254,190,2,0.15);box-shadow:inset 0 0 7px rgba(254,190,2,0.5)}
+.entry-category.winners{border-color:var(--col-winners);color:var(--col-winners);background:rgba(48,161,78,0.15);box-shadow:inset 0 0 7px rgba(48,161,78,0.5)}
+.entry-category.losers{border-color:var(--col-losers);color:var(--col-losers);background:rgba(235,72,35,0.15);box-shadow:inset 0 0 7px rgba(235,72,35,0.5)}
+.entry-category.assignments{border-color:var(--col-assignments);color:var(--col-assignments);background:rgba(65,131,196,0.15);box-shadow:inset 0 0 7px rgba(65,131,196,0.5)}
+.entry-category.rolls{border-color:var(--col-rolls);color:var(--col-rolls);background:rgba(54,189,170,0.15);box-shadow:inset 0 0 7px rgba(54,189,170,0.5)}
+.entry-category.announcements{border-color:var(--col-announcements);color:var(--col-announcements);background:rgba(176,91,255,0.15);box-shadow:inset 0 0 7px rgba(176,91,255,0.5)}
+.entry-category.analysis{border-color:var(--col-analysis);color:var(--col-analysis);background:rgba(234,76,137,0.15);box-shadow:inset 0 0 7px rgba(234,76,137,0.5)}
+.entry-desc{font-size:13px;color:var(--text-secondary);margin-top:2px;display:flex;align-items:center;gap:12px}
+.entry-desc .detail{display:flex;align-items:center;gap:4px;transition:color 0.2s,text-shadow 0.2s}
+.entry-desc .detail.highlight{color:var(--text-heading);text-shadow:0 0 6px rgba(254,190,2,0.3)}
+.entry-actions{display:flex;align-items:center;gap:8px;margin-top:6px;opacity:0;transition:opacity 0.2s}
+.entry:hover .entry-actions{opacity:1}
+.copy-trade-btn{
+font-family:'Inter',Arial,sans-serif;font-size:11px;font-weight:600;
+padding:3px 10px;border-radius:6px;border:1px solid var(--col-signals);
+color:var(--col-signals);background:rgba(254,190,2,0.1);cursor:pointer;
+transition:all 0.2s;position:relative;overflow:hidden;
+}
+.copy-trade-btn:hover{background:var(--col-signals);color:#000}
+.share-btn{
+font-size:18px;color:var(--text-muted);cursor:pointer;
+transition:all 0.3s cubic-bezier(0.34,1.56,0.64,1);
+background:none;border:none;font-family:inherit;padding:0 4px;
+}
+.share-btn:hover{font-size:22px;color:var(--text-secondary)}
+/* PARTICLE BURST */
+.particle{
+position:absolute;width:4px;height:4px;border-radius:50%;
+pointer-events:none;z-index:10;
+}
+@keyframes particleBurst{
+0%{transform:translate(0,0) scale(1);opacity:1}
+100%{opacity:0}
+}
+/* NEW INDICATOR PULSE */
+.new-badge{
+font-size:9px;font-weight:700;color:#fff;background:var(--col-losers);
+padding:1px 6px;border-radius:8px;margin-left:6px;position:relative;
+}
+.new-badge::before,.new-badge::after,.new-badge .ring3{
+content:'';position:absolute;inset:-3px;border-radius:12px;
+border:1px solid var(--col-losers);
+animation:newRingPulse 2s ease-out infinite;
+}
+.new-badge::after{animation-delay:0.4s}
+.new-badge .ring3{animation-delay:0.8s}
+@keyframes newRingPulse{0%{transform:scale(0.8);opacity:0.8}100%{transform:scale(1.8);opacity:0}}
+/* FOOTER */
+.footer{
+background:var(--bg-footer);box-shadow:inset 0 1px 0 var(--bg-hover);
+padding:48px 20px;margin-top:60px;text-align:center;
+}
+.footer-stat{font-size:52px;font-weight:800;color:var(--text-heading);line-height:1}
+.footer-stat-label{font-size:14px;color:var(--text-secondary);margin-top:6px}
+.footer-sub{font-size:13px;color:var(--text-muted);margin-top:4px}
+.footer-nav{display:flex;justify-content:center;gap:24px;margin-top:32px}
+.footer-nav a{color:var(--text-secondary);text-decoration:none;font-size:13px;font-weight:400;transition:color 0.2s}
+.footer-nav a:hover{color:var(--text-heading)}
+/* SCROLL PROGRESS ON TIMELINE */
+.scroll-progress{
+position:absolute;left:-4px;top:0;width:4px;height:0;
+background:linear-gradient(180deg,var(--col-signals),var(--col-winners));
+z-index:1;border-radius:2px;pointer-events:none;
+transition:height 0.1s linear;
+}
+/* TOAST */
+.toast{
+position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(20px);
+background:var(--col-signals);color:#000;font-size:13px;font-weight:600;
+padding:8px 20px;border-radius:8px;opacity:0;transition:all 0.25s;
+z-index:999;pointer-events:none;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+/* LOAD CHOREOGRAPHY */
+.load-hidden{opacity:0}
+@keyframes slideDown{from{opacity:0;transform:translateY(-20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideUp{from{opacity:0;transform:translateY(15px)}to{opacity:1;transform:translateY(0)}}
+@keyframes drawDown{from{max-height:0}to{max-height:100%}}
+/* RESPONSIVE */
+@media(max-width:640px){
+.stats-bar{grid-template-columns:repeat(2,1fr)}
+.header-inner{padding:0 14px}
+.portfolio-pill{display:none}
+.logo-text{font-size:12px;letter-spacing:1px}
+.timeline{padding-left:28px;margin-left:10px}
+.month-dot{left:-38px}
+.entry-top{flex-wrap:wrap}
+}
+</style>
+</head>
+<body>
+
+<div id="cursorGlow"></div>
+<div id="themeWipe"></div>
+
+<header class="header load-hidden" id="mainHeader">
+  <div class="header-inner">
+    <div class="header-left">
+      <div class="logo-shape"></div>
+      <span class="logo-text">MARKET ELITES</span>
+    </div>
+    <div class="header-right">
+      <div class="portfolio-pill">$147,832 <span style="color:#30a14e">&#8593; 1.96%</span></div>
+      <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+        <span class="theme-toggle-icon sun">&#9728;</span>
+        <span class="theme-toggle-icon moon">&#9790;</span>
+      </button>
+      <div class="avatar">B</div>
+    </div>
+  </div>
+</header>
+
+<main class="container">
+  <div class="filter-bar load-hidden" id="filterBar">
+    <button class="filter-pill active" data-filter="all">All <span class="count" data-base="156">156</span></button>
+    <button class="filter-pill" data-filter="signals">Signals <span class="count" data-base="48">48</span></button>
+    <button class="filter-pill" data-filter="winners">Winners <span class="count" data-base="32">32</span></button>
+    <button class="filter-pill" data-filter="losers">Losers <span class="count" data-base="12">12</span></button>
+    <button class="filter-pill" data-filter="assignments">Assignments <span class="count" data-base="8">8</span></button>
+    <button class="filter-pill" data-filter="rolls">Rolls <span class="count" data-base="6">6</span></button>
+    <button class="filter-pill" data-filter="analysis">Analysis <span class="count" data-base="28">28</span></button>
+    <button class="filter-pill" data-filter="announcements">Announcements <span class="count" data-base="22">22</span></button>
+  </div>
+
+  <div class="stats-bar load-hidden" id="statsBar">
+    <div class="stat-box"><div class="stat-value" data-countup="87" data-suffix="%">0%</div><div class="stat-label">Win Rate</div></div>
+    <div class="stat-box"><div class="stat-value" data-countup="4.2" data-prefix="$" data-suffix="K">$0K</div><div class="stat-label">Monthly</div></div>
+    <div class="stat-box"><div class="stat-value" data-countup="8">0</div><div class="stat-label">Open</div></div>
+    <div class="stat-box"><div class="stat-value" data-countup="156">0</div><div class="stat-label">Total Trades</div></div>
+  </div>
+
+  <!-- 2026 -->
+  <div class="year-section load-hidden" data-year="2026">
+    <div class="year-header" onclick="toggleYear(this)">
+      <span class="year-text">2026</span>
+      <span class="year-count">(42 entries)</span>
+      <span class="year-arrow">&#9660;</span>
+    </div>
+    <div class="year-content">
+      <div class="month-section" data-month="january-2026">
+        <div class="timeline">
+          <div class="scroll-progress"></div>
+          <div class="month-header" onclick="toggleMonth(this)">
+            <div class="month-dot"></div>
+            <span class="month-text">January 2026</span>
+            <span class="month-count">(18)</span>
+            <span class="month-arrow">&#9660;</span>
+          </div>
+          <div class="month-entries">
+            <div class="entry" data-category="signals">
+              <div class="entry-top">
+                <span class="entry-date">Jan 29<span class="tooltip"></span></span>
+                <span class="entry-category signals">Signal</span>
+                <span class="entry-title">NVDA $420P CSP</span>
+                <span class="new-badge">NEW<span class="ring3"></span></span>
+              </div>
+              <div class="entry-desc">
+                <span class="detail">Premium $5.80</span>
+                <span class="detail">Delta 0.22</span>
+                <span class="detail">IV Rank 42%</span>
+              </div>
+              <div class="entry-actions">
+                <button class="copy-trade-btn" onclick="event.stopPropagation();copyTrade(this,'NVDA $420P CSP - $5.80')">Copy Trade</button>
+                <button class="share-btn" title="Share">&#8599;</button>
+              </div>
+              <div class="entry-expand"><div class="trade-notes">High IV environment. Targeting 30-45 DTE for optimal theta decay. Support at $415 level.</div><div class="mini-chart"></div></div>
+            </div>
+            <div class="entry" data-category="winners">
+              <div class="entry-top">
+                <span class="entry-date">Jan 28<span class="tooltip"></span></span>
+                <span class="entry-category winners">Winner</span>
+                <span class="entry-title">AAPL $185P expired worthless</span>
+              </div>
+              <div class="entry-desc">
+                <span class="detail" data-pnl="+420">+$420 profit</span>
+                <span class="detail">87% of max</span>
+              </div>
+              <div class="entry-actions"><button class="share-btn" title="Share">&#8599;</button></div>
+              <div class="entry-expand"><div class="trade-notes">Clean expiration. Stock never threatened strike. Collected full premium.</div><div class="mini-chart"></div></div>
+            </div>
+            <div class="entry" data-category="signals">
+              <div class="entry-top">
+                <span class="entry-date">Jan 27<span class="tooltip"></span></span>
+                <span class="entry-category signals">Signal</span>
+                <span class="entry-title">AMZN $210P CSP</span>
+              </div>
+              <div class="entry-desc">
+                <span class="detail">Premium $4.15</span>
+                <span class="detail">Delta 0.18</span>
+              </div>
+              <div class="entry-actions">
+                <button class="copy-trade-btn" onclick="event.stopPropagation();copyTrade(this,'AMZN $210P CSP - $4.15')">Copy Trade</button>
+                <button class="share-btn" title="Share">&#8599;</button>
+              </div>
+              <div class="entry-expand"><div class="trade-notes">Conservative delta on AMZN. Earnings not for another 3 weeks.</div><div class="mini-chart"></div></div>
+            </div>
+            <div class="entry" data-category="analysis">
+              <div class="entry-top">
+                <span class="entry-date">Jan 25<span class="tooltip"></span></span>
+                <span class="entry-category analysis">Analysis</span>
+                <span class="entry-title">Weekly market review: SPY holds above 475</span>
+              </div>
+              <div class="entry-desc"><span class="detail">3 charts referenced</span></div>
+              <div class="entry-actions"><button class="share-btn" title="Share">&#8599;</button></div>
+              <div class="entry-expand"><div class="trade-notes">SPY maintaining bullish structure. VIX at 14 - slightly below average.</div><div class="mini-chart"></div></div>
+            </div>
+            <div class="entry" data-category="winners">
+              <div class="entry-top">
+                <span class="entry-date">Jan 24<span class="tooltip"></span></span>
+                <span class="entry-category winners">Winner</span>
+                <span class="entry-title">MSFT $380P closed at 80% profit</span>
+              </div>
+              <div class="entry-desc"><span class="detail" data-pnl="+310">+$310 captured</span></div>
+              <div class="entry-actions"><button class="share-btn" title="Share">&#8599;</button></div>
+              <div class="entry-expand"><div class="trade-notes">Closed early at 80% target. 12 DTE remaining.</div><div class="mini-chart"></div></div>
+            </div>
+            <div class="entry" data-category="assignments">
+              <div class="entry-top">
+                <span class="entry-date">Jan 23<span class="tooltip"></span></span>
+                <span class="entry-category assignments">Assignment</span>
+                <span class="entry-title">AMD $140P assigned at $140</span>
+              </div>
+              <div class="entry-desc"><span class="detail">Cost basis $136.50 with premium</span></div>
+              <div class="entry-actions"><button class="share-btn" title="Share">&#8599;</button></div>
+              <div class="entry-expand"><div class="trade-notes">Assigned shares. Will sell covered calls against position.</div><div class="mini-chart"></div></div>
+            </div>
+            <div class="entry" data-category="rolls">
+              <div class="entry-top">
+                <span class="entry-date">Jan 22<span class="tooltip"></span></span>
+                <span class="entry-category rolls">Roll</span>
+                <span class="entry-title">TSLA $250C rolled to $260C Mar</span>
+              </div>
+              <div class="entry-desc"><span class="detail">Collected $1.20 additional credit</span></div>
+              <div class="entry-actions"><button class="share-btn" title="Share">&#8599;</button></div>
+              <div class="entry-expand"><div class="trade-notes">Rolled up and out for credit. Gives more upside room.</div><div class="mini-chart"></div></div>
+            </div>
+            <div class="entry" data-category="signals">
+              <div class="entry-top">
+                <span class="entry-date">Jan 20<span class="tooltip"></span></span>
+                <span class="entry-category signals">Signal</span>
+                <span class="entry-title">META $500P CSP</span>
+              </div>
+              <div class="entry-desc">
+                <span class="detail">Premium $6.40</span>
+                <span class="detail">Delta 0.25</span>
+              </div>
+              <div class="entry-actions">
+                <button class="copy-trade-btn" onclick="event.stopPropagation();copyTrade(this,'META $500P CSP - $6.40')">Copy Trade</button>
+                <button class="share-btn" title="Share">&#8599;</button>
+              </div>
+              <div class="entry-expand"><div class="trade-notes">Slightly higher delta - elevated premium justified.</div><div class="mini-chart"></div></div>
+            </div>
+            <div class="entry" data-category="announcements">
+              <div class="entry-top">
+                <span class="entry-date">Jan 18<span class="tooltip"></span></span>
+                <span class="entry-category announcements">Announce</span>
+                <span class="entry-title">New feature: AI-powered signal alerts</span>
+              </div>
+              <div class="entry-desc"><span class="detail">Real-time notification system now live</span></div>
+              <div class="entry-actions"><button class="share-btn" title="Share">&#8599;</button></div>
+              <div class="entry-expand"><div class="trade-notes">Push notifications for all new signals. Customizable filters.</div><div class="mini-chart"></div></div>
+            </div>
+            <div class="entry" data-category="losers">
+              <div class="entry-top">
+                <span class="entry-date">Jan 15<span class="tooltip"></span></span>
+                <span class="entry-category losers">Loser</span>
+                <span class="entry-title">GOOGL $170P closed for loss</span>
+              </div>
+              <div class="entry-desc">
+                <span class="detail" data-pnl="-180">-$180</span>
+                <span class="detail">Cut at 200% of premium</span>
+              </div>
+              <div class="entry-actions"><button class="share-btn" title="Share">&#8599;</button></div>
+              <div class="entry-expand"><div class="trade-notes">Disciplined exit at 2x stop. Market selloff triggered.</div><div class="mini-chart"></div></div>
+            </div>
+            <div class="entry" data-category="signals">
+              <div class="entry-top">
+                <span class="entry-date">Jan 13<span class="tooltip"></span></span>
+                <span class="entry-category signals">Signal</span>
+                <span class="entry-title">NFLX $620P CSP</span>
+              </div>
+              <div class="entry-desc">
+                <span class="detail">Premium $7.20</span>
+                <span class="detail">Delta 0.20</span>
+                <span class="detail">IV Rank 55%</span>
+              </div>
+              <div class="entry-actions">
+                <button class="copy-trade-btn" onclick="event.stopPropagation();copyTrade(this,'NFLX $620P CSP - $7.20')">Copy Trade</button>
+                <button class="share-btn" title="Share">&#8599;</button>
+              </div>
+              <div class="entry-expand"><div class="trade-notes">Elevated IV rank. Post-earnings play with strong support.</div><div class="mini-chart"></div></div>
+            </div>
+            <div class="entry" data-category="winners">
+              <div class="entry-top">
+                <span class="entry-date">Jan 10<span class="tooltip"></span></span>
+                <span class="entry-category winners">Winner</span>
+                <span class="entry-title">CRM $290P expired worthless</span>
+              </div>
+              <div class="entry-desc">
+                <span class="detail" data-pnl="+380">+$380 profit</span>
+                <span class="detail">100% of max</span>
+              </div>
+              <div class="entry-actions"><button class="share-btn" title="Share">&#8599;</button></div>
+              <div class="entry-expand"><div class="trade-notes">Full premium collected. Patient hold to expiration.</div><div class="mini-chart"></div></div>
+            </div>
+            <div class="entry" data-category="analysis">
+              <div class="entry-top">
+                <span class="entry-date">Jan 8<span class="tooltip"></span></span>
+                <span class="entry-category analysis">Analysis</span>
+                <span class="entry-title">Q4 earnings season preview & volatility outlook</span>
+              </div>
+              <div class="entry-desc"><span class="detail">12 tickers analyzed</span></div>
+              <div class="entry-actions"><button class="share-btn" title="Share">&#8599;</button></div>
+              <div class="entry-expand"><div class="trade-notes">Key earnings dates mapped. IV crush opportunities identified.</div><div class="mini-chart"></div></div>
+            </div>
+            <div class="entry" data-category="signals">
+              <div class="entry-top">
+                <span class="entry-date">Jan 6<span class="tooltip"></span></span>
+                <span class="entry-category signals">Signal</span>
+                <span class="entry-title">COST $780P CSP</span>
+              </div>
+              <div class="entry-desc">
+                <span class="detail">Premium $5.50</span>
+                <span class="detail">Delta 0.15</span>
+              </div>
+              <div class="entry-actions">
+                <button class="copy-trade-btn" onclick="event.stopPropagation();copyTrade(this,'COST $780P CSP - $5.50')">Copy Trade</button>
+                <button class="share-btn" title="Share">&#8599;</button>
+              </div>
+              <div class="entry-expand"><div class="trade-notes">Conservative play on COST. Low delta, steady premium.</div><div class="mini-chart"></div></div>
+            </div>
+            <div class="entry" data-category="winners">
+              <div class="entry-top">
+                <span class="entry-date">Jan 3<span class="tooltip"></span></span>
+                <span class="entry-category winners">Winner</span>
+                <span class="entry-title">AMZN $195P closed at 75% profit</span>
+              </div>
+              <div class="entry-desc"><span class="detail" data-pnl="+295">+$295 captured</span></div>
+              <div class="entry-actions"><button class="share-btn" title="Share">&#8599;</button></div>
+              <div class="entry-expand"><div class="trade-notes">Hit 75% profit target. Freed up buying power for new plays.</div><div class="mini-chart"></div></div>
+            </div>
+            <div class="entry" data-category="announcements">
+              <div class="entry-top">
+                <span class="entry-date">Jan 2<span class="tooltip"></span></span>
+                <span class="entry-category announcements">Announce</span>
+                <span class="entry-title">2026 strategy update: targeting 30% annual ROI</span>
+              </div>
+              <div class="entry-desc"><span class="detail">Portfolio allocation changes detailed</span></div>
+              <div class="entry-actions"><button class="share-btn" title="Share">&#8599;</button></div>
+              <div class="entry-expand"><div class="trade-notes">New year, new targets. Diversifying into more sectors.</div><div class="mini-chart"></div></div>
+            </div>
+            <div class="entry" data-category="rolls">
+              <div class="entry-top">
+                <span class="entry-date">Jan 2<span class="tooltip"></span></span>
+                <span class="entry-category rolls">Roll</span>
+                <span class="entry-title">AAPL $180C rolled to $190C Feb</span>
+              </div>
+              <div class="entry-desc"><span class="detail">Collected $0.85 additional credit</span></div>
+              <div class="entry-actions"><button class="share-btn" title="Share">&#8599;</button></div>
+              <div class="entry-expand"><div class="trade-notes">Defensive roll. Apple approaching resistance.</div><div class="mini-chart"></div></div>
+            </div>
+            <div class="entry" data-category="losers">
+              <div class="entry-top">
+                <span class="entry-date">Jan 1<span class="tooltip"></span></span>
+                <span class="entry-category losers">Loser</span>
+                <span class="entry-title">PYPL $72P closed for loss</span>
+              </div>
+              <div class="entry-desc">
+                <span class="detail" data-pnl="-140">-$140</span>
+                <span class="detail">Cut at 150% of premium</span>
+              </div>
+              <div class="entry-actions"><button class="share-btn" title="Share">&#8599;</button></div>
+              <div class="entry-expand"><div class="trade-notes">PayPal weakness continued. Cut losses early per rules.</div><div class="mini-chart"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2025 -->
+  <div class="year-section collapsed load-hidden" data-year="2025">
+    <div class="year-header" onclick="toggleYear(this)">
+      <span class="year-text">2025</span>
+      <span class="year-count">(89 entries)</span>
+      <span class="year-arrow">&#9660;</span>
+    </div>
+    <div class="year-content">
+      <div class="month-section" data-month="december-2025">
+        <div class="timeline">
+          <div class="scroll-progress"></div>
+          <div class="month-header" onclick="toggleMonth(this)">
+            <div class="month-dot"></div>
+            <span class="month-text">December 2025</span>
+            <span class="month-count">(15)</span>
+            <span class="month-arrow">&#9660;</span>
+          </div>
+          <div class="month-entries">
+            <div class="entry" data-category="signals"><div class="entry-top"><span class="entry-date">Dec 30<span class="tooltip"></span></span><span class="entry-category signals">Signal</span><span class="entry-title">SPY $470P CSP (year-end play)</span></div><div class="entry-desc"><span class="detail">Premium $3.90</span><span class="detail">Delta 0.20</span></div><div class="entry-actions"><button class="copy-trade-btn" onclick="event.stopPropagation();copyTrade(this,'SPY $470P CSP - $3.90')">Copy Trade</button><button class="share-btn" title="Share">&#8599;</button></div><div class="entry-expand"><div class="trade-notes">Year-end positioning. Low volume expected.</div><div class="mini-chart"></div></div></div>
+            <div class="entry" data-category="winners"><div class="entry-top"><span class="entry-date">Dec 28<span class="tooltip"></span></span><span class="entry-category winners">Winner</span><span class="entry-title">NVDA $400P expired worthless</span></div><div class="entry-desc"><span class="detail" data-pnl="+510">+$510 profit</span><span class="detail">100% of max</span></div><div class="entry-actions"><button class="share-btn" title="Share">&#8599;</button></div><div class="entry-expand"><div class="trade-notes">NVDA strength continued through Q4.</div><div class="mini-chart"></div></div></div>
+            <div class="entry" data-category="analysis"><div class="entry-top"><span class="entry-date">Dec 27<span class="tooltip"></span></span><span class="entry-category analysis">Analysis</span><span class="entry-title">Year-end portfolio review & 2025 performance</span></div><div class="entry-desc"><span class="detail">32% ROI achieved</span></div><div class="entry-actions"><button class="share-btn" title="Share">&#8599;</button></div><div class="entry-expand"><div class="trade-notes">Exceeded 30% target. Strategy refinements noted.</div><div class="mini-chart"></div></div></div>
+            <div class="entry" data-category="winners"><div class="entry-top"><span class="entry-date">Dec 23<span class="tooltip"></span></span><span class="entry-category winners">Winner</span><span class="entry-title">MSFT $370P closed at 90% profit</span></div><div class="entry-desc"><span class="detail" data-pnl="+450">+$450 captured</span></div><div class="entry-actions"><button class="share-btn" title="Share">&#8599;</button></div><div class="entry-expand"><div class="trade-notes">Near-max profit. Holiday rally helped.</div><div class="mini-chart"></div></div></div>
+            <div class="entry" data-category="signals"><div class="entry-top"><span class="entry-date">Dec 20<span class="tooltip"></span></span><span class="entry-category signals">Signal</span><span class="entry-title">AAPL $180P CSP</span></div><div class="entry-desc"><span class="detail">Premium $4.00</span><span class="detail">Delta 0.19</span></div><div class="entry-actions"><button class="copy-trade-btn" onclick="event.stopPropagation();copyTrade(this,'AAPL $180P CSP - $4.00')">Copy Trade</button><button class="share-btn" title="Share">&#8599;</button></div><div class="entry-expand"><div class="trade-notes">Standard AAPL wheel play.</div><div class="mini-chart"></div></div></div>
+            <div class="entry" data-category="assignments"><div class="entry-top"><span class="entry-date">Dec 19<span class="tooltip"></span></span><span class="entry-category assignments">Assignment</span><span class="entry-title">INTC $25P assigned at $25</span></div><div class="entry-desc"><span class="detail">Cost basis $23.80 with premium</span></div><div class="entry-actions"><button class="share-btn" title="Share">&#8599;</button></div><div class="entry-expand"><div class="trade-notes">INTC weakness led to assignment. Will sell calls.</div><div class="mini-chart"></div></div></div>
+            <div class="entry" data-category="losers"><div class="entry-top"><span class="entry-date">Dec 17<span class="tooltip"></span></span><span class="entry-category losers">Loser</span><span class="entry-title">BABA $90P closed for loss</span></div><div class="entry-desc"><span class="detail" data-pnl="-220">-$220</span><span class="detail">Cut at 200% of premium</span></div><div class="entry-actions"><button class="share-btn" title="Share">&#8599;</button></div><div class="entry-expand"><div class="trade-notes">China regulatory fears. Quick exit.</div><div class="mini-chart"></div></div></div>
+            <div class="entry" data-category="rolls"><div class="entry-top"><span class="entry-date">Dec 15<span class="tooltip"></span></span><span class="entry-category rolls">Roll</span><span class="entry-title">AMD $135C rolled to $145C Jan</span></div><div class="entry-desc"><span class="detail">Collected $0.95 additional credit</span></div><div class="entry-actions"><button class="share-btn" title="Share">&#8599;</button></div><div class="entry-expand"><div class="trade-notes">AMD momentum strong. Rolled up for more room.</div><div class="mini-chart"></div></div></div>
+            <div class="entry" data-category="signals"><div class="entry-top"><span class="entry-date">Dec 13<span class="tooltip"></span></span><span class="entry-category signals">Signal</span><span class="entry-title">GOOGL $165P CSP</span></div><div class="entry-desc"><span class="detail">Premium $3.60</span><span class="detail">Delta 0.17</span></div><div class="entry-actions"><button class="copy-trade-btn" onclick="event.stopPropagation();copyTrade(this,'GOOGL $165P CSP - $3.60')">Copy Trade</button><button class="share-btn" title="Share">&#8599;</button></div><div class="entry-expand"><div class="trade-notes">Low delta GOOGL play.</div><div class="mini-chart"></div></div></div>
+            <div class="entry" data-category="winners"><div class="entry-top"><span class="entry-date">Dec 11<span class="tooltip"></span></span><span class="entry-category winners">Winner</span><span class="entry-title">META $480P expired worthless</span></div><div class="entry-desc"><span class="detail" data-pnl="+380">+$380 profit</span><span class="detail">100% of max</span></div><div class="entry-actions"><button class="share-btn" title="Share">&#8599;</button></div><div class="entry-expand"><div class="trade-notes">META strong through holiday quarter.</div><div class="mini-chart"></div></div></div>
+            <div class="entry" data-category="announcements"><div class="entry-top"><span class="entry-date">Dec 9<span class="tooltip"></span></span><span class="entry-category announcements">Announce</span><span class="entry-title">Holiday schedule: reduced trading Dec 24-Jan 1</span></div><div class="entry-desc"><span class="detail">Market hours adjusted</span></div><div class="entry-actions"><button class="share-btn" title="Share">&#8599;</button></div><div class="entry-expand"><div class="trade-notes">Limited signals during holiday period.</div><div class="mini-chart"></div></div></div>
+            <div class="entry" data-category="analysis"><div class="entry-top"><span class="entry-date">Dec 6<span class="tooltip"></span></span><span class="entry-category analysis">Analysis</span><span class="entry-title">Sector rotation signals: tech overbought, energy underweight</span></div><div class="entry-desc"><span class="detail">5 sector charts analyzed</span></div><div class="entry-actions"><button class="share-btn" title="Share">&#8599;</button></div><div class="entry-expand"><div class="trade-notes">Rotating some exposure to energy names.</div><div class="mini-chart"></div></div></div>
+            <div class="entry" data-category="winners"><div class="entry-top"><span class="entry-date">Dec 4<span class="tooltip"></span></span><span class="entry-category winners">Winner</span><span class="entry-title">COST $750P closed at 85% profit</span></div><div class="entry-desc"><span class="detail" data-pnl="+340">+$340 captured</span></div><div class="entry-actions"><button class="share-btn" title="Share">&#8599;</button></div><div class="entry-expand"><div class="trade-notes">COST steady as always.</div><div class="mini-chart"></div></div></div>
+            <div class="entry" data-category="signals"><div class="entry-top"><span class="entry-date">Dec 2<span class="tooltip"></span></span><span class="entry-category signals">Signal</span><span class="entry-title">TSLA $240P CSP</span></div><div class="entry-desc"><span class="detail">Premium $8.10</span><span class="detail">Delta 0.24</span><span class="detail">IV Rank 68%</span></div><div class="entry-actions"><button class="copy-trade-btn" onclick="event.stopPropagation();copyTrade(this,'TSLA $240P CSP - $8.10')">Copy Trade</button><button class="share-btn" title="Share">&#8599;</button></div><div class="entry-expand"><div class="trade-notes">High IV on TSLA. Fat premium.</div><div class="mini-chart"></div></div></div>
+            <div class="entry" data-category="losers"><div class="entry-top"><span class="entry-date">Dec 1<span class="tooltip"></span></span><span class="entry-category losers">Loser</span><span class="entry-title">ROKU $75P closed for loss</span></div><div class="entry-desc"><span class="detail" data-pnl="-160">-$160</span><span class="detail">Cut at 175% of premium</span></div><div class="entry-actions"><button class="share-btn" title="Share">&#8599;</button></div><div class="entry-expand"><div class="trade-notes">ROKU dropped on weak guidance.</div><div class="mini-chart"></div></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="month-section collapsed" data-month="november-2025">
+        <div class="timeline">
+          <div class="scroll-progress"></div>
+          <div class="month-header" onclick="toggleMonth(this)">
+            <div class="month-dot"></div>
+            <span class="month-text">November 2025</span>
+            <span class="month-count">(12)</span>
+            <span class="month-arrow">&#9660;</span>
+          </div>
+          <div class="month-entries">
+            <div class="entry" data-category="signals"><div class="entry-top"><span class="entry-date">Nov 28<span class="tooltip"></span></span><span class="entry-category signals">Signal</span><span class="entry-title">AMZN $200P CSP</span></div><div class="entry-desc"><span class="detail">Premium $4.50</span><span class="detail">Delta 0.21</span></div><div class="entry-actions"><button class="copy-trade-btn" onclick="event.stopPropagation();copyTrade(this,'AMZN $200P CSP - $4.50')">Copy Trade</button><button class="share-btn" title="Share">&#8599;</button></div><div class="entry-expand"><div class="trade-notes">Post-Thanksgiving play.</div><div class="mini-chart"></div></div></div>
+            <div class="entry" data-category="winners"><div class="entry-top"><span class="entry-date">Nov 25<span class="tooltip"></span></span><span class="entry-category winners">Winner</span><span class="entry-title">AAPL $175P expired worthless</span></div><div class="entry-desc"><span class="detail" data-pnl="+360">+$360 profit</span><span class="detail">100% of max</span></div><div class="entry-actions"><button class="share-btn" title="Share">&#8599;</button></div><div class="entry-expand"><div class="trade-notes">AAPL strength into holidays.</div><div class="mini-chart"></div></div></div>
+            <div class="entry" data-category="analysis"><div class="entry-top"><span class="entry-date">Nov 22<span class="tooltip"></span></span><span class="entry-category analysis">Analysis</span><span class="entry-title">Thanksgiving week: low volume playbook</span></div><div class="entry-desc"><span class="detail">Historical patterns reviewed</span></div><div class="entry-actions"><button class="share-btn" title="Share">&#8599;</button></div><div class="entry-expand"><div class="trade-notes">Historically low IV week. Selling premium less attractive.</div><div class="mini-chart"></div></div></div>
+            <div class="entry" data-category="winners"><div class="entry-top"><span class="entry-date">Nov 20<span class="tooltip"></span></span><span class="entry-category winners">Winner</span><span class="entry-title">GOOGL $160P closed at 80% profit</span></div><div class="entry-desc"><span class="detail" data-pnl="+290">+$290 captured</span></div><div class="entry-actions"><button class="share-btn" title="Share">&#8599;</button></div><div class="entry-expand"><div class="trade-notes">Closed at 80% target with 15 DTE.</div><div class="mini-chart"></div></div></div>
+            <div class="entry" data-category="signals"><div class="entry-top"><span class="entry-date">Nov 18<span class="tooltip"></span></span><span class="entry-category signals">Signal</span><span class="entry-title">MSFT $370P CSP</span></div><div class="entry-desc"><span class="detail">Premium $4.80</span><span class="detail">Delta 0.19</span></div><div class="entry-actions"><button class="copy-trade-btn" onclick="event.stopPropagation();copyTrade(this,'MSFT $370P CSP - $4.80')">Copy Trade</button><button class="share-btn" title="Share">&#8599;</button></div><div class="entry-expand"><div class="trade-notes">MSFT at support. Good entry.</div><div class="mini-chart"></div></div></div>
+            <div class="entry" data-category="assignments"><div class="entry-top"><span class="entry-date">Nov 15<span class="tooltip"></span></span><span class="entry-category assignments">Assignment</span><span class="entry-title">SOFI $10P assigned at $10</span></div><div class="entry-desc"><span class="detail">Cost basis $9.45 with premium</span></div><div class="entry-actions"><button class="share-btn" title="Share">&#8599;</button></div><div class="entry-expand"><div class="trade-notes">Small position. Will sell calls at $11.</div><div class="mini-chart"></div></div></div>
+            <div class="entry" data-category="rolls"><div class="entry-top"><span class="entry-date">Nov 13<span class="tooltip"></span></span><span class="entry-category rolls">Roll</span><span class="entry-title">NVDA $380C rolled to $400C Dec</span></div><div class="entry-desc"><span class="detail">Collected $1.50 additional credit</span></div><div class="entry-actions"><button class="share-btn" title="Share">&#8599;</button></div><div class="entry-expand"><div class="trade-notes">NVDA ripping. Rolled up aggressively.</div><div class="mini-chart"></div></div></div>
+            <div class="entry" data-category="winners"><div class="entry-top"><span class="entry-date">Nov 10<span class="tooltip"></span></span><span class="entry-category winners">Winner</span><span class="entry-title">TSLA $230P closed at 70% profit</span></div><div class="entry-desc"><span class="detail" data-pnl="+410">+$410 captured</span></div><div class="entry-actions"><button class="share-btn" title="Share">&#8599;</button></div><div class="entry-expand"><div class="trade-notes">TSLA bounced off support perfectly.</div><div class="mini-chart"></div></div></div>
+            <div class="entry" data-category="announcements"><div class="entry-top"><span class="entry-date">Nov 8<span class="tooltip"></span></span><span class="entry-category announcements">Announce</span><span class="entry-title">Discord community hits 5,000 members</span></div><div class="entry-desc"><span class="detail">Milestone celebration & new channels</span></div><div class="entry-actions"><button class="share-btn" title="Share">&#8599;</button></div><div class="entry-expand"><div class="trade-notes">Growing fast! New educational channels added.</div><div class="mini-chart"></div></div></div>
+            <div class="entry" data-category="losers"><div class="entry-top"><span class="entry-date">Nov 5<span class="tooltip"></span></span><span class="entry-category losers">Loser</span><span class="entry-title">SNAP $12P closed for loss</span></div><div class="entry-desc"><span class="detail" data-pnl="-95">-$95</span><span class="detail">Cut at 200% of premium</span></div><div class="entry-actions"><button class="share-btn" title="Share">&#8599;</button></div><div class="entry-expand"><div class="trade-notes">SNAP continues to disappoint.</div><div class="mini-chart"></div></div></div>
+            <div class="entry" data-category="signals"><div class="entry-top"><span class="entry-date">Nov 3<span class="tooltip"></span></span><span class="entry-category signals">Signal</span><span class="entry-title">META $470P CSP</span></div><div class="entry-desc"><span class="detail">Premium $5.90</span><span class="detail">Delta 0.22</span></div><div class="entry-actions"><button class="copy-trade-btn" onclick="event.stopPropagation();copyTrade(this,'META $470P CSP - $5.90')">Copy Trade</button><button class="share-btn" title="Share">&#8599;</button></div><div class="entry-expand"><div class="trade-notes">META pulling back to support zone.</div><div class="mini-chart"></div></div></div>
+            <div class="entry" data-category="analysis"><div class="entry-top"><span class="entry-date">Nov 1<span class="tooltip"></span></span><span class="entry-category analysis">Analysis</span><span class="entry-title">November seasonality: historically strong for wheel</span></div><div class="entry-desc"><span class="detail">10-year seasonal data reviewed</span></div><div class="entry-actions"><button class="share-btn" title="Share">&#8599;</button></div><div class="entry-expand"><div class="trade-notes">Nov-Jan historically best period for premium sellers.</div><div class="mini-chart"></div></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="month-section collapsed" data-month="october-2025">
+        <div class="timeline">
+          <div class="scroll-progress"></div>
+          <div class="month-header" onclick="toggleMonth(this)">
+            <div class="month-dot"></div>
+            <span class="month-text">October 2025</span>
+            <span class="month-count">(14)</span>
+            <span class="month-arrow">&#9660;</span>
+          </div>
+          <div class="month-entries">
+            <div class="entry" data-category="signals"><div class="entry-top"><span class="entry-date">Oct 30<span class="tooltip"></span></span><span class="entry-category signals">Signal</span><span class="entry-title">NVDA $380P CSP</span></div><div class="entry-desc"><span class="detail">Premium $6.80</span><span class="detail">Delta 0.23</span></div><div class="entry-actions"><button class="copy-trade-btn" onclick="event.stopPropagation();copyTrade(this,'NVDA $380P CSP - $6.80')">Copy Trade</button><button class="share-btn" title="Share">&#8599;</button></div><div class="entry-expand"><div class="trade-notes">Earnings season IV play.</div><div class="mini-chart"></div></div></div>
+            <div class="entry" data-category="winners"><div class="entry-top"><span class="entry-date">Oct 27<span class="tooltip"></span></span><span class="entry-category winners">Winner</span><span class="entry-title">AMZN $190P expired worthless</span></div><div class="entry-desc"><span class="detail" data-pnl="+350">+$350 profit</span></div><div class="entry-actions"><button class="share-btn" title="Share">&#8599;</button></div><div class="entry-expand"><div class="trade-notes">AMZN earnings beat helped.</div><div class="mini-chart"></div></div></div>
+            <div class="entry" data-category="analysis"><div class="entry-top"><span class="entry-date">Oct 24<span class="tooltip"></span></span><span class="entry-category analysis">Analysis</span><span class="entry-title">Earnings season week 3: key takeaways</span></div><div class="entry-desc"><span class="detail">8 earnings reviewed</span></div><div class="entry-actions"><button class="share-btn" title="Share">&#8599;</button></div><div class="entry-expand"><div class="trade-notes">Mixed results. Tech beating, industrials lagging.</div><div class="mini-chart"></div></div></div>
+            <div class="entry" data-category="winners"><div class="entry-top"><span class="entry-date">Oct 21<span class="tooltip"></span></span><span class="entry-category winners">Winner</span><span class="entry-title">AAPL $170P closed at 85% profit</span></div><div class="entry-desc"><span class="detail" data-pnl="+325">+$325 captured</span></div><div class="entry-actions"><button class="share-btn" title="Share">&#8599;</button></div><div class="entry-expand"><div class="trade-notes">Closed pre-earnings for safety.</div><div class="mini-chart"></div></div></div>
+            <div class="entry" data-category="losers"><div class="entry-top"><span class="entry-date">Oct 18<span class="tooltip"></span></span><span class="entry-category losers">Loser</span><span class="entry-title">DIS $95P closed for loss</span></div><div class="entry-desc"><span class="detail" data-pnl="-175">-$175</span><span class="detail">Cut at 200% of premium</span></div><div class="entry-actions"><button class="share-btn" title="Share">&#8599;</button></div><div class="entry-expand"><div class="trade-notes">DIS streaming concerns weighed.</div><div class="mini-chart"></div></div></div>
+            <div class="entry" data-category="signals"><div class="entry-top"><span class="entry-date">Oct 15<span class="tooltip"></span></span><span class="entry-category signals">Signal</span><span class="entry-title">GOOGL $155P CSP</span></div><div class="entry-desc"><span class="detail">Premium $3.40</span><span class="detail">Delta 0.16</span></div><div class="entry-actions"><button class="copy-trade-btn" onclick="event.stopPropagation();copyTrade(this,'GOOGL $155P CSP - $3.40')">Copy Trade</button><button class="share-btn" title="Share">&#8599;</button></div><div class="entry-expand"><div class="trade-notes">Pre-earnings play. Conservative delta.</div><div class="mini-chart"></div></div></div>
+            <div class="entry" data-category="rolls"><div class="entry-top"><span class="entry-date">Oct 12<span class="tooltip"></span></span><span class="entry-category rolls">Roll</span><span class="entry-title">MSFT $360C rolled to $375C Nov</span></div><div class="entry-desc"><span class="detail">Collected $1.10 additional credit</span></div><div class="entry-actions"><button class="share-btn" title="Share">&#8599;</button></div><div class="entry-expand"><div class="trade-notes">MSFT breakout. Rolling up.</div><div class="mini-chart"></div></div></div>
+            <div class="entry" data-category="announcements"><div class="entry-top"><span class="entry-date">Oct 9<span class="tooltip"></span></span><span class="entry-category announcements">Announce</span><span class="entry-title">New earnings tracker feature launched</span></div><div class="entry-desc"><span class="detail">Track earnings impact on open positions</span></div><div class="entry-actions"><button class="share-btn" title="Share">&#8599;</button></div><div class="entry-expand"><div class="trade-notes">New tool to track earnings dates vs positions.</div><div class="mini-chart"></div></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="month-section collapsed" data-month="september-2025">
+        <div class="timeline">
+          <div class="scroll-progress"></div>
+          <div class="month-header" onclick="toggleMonth(this)">
+            <div class="month-dot"></div>
+            <span class="month-text">September 2025</span>
+            <span class="month-count">(16)</span>
+            <span class="month-arrow">&#9660;</span>
+          </div>
+          <div class="month-entries">
+            <div class="entry" data-category="analysis"><div class="entry-top"><span class="entry-date">Sep 29<span class="tooltip"></span></span><span class="entry-category analysis">Analysis</span><span class="entry-title">Fed meeting impact: rate hold as expected</span></div><div class="entry-desc"><span class="detail">Volatility implications assessed</span></div><div class="entry-actions"><button class="share-btn" title="Share">&#8599;</button></div><div class="entry-expand"><div class="trade-notes">Fed hold. VIX crushed post-announcement.</div><div class="mini-chart"></div></div></div>
+            <div class="entry" data-category="signals"><div class="entry-top"><span class="entry-date">Sep 26<span class="tooltip"></span></span><span class="entry-category signals">Signal</span><span class="entry-title">TSLA $220P CSP</span></div><div class="entry-desc"><span class="detail">Premium $7.50</span><span class="detail">Delta 0.25</span></div><div class="entry-actions"><button class="copy-trade-btn" onclick="event.stopPropagation();copyTrade(this,'TSLA $220P CSP - $7.50')">Copy Trade</button><button class="share-btn" title="Share">&#8599;</button></div><div class="entry-expand"><div class="trade-notes">TSLA post-delivery numbers. High premium.</div><div class="mini-chart"></div></div></div>
+            <div class="entry" data-category="winners"><div class="entry-top"><span class="entry-date">Sep 22<span class="tooltip"></span></span><span class="entry-category winners">Winner</span><span class="entry-title">COST $730P closed at 90% profit</span></div><div class="entry-desc"><span class="detail" data-pnl="+405">+$405 captured</span></div><div class="entry-actions"><button class="share-btn" title="Share">&#8599;</button></div><div class="entry-expand"><div class="trade-notes">COST membership renewal cycle bullish.</div><div class="mini-chart"></div></div></div>
+            <div class="entry" data-category="assignments"><div class="entry-top"><span class="entry-date">Sep 19<span class="tooltip"></span></span><span class="entry-category assignments">Assignment</span><span class="entry-title">PLTR $22P assigned at $22</span></div><div class="entry-desc"><span class="detail">Cost basis $21.10 with premium</span></div><div class="entry-actions"><button class="share-btn" title="Share">&#8599;</button></div><div class="entry-expand"><div class="trade-notes">PLTR pullback. Happy to own at this level.</div><div class="mini-chart"></div></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2024 -->
+  <div class="year-section collapsed load-hidden" data-year="2024">
+    <div class="year-header" onclick="toggleYear(this)">
+      <span class="year-text">2024</span>
+      <span class="year-count">(25 entries)</span>
+      <span class="year-arrow">&#9660;</span>
+    </div>
+    <div class="year-content">
+      <div class="month-section collapsed" data-month="december-2024">
+        <div class="timeline">
+          <div class="scroll-progress"></div>
+          <div class="month-header" onclick="toggleMonth(this)">
+            <div class="month-dot"></div>
+            <span class="month-text">December 2024</span>
+            <span class="month-count">(10)</span>
+            <span class="month-arrow">&#9660;</span>
+          </div>
+          <div class="month-entries">
+            <div class="entry" data-category="signals"><div class="entry-top"><span class="entry-date">Dec 28<span class="tooltip"></span></span><span class="entry-category signals">Signal</span><span class="entry-title">AAPL $165P CSP</span></div><div class="entry-desc"><span class="detail">Premium $3.20</span><span class="detail">Delta 0.18</span></div><div class="entry-actions"><button class="copy-trade-btn" onclick="event.stopPropagation();copyTrade(this,'AAPL $165P CSP - $3.20')">Copy Trade</button><button class="share-btn" title="Share">&#8599;</button></div><div class="entry-expand"><div class="trade-notes">Early days. Conservative approach.</div><div class="mini-chart"></div></div></div>
+            <div class="entry" data-category="winners"><div class="entry-top"><span class="entry-date">Dec 22<span class="tooltip"></span></span><span class="entry-category winners">Winner</span><span class="entry-title">MSFT $340P expired worthless</span></div><div class="entry-desc"><span class="detail" data-pnl="+280">+$280 profit</span></div><div class="entry-actions"><button class="share-btn" title="Share">&#8599;</button></div><div class="entry-expand"><div class="trade-notes">First MSFT win! Building confidence.</div><div class="mini-chart"></div></div></div>
+            <div class="entry" data-category="analysis"><div class="entry-top"><span class="entry-date">Dec 18<span class="tooltip"></span></span><span class="entry-category analysis">Analysis</span><span class="entry-title">End of year tax-loss harvesting strategies</span></div><div class="entry-desc"><span class="detail">Position management guide</span></div><div class="entry-actions"><button class="share-btn" title="Share">&#8599;</button></div><div class="entry-expand"><div class="trade-notes">Tax optimization for options traders.</div><div class="mini-chart"></div></div></div>
+            <div class="entry" data-category="announcements"><div class="entry-top"><span class="entry-date">Dec 15<span class="tooltip"></span></span><span class="entry-category announcements">Announce</span><span class="entry-title">Market Elites beta launch</span></div><div class="entry-desc"><span class="detail">First 100 members onboarded</span></div><div class="entry-actions"><button class="share-btn" title="Share">&#8599;</button></div><div class="entry-expand"><div class="trade-notes">Official launch day! Let's go.</div><div class="mini-chart"></div></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="month-section collapsed" data-month="november-2024">
+        <div class="timeline">
+          <div class="scroll-progress"></div>
+          <div class="month-header" onclick="toggleMonth(this)">
+            <div class="month-dot"></div>
+            <span class="month-text">November 2024</span>
+            <span class="month-count">(8)</span>
+            <span class="month-arrow">&#9660;</span>
+          </div>
+          <div class="month-entries">
+            <div class="entry" data-category="signals"><div class="entry-top"><span class="entry-date">Nov 25<span class="tooltip"></span></span><span class="entry-category signals">Signal</span><span class="entry-title">NVDA $320P CSP</span></div><div class="entry-desc"><span class="detail">Premium $5.10</span><span class="detail">Delta 0.20</span></div><div class="entry-actions"><button class="copy-trade-btn" onclick="event.stopPropagation();copyTrade(this,'NVDA $320P CSP - $5.10')">Copy Trade</button><button class="share-btn" title="Share">&#8599;</button></div><div class="entry-expand"><div class="trade-notes">NVDA AI hype continuing. Good premium.</div><div class="mini-chart"></div></div></div>
+            <div class="entry" data-category="winners"><div class="entry-top"><span class="entry-date">Nov 20<span class="tooltip"></span></span><span class="entry-category winners">Winner</span><span class="entry-title">AMZN $175P expired worthless</span></div><div class="entry-desc"><span class="detail" data-pnl="+310">+$310 profit</span></div><div class="entry-actions"><button class="share-btn" title="Share">&#8599;</button></div><div class="entry-expand"><div class="trade-notes">Holiday shopping optimism lifted AMZN.</div><div class="mini-chart"></div></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="month-section collapsed" data-month="august-2024">
+        <div class="timeline">
+          <div class="scroll-progress"></div>
+          <div class="month-header" onclick="toggleMonth(this)">
+            <div class="month-dot"></div>
+            <span class="month-text">August 2024</span>
+            <span class="month-count">(7)</span>
+            <span class="month-arrow">&#9660;</span>
+          </div>
+          <div class="month-entries">
+            <div class="entry" data-category="announcements"><div class="entry-top"><span class="entry-date">Aug 15<span class="tooltip"></span></span><span class="entry-category announcements">Announce</span><span class="entry-title">Market Elites founded - wheel strategy tracking begins</span></div><div class="entry-desc"><span class="detail">The journey starts here</span></div><div class="entry-actions"><button class="share-btn" title="Share">&#8599;</button></div><div class="entry-expand"><div class="trade-notes">Day one. Building something special.</div><div class="mini-chart"></div></div></div>
+            <div class="entry" data-category="signals"><div class="entry-top"><span class="entry-date">Aug 20<span class="tooltip"></span></span><span class="entry-category signals">Signal</span><span class="entry-title">AAPL $150P CSP (first trade!)</span></div><div class="entry-desc"><span class="detail">Premium $2.80</span><span class="detail">Delta 0.18</span></div><div class="entry-actions"><button class="copy-trade-btn" onclick="event.stopPropagation();copyTrade(this,'AAPL $150P CSP - $2.80')">Copy Trade</button><button class="share-btn" title="Share">&#8599;</button></div><div class="entry-expand"><div class="trade-notes">First ever trade! AAPL seemed safest.</div><div class="mini-chart"></div></div></div>
+            <div class="entry" data-category="winners"><div class="entry-top"><span class="entry-date">Aug 30<span class="tooltip"></span></span><span class="entry-category winners">Winner</span><span class="entry-title">AAPL $150P expired worthless</span></div><div class="entry-desc"><span class="detail" data-pnl="+280">+$280 profit</span><span class="detail">First win!</span></div><div class="entry-actions"><button class="share-btn" title="Share">&#8599;</button></div><div class="entry-expand"><div class="trade-notes">First win! The wheel works. Hooked.</div><div class="mini-chart"></div></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer class="footer load-hidden">
+  <div class="footer-stat" id="footerStat">0</div>
+  <div class="footer-stat-label">Total Trades Tracked</div>
+  <div class="footer-sub">Since Aug 2024</div>
+  <nav class="footer-nav">
+    <a href="#">About</a>
+    <a href="#">FAQ</a>
+    <a href="#">Discord</a>
+    <a href="#">Twitter</a>
+  </nav>
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+/* ========== THEME ========== */
+const saved=localStorage.getItem('me-theme');
+if(saved)document.documentElement.setAttribute('data-theme',saved);
+
+/* ========== CURSOR GLOW ========== */
+const glow=document.getElementById('cursorGlow');
+let mx=0,my=0,gx=0,gy=0;
+let activeFilterColor='rgba(255,255,255,0.08)';
+
+document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY});
+function animGlow(){
+  gx+=(mx-gx)*0.12;gy+=(my-gy)*0.12;
+  glow.style.left=gx+'px';glow.style.top=gy+'px';
+  requestAnimationFrame(animGlow);
+}
+animGlow();
+
+function setGlowColor(cat){
+  const colors={
+    all:'rgba(255,255,255,0.08)',
+    signals:'rgba(254,190,2,0.08)',winners:'rgba(48,161,78,0.08)',
+    losers:'rgba(235,72,35,0.08)',assignments:'rgba(65,131,196,0.08)',
+    rolls:'rgba(54,189,170,0.08)',analysis:'rgba(234,76,137,0.08)',
+    announcements:'rgba(176,91,255,0.08)'
+  };
+  const c=colors[cat]||colors.all;
+  glow.style.background='radial-gradient(circle,'+c+' 0%,transparent 70%)';
+}
+
+/* ========== FLASHLIGHT EFFECT ========== */
+function flashlightTick(){
+  const entries=document.querySelectorAll('.entry');
+  entries.forEach(e=>{
+    const r=e.getBoundingClientRect();
+    const cy=r.top+r.height/2;
+    const dist=Math.abs(my-cy);
+    if(dist<300&&!e.classList.contains('filter-hide')){
+      const o=0.7+0.2*(1-dist/300);
+      e.style.opacity=Math.min(o,0.95);
+    }
+  });
+  requestAnimationFrame(flashlightTick);
+}
+flashlightTick();
+
+/* ========== MAGNETIC PULL ========== */
+document.querySelectorAll('.filter-pill,.copy-trade-btn').forEach(el=>{
+  el.addEventListener('mousemove',e=>{
+    const r=el.getBoundingClientRect();
+    const cx=r.left+r.width/2,cy=r.top+r.height/2;
+    const dx=(e.clientX-cx)*0.15,dy=(e.clientY-cy)*0.15;
+    el.style.transform='translate('+dx+'px,'+dy+'px)';
+  });
+  el.addEventListener('mouseleave',()=>{
+    el.style.transform='';
+  });
+});
+
+/* ========== THEME TOGGLE (CIRCULAR WIPE) ========== */
+const themeBtn=document.getElementById('themeToggle');
+const wipe=document.getElementById('themeWipe');
+themeBtn.addEventListener('click',function(e){
+  const r=themeBtn.getBoundingClientRect();
+  const wx=((r.left+r.width/2)/window.innerWidth*100)+'%';
+  const wy=((r.top+r.height/2)/window.innerHeight*100)+'%';
+  wipe.style.setProperty('--wx',wx);
+  wipe.style.setProperty('--wy',wy);
+
+  const html=document.documentElement;
+  const current=html.getAttribute('data-theme');
+  const next=current==='dark'?'light':'dark';
+
+  // set wipe bg to NEW theme color
+  wipe.style.background=next==='dark'?'#191a1e':'#ffffff';
+  wipe.classList.add('active');
+
+  setTimeout(()=>{
+    html.setAttribute('data-theme',next);
+    localStorage.setItem('me-theme',next);
+    setTimeout(()=>{wipe.classList.remove('active')},50);
+  },500);
+});
+
+/* ========== HEADER SCROLL ========== */
+const header=document.getElementById('mainHeader');
+const logo=document.querySelector('.logo-shape');
+let wasScrolled=false;
+window.addEventListener('scroll',function(){
+  const y=window.scrollY;
+  if(y>120){
+    if(!wasScrolled){
+      header.classList.add('scrolled');
+      // Speed up logo spin briefly
+      logo.querySelector('::before');
+      logo.style.setProperty('--scan-dur','6s');
+      const before=document.styleSheets[0];
+      // Faster spin hack via class
+      logo.classList.add('fast-spin');
+      setTimeout(()=>logo.classList.remove('fast-spin'),1000);
+      wasScrolled=true;
+    }
+  }else{
+    header.classList.remove('scrolled');
+    wasScrolled=false;
+  }
+
+  // Stats bar sticky
+  const sb=document.getElementById('statsBar');
+  if(y>250)sb.classList.add('stuck');
+  else sb.classList.remove('stuck');
+},{passive:true});
+
+/* ========== YEAR TOGGLE ========== */
+window.toggleYear=function(el){
+  const s=el.closest('.year-section');
+  const arrow=el.querySelector('.year-arrow');
+  const badge=el.querySelector('.year-count');
+  s.classList.toggle('collapsed');
+  // Arrow spring bounce
+  arrow.style.transition='transform 0.5s cubic-bezier(0.34,1.56,0.64,1)';
+  // Badge pulse
+  badge.style.transform='scale(1.15)';
+  setTimeout(()=>badge.style.transform='',300);
+};
+
+/* ========== MONTH TOGGLE (SPRING) ========== */
+window.toggleMonth=function(el){
+  const s=el.closest('.month-section');
+  s.classList.toggle('collapsed');
+};
+
+/* ========== FILTER PILLS ========== */
+const filterBar=document.getElementById('filterBar');
+const pills=filterBar.querySelectorAll('.filter-pill');
+const allEntries=document.querySelectorAll('.entry');
+const allMonths=document.querySelectorAll('.month-section');
+const allYears=document.querySelectorAll('.year-section');
+
+pills.forEach(pill=>{
+  pill.addEventListener('click',function(e){
+    // Ripple
+    const ripple=document.createElement('span');
+    ripple.className='ripple';
+    const r=pill.getBoundingClientRect();
+    ripple.style.left=(e.clientX-r.left)+'px';
+    ripple.style.top=(e.clientY-r.top)+'px';
+    ripple.style.width=ripple.style.height='10px';
+    pill.appendChild(ripple);
+    setTimeout(()=>ripple.remove(),600);
+
+    // Spring scale
+    this.style.transform='scale(0.9)';
+    setTimeout(()=>{this.style.transform='scale(1.05)'},100);
+    setTimeout(()=>{this.style.transform='scale(1)'},250);
+
+    pills.forEach(p=>p.classList.remove('active'));
+    this.classList.add('active');
+
+    const filter=this.getAttribute('data-filter');
+    setGlowColor(filter);
+
+    // Animate count badges
+    pills.forEach(p=>{
+      const c=p.querySelector('.count');
+      c.style.transform='scale(0.8)';
+      setTimeout(()=>{c.style.transform='scale(1.1)'},150);
+      setTimeout(()=>{c.style.transform='scale(1)'},300);
+    });
+
+    if(filter==='all'){
+      allEntries.forEach((e,i)=>{
+        e.classList.remove('filter-hide');
+        e.className=e.className.replace(/filter-glow-\w+/g,'').trim();
+        e.style.transform='';
+        e.style.transitionDelay=(i*30)+'ms';
+      });
+      allMonths.forEach(ms=>ms.style.display='');
+      return;
+    }
+
+    let stagger=0;
+    allEntries.forEach(entry=>{
+      entry.className=entry.className.replace(/filter-glow-\w+/g,'').trim();
+      if(entry.getAttribute('data-category')===filter){
+        entry.classList.remove('filter-hide');
+        entry.classList.add('filter-glow-'+filter);
+        entry.style.transitionDelay=(stagger*40)+'ms';
+        stagger++;
+      }else{
+        entry.classList.add('filter-hide');
+        entry.style.transitionDelay='0ms';
+      }
+    });
+
+    allMonths.forEach(ms=>{
+      const vis=ms.querySelectorAll('.entry:not(.filter-hide)');
+      if(vis.length===0)ms.style.display='none';
+      else{ms.style.display='';ms.classList.remove('collapsed')}
+    });
+    allYears.forEach(ys=>{
+      const vm=ys.querySelectorAll('.month-section:not([style*="display: none"])');
+      if(vm.length>0)ys.classList.remove('collapsed');
+    });
+  });
+});
+
+/* ========== COPY TRADE + PARTICLES ========== */
+window.copyTrade=function(btn,text){
+  navigator.clipboard.writeText(text).then(()=>showToast('Trade copied!')).catch(()=>{
+    const ta=document.createElement('textarea');ta.value=text;
+    document.body.appendChild(ta);ta.select();document.execCommand('copy');
+    document.body.removeChild(ta);showToast('Trade copied!');
+  });
+  // Particle burst
+  const r=btn.getBoundingClientRect();
+  for(let i=0;i<12;i++){
+    const p=document.createElement('div');
+    p.className='particle';
+    p.style.background='#febe02';
+    p.style.left=(r.left+r.width/2)+'px';
+    p.style.top=(r.top+r.height/2)+'px';
+    p.style.position='fixed';
+    const angle=Math.random()*Math.PI*2;
+    const dist=30+Math.random()*50;
+    const tx=Math.cos(angle)*dist,ty=Math.sin(angle)*dist;
+    p.style.animation='none';
+    document.body.appendChild(p);
+    p.animate([
+      {transform:'translate(0,0) scale(1)',opacity:1},
+      {transform:'translate('+tx+'px,'+ty+'px) scale(0)',opacity:0}
+    ],{duration:600,easing:'cubic-bezier(0.34,1.56,0.64,1)'});
+    setTimeout(()=>p.remove(),600);
+  }
+};
+
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2000);
+}
+
+/* ========== ENTRY EXPAND ON CLICK ========== */
+document.querySelectorAll('.entry').forEach(entry=>{
+  entry.addEventListener('click',function(){
+    const wasExpanded=this.classList.contains('expanded');
+    // Close others
+    document.querySelectorAll('.entry.expanded').forEach(e=>e.classList.remove('expanded'));
+    if(!wasExpanded){
+      this.classList.add('expanded');
+      // Generate mini chart bars
+      const chart=this.querySelector('.mini-chart');
+      if(chart&&chart.children.length===0){
+        for(let i=0;i<20;i++){
+          const bar=document.createElement('div');
+          bar.className='bar';
+          const h=8+Math.random()*32;
+          const cat=entry.getAttribute('data-category');
+          const colors={signals:'#febe02',winners:'#30a14e',losers:'#eb4823',assignments:'#4183c4',rolls:'#36bdaa',announcements:'#b05bff',analysis:'#ea4c89'};
+          bar.style.background=colors[cat]||'#febe02';
+          bar.style.height='0px';
+          chart.appendChild(bar);
+          setTimeout(()=>{bar.style.height=h+'px'},i*30);
+        }
+      }
+    }
+  });
+});
+
+/* ========== INTERSECTION OBSERVER ========== */
+const entryObs=new IntersectionObserver((entries)=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting){
+      const el=e.target;
+      el.classList.add('in-view');
+
+      // P&L count up
+      el.querySelectorAll('[data-pnl]').forEach(pnl=>{
+        if(pnl.dataset.counted)return;
+        pnl.dataset.counted='1';
+        const val=parseInt(pnl.dataset.pnl);
+        const prefix=val>=0?'+$':'-$';
+        const abs=Math.abs(val);
+        let current=0;
+        const step=Math.max(1,Math.floor(abs/30));
+        const iv=setInterval(()=>{
+          current+=step;
+          if(current>=abs){current=abs;clearInterval(iv)}
+          pnl.textContent=prefix+current+(pnl.textContent.includes('profit')?' profit':pnl.textContent.includes('captured')?' captured':'');
+        },20);
+      });
+
+      // Detail highlight sequence
+      const details=el.querySelectorAll('.entry-desc .detail');
+      details.forEach((d,i)=>{
+        setTimeout(()=>{
+          d.classList.add('highlight');
+          setTimeout(()=>d.classList.remove('highlight'),600);
+        },i*100);
+      });
+
+      // Timeline dot pulse
+      const month=el.closest('.month-section');
+      if(month){
+        const dot=month.querySelector('.month-dot');
+        if(dot&&!dot.classList.contains('pulse')){
+          dot.classList.add('pulse');
+          setTimeout(()=>dot.classList.remove('pulse'),1000);
+        }
+      }
+    }
+  });
+},{threshold:0.3});
+document.querySelectorAll('.entry').forEach(e=>entryObs.observe(e));
+
+/* ========== DATE TOOLTIPS (DAY OF WEEK) ========== */
+document.querySelectorAll('.entry-date').forEach(el=>{
+  const text=el.childNodes[0].textContent.trim();
+  const tip=el.querySelector('.tooltip');
+  if(!tip)return;
+  // Parse approximate date
+  const parts=text.split(' ');
+  const monthMap={Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};
+  const m=monthMap[parts[0]];
+  const d=parseInt(parts[1]);
+  const yearEl=el.closest('.year-section');
+  const yr=yearEl?parseInt(yearEl.dataset.year):2026;
+  if(m!==undefined&&d){
+    const date=new Date(yr,m,d);
+    const days=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+    tip.textContent=days[date.getDay()];
+  }
+});
+
+/* ========== COUNT-UP ANIMATION ========== */
+function countUp(el,target,prefix,suffix,duration){
+  prefix=prefix||'';suffix=suffix||'';
+  const isFloat=String(target).includes('.');
+  let start=0;const startTime=performance.now();
+  function tick(now){
+    const elapsed=now-startTime;
+    const progress=Math.min(elapsed/duration,1);
+    const eased=1-Math.pow(1-progress,3);
+    const current=eased*target;
+    el.textContent=prefix+(isFloat?current.toFixed(1):Math.floor(current))+suffix;
+    if(progress<1)requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+
+/* ========== SPARK DOTS ON TIMELINE ========== */
+function spawnSpark(){
+  const timelines=document.querySelectorAll('.timeline');
+  if(timelines.length===0)return;
+  const tl=timelines[Math.floor(Math.random()*timelines.length)];
+  const spark=document.createElement('div');
+  spark.className='spark';
+  tl.appendChild(spark);
+  setTimeout(()=>spark.remove(),2000);
+}
+setInterval(spawnSpark,3000+Math.random()*2000);
+
+/* ========== AMBIENT FILTER COUNT INCREMENT ========== */
+setInterval(()=>{
+  const counts=document.querySelectorAll('.filter-pill .count');
+  const idx=Math.floor(Math.random()*counts.length);
+  const c=counts[idx];
+  const base=parseInt(c.dataset.base)||parseInt(c.textContent);
+  c.dataset.base=base+1;
+  c.textContent=base+1;
+  c.style.transform='scale(1.3)';
+  c.style.color='#febe02';
+  setTimeout(()=>{c.style.transform='scale(1)';c.style.color=''},400);
+},8000+Math.random()*4000);
+
+/* ========== SCROLL PROGRESS ON TIMELINE ========== */
+window.addEventListener('scroll',()=>{
+  document.querySelectorAll('.timeline').forEach(tl=>{
+    const prog=tl.querySelector('.scroll-progress');
+    if(!prog)return;
+    const r=tl.getBoundingClientRect();
+    const vh=window.innerHeight;
+    if(r.top>vh||r.bottom<0){prog.style.height='0';return}
+    const scrolled=Math.min(1,Math.max(0,(vh-r.top)/(r.height+vh)));
+    prog.style.height=(scrolled*100)+'%';
+  });
+},{passive:true});
+
+/* ========== YEAR HEADER PARALLAX ========== */
+window.addEventListener('scroll',()=>{
+  document.querySelectorAll('.year-header').forEach(yh=>{
+    const r=yh.getBoundingClientRect();
+    const offset=(window.innerHeight/2-r.top)*0.2;
+    yh.style.transform='translateY('+offset*0.1+'px)';
+  });
+},{passive:true});
+
+/* ========== LOADING CHOREOGRAPHY ========== */
+document.addEventListener('DOMContentLoaded',function(){
+  // 1. BG mesh (already CSS)
+  // 2. Header
+  const h=document.querySelector('.header');
+  setTimeout(()=>{h.classList.remove('load-hidden');h.style.animation='slideDown 0.4s ease forwards'},200);
+
+  // 3. Filter pills cascade
+  const fb=document.querySelector('.filter-bar');
+  setTimeout(()=>{
+    fb.classList.remove('load-hidden');
+    fb.querySelectorAll('.filter-pill').forEach((p,i)=>{
+      p.style.opacity='0';p.style.transform='translateY(10px)';
+      setTimeout(()=>{
+        p.style.transition='all 0.3s cubic-bezier(0.34,1.56,0.64,1)';
+        p.style.opacity='1';p.style.transform='translateY(0)';
+      },i*50);
+    });
+  },300);
+
+  // 4. Stats count up
+  const sb=document.getElementById('statsBar');
+  setTimeout(()=>{
+    sb.classList.remove('load-hidden');
+    sb.style.animation='fadeIn 0.3s ease forwards';
+    sb.querySelectorAll('.stat-value').forEach(sv=>{
+      const target=parseFloat(sv.dataset.countup);
+      const prefix=sv.dataset.prefix||'';
+      const suffix=sv.dataset.suffix||'';
+      countUp(sv,target,prefix,suffix,800);
+    });
+  },500);
+
+  // 5-6. Year sections + entries
+  document.querySelectorAll('.year-section').forEach((ys,yi)=>{
+    setTimeout(()=>{
+      ys.classList.remove('load-hidden');
+      ys.style.animation='fadeIn 0.4s ease forwards';
+      // Entries cascade
+      const visEntries=ys.querySelectorAll('.month-section:not(.collapsed) .entry');
+      visEntries.forEach((e,i)=>{
+        e.style.opacity='0';e.style.transform='translateY(12px)';
+        setTimeout(()=>{
+          e.style.transition='all 0.35s cubic-bezier(0.34,1.56,0.64,1)';
+          e.style.opacity='0.7';e.style.transform='translateY(0)';
+        },i*40);
+      });
+    },600+yi*200);
+  });
+
+  // 7. Footer
+  const footer=document.querySelector('.footer');
+  setTimeout(()=>{
+    footer.classList.remove('load-hidden');
+    footer.style.animation='fadeIn 0.4s ease forwards';
+    // Footer stat count up with typewriter delay
+    const fs=document.getElementById('footerStat');
+    let count=0;
+    const target=156;
+    const iv=setInterval(()=>{
+      count+=Math.ceil((target-count)*0.08)+1;
+      if(count>=target){count=target;clearInterval(iv)}
+      fs.textContent=count;
+    },30);
+  },1500);
+});
+
+/* ========== LOGO COLOR SHIFT ON SCROLL ========== */
+const catColors={
+  signals:'#febe02',winners:'#30a14e',losers:'#eb4823',
+  assignments:'#4183c4',rolls:'#36bdaa',announcements:'#b05bff',analysis:'#ea4c89'
+};
+let logoAccent=document.querySelector('.logo-shape');
+window.addEventListener('scroll',()=>{
+  const entries=document.querySelectorAll('.entry.in-view');
+  if(entries.length>0){
+    const last=entries[entries.length-1];
+    const cat=last.getAttribute('data-category');
+    // We can't easily change conic-gradient per scroll, but we add a box-shadow tint
+    const c=catColors[cat]||'transparent';
+    logoAccent.style.boxShadow='0 0 12px '+c+'60';
+  }
+},{passive:true});
+})();
+</script>
+</body>
+</html>
