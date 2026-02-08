@@ -3719,8 +3719,8 @@ function markPostRolled(postId, postRef) {
 
   // adminAction already closed the admin modal
   const origPrem = parseFloat((post.prem || '').replace(/[$,]/g, '')) || 0;
-  const prevRollPrem = (post.rollHistory || []).reduce((s, r) => s + (r.premiumPerShare || 0), 0);
-  const totalPrevPrem = origPrem + prevRollPrem;
+  const prevRollCredits = (post.rollHistory || []).reduce((s, r) => s + (r.netCredit || r.premiumPerShare || 0), 0);
+  const totalPrevPrem = origPrem + prevRollCredits;
 
   // Step 1: New strike
   showPrompt(`Roll ${post.ticker} $${post.strike}${post.type==='csp'?'P':'C'} — New strike?`, '', (strikeStr) => {
@@ -3731,12 +3731,12 @@ function markPostRolled(postId, postRef) {
     showPrompt('New expiration? (e.g. Feb 21)', '', (newExp) => {
       if (!newExp) return showToast('Enter expiration', 'error');
 
-      // Step 3: New premium
-      showPrompt(`New premium per share? (original was $${origPrem.toFixed(2)})`, '', async (premStr) => {
-        const newPrem = parseFloat(premStr);
-        if (!newPrem && newPrem !== 0) return showToast('Enter premium', 'error');
+      // Step 3: Net credit of the roll (negative = debit roll)
+      showPrompt(`Net credit per share for this roll? (negative if debit roll, e.g. -2.50 or 1.50)\nPrevious total premium: $${totalPrevPrem.toFixed(2)}/share`, '', async (premStr) => {
+        const netCredit = parseFloat(premStr);
+        if (isNaN(netCredit)) return showToast('Enter net credit (can be negative)', 'error');
 
-        const totalPrem = totalPrevPrem + newPrem;
+        const totalPrem = totalPrevPrem + netCredit;
         const contracts = post.assignedContracts || 1;
 
         // Mark original as ROLLED
@@ -3754,14 +3754,14 @@ function markPostRolled(postId, postRef) {
           ticker: post.ticker,
           strike: newStrike,
           exp: newExp,
-          prem: '$' + newPrem.toFixed(2),
+          prem: '$' + netCredit.toFixed(2),
           delta: post.delta || '',
-          notes: `Rolled from $${post.strike} · Total premium: $${(totalPrem * 100).toFixed(0)} (${(post.rollHistory||[]).length + 1} rolls)`,
+          notes: `Rolled from $${post.strike} · Net credit: ${netCredit >= 0 ? '+' : ''}$${netCredit.toFixed(2)}/share · Total net premium: $${(totalPrem * 100).toFixed(0)} (${(post.rollHistory||[]).length + 1} rolls)`,
           time: 'Just now',
           timestamp: Date.now(),
           kind: 'signal',
           rolledFrom: post.id,
-          rollHistory: [...(post.rollHistory || []), { strike: post.strike, exp: post.exp, premiumPerShare: origPrem, rolledAt: Date.now() }],
+          rollHistory: [...(post.rollHistory || []), { strike: post.strike, exp: post.exp, premiumPerShare: origPrem, netCredit: netCredit, rolledAt: Date.now() }],
           totalPremiumCollected: totalPrem,
           rollCount: (post.rollCount || 0) + 1
         };
@@ -3769,10 +3769,11 @@ function markPostRolled(postId, postRef) {
         savePostToFirebase(newSignal).catch(e => console.warn('Roll signal save error:', e));
 
         // Post roll notification for users
+        const creditStr = netCredit >= 0 ? `+$${(netCredit * 100).toFixed(0)} credit` : `-$${(Math.abs(netCredit) * 100).toFixed(0)} debit`;
         const rollNotif = {
           original: `${post.ticker} $${post.strike}${post.type==='csp'?'P':'C'} ${post.exp}`,
           newPos: `${post.ticker} $${newStrike}${post.type==='csp'?'P':'C'} ${newExp}`,
-          credit: newPrem > 0 ? `+$${(newPrem * 100).toFixed(0)} new premium` : 'even',
+          credit: creditStr,
           notes: `Total premium collected across rolls: $${(totalPrem * 100).toFixed(0)}`,
           time: 'Just now',
           timestamp: Date.now() + 2,
@@ -3793,7 +3794,8 @@ function markPostRolled(postId, postRef) {
         })();
 
         renderHome();
-        showToast(`Rolled ${post.ticker} to $${newStrike} ${newExp} · Total premium: $${(totalPrem * 100).toFixed(0)}`, 'success');
+        const rollCreditStr = netCredit >= 0 ? `+$${(netCredit * 100).toFixed(0)} credit` : `-$${(Math.abs(netCredit) * 100).toFixed(0)} debit`;
+        showToast(`Rolled ${post.ticker} to $${newStrike} ${newExp} · ${rollCreditStr} · Net premium: $${(totalPrem * 100).toFixed(0)}`, 'success');
         setTimeout(() => openAdmin(), 300);
       });
     });
@@ -8510,7 +8512,7 @@ function renderSignals(){
       const premVal = s.prem || '';
       const sid = s.id ? `,'${s.id}'` : '';
       const rollBadge = s.rollCount ? `<span style="font-size:10px;padding:2px 6px;background:var(--purple-bg);color:var(--purple);border-radius:10px;font-weight:600;margin-left:6px">ROLL #${s.rollCount}</span>` : '';
-      const totalPremLine = s.totalPremiumCollected ? `<div style="font-size:11px;color:var(--text3);margin-top:4px">Total premium across rolls: <b style="color:var(--green)">$${(s.totalPremiumCollected * 100).toFixed(0)}</b></div>` : '';
+      const totalPremLine = s.totalPremiumCollected ? `<div style="font-size:11px;color:var(--text3);margin-top:4px">Net premium (all rolls): <b style="color:${s.totalPremiumCollected >= 0 ? 'var(--green)' : 'var(--red)'}">$${(s.totalPremiumCollected * 100).toFixed(0)}</b></div>` : '';
       html += `<div class="signal-card" style="border-left:3px solid var(--${s.type==='csp'?'green':'blue'})"><div class="signal-header"><span class="signal-type ${s.type}">${s.type.toUpperCase()}</span>${rollBadge}<span class="signal-time" style="margin-left:auto">${time}</span></div><div class="signal-ticker">${s.ticker}</div><div class="signal-details">$${s.strike} ${s.type==='csp'?'Put':'Call'} · Exp ${s.exp}</div><div style="display:flex;gap:16px;font-size:13px;align-items:center"><span>Premium: <b style="color:var(--green)">${premVal}</b></span><span>Delta: <b>${s.delta||''}</b></span><button class="copy-trade-btn" onclick="event.stopPropagation();copyTradeFromSignal('${s.ticker}','${s.type}','${s.strike}','${s.exp}','${premVal}'${sid})">+ Copy Trade</button></div>${totalPremLine}</div>`;
     });
   } else if (activeWheels.length === 0) {
