@@ -1593,6 +1593,12 @@
     </div>
 
     <div style="margin-top:24px;padding-top:16px;border-top:1px solid var(--border)">
+      <div class="card-title" style="display:flex;align-items:center;gap:8px">Registered Users <span style="font-size:11px;padding:2px 8px;background:var(--blue-bg,rgba(59,130,246,0.1));color:var(--blue,#3b82f6);border-radius:20px;font-weight:600" id="userCount">0</span></div>
+      <p style="font-size:11px;color:var(--text3);margin-bottom:12px">Everyone who has signed up</p>
+      <div id="adminUsersList" style="max-height:300px;overflow-y:auto"></div>
+    </div>
+
+    <div style="margin-top:24px;padding-top:16px;border-top:1px solid var(--border)">
       <div class="card-title">Notification Settings</div>
       <div style="margin-top:12px">
         <div class="form-label" style="font-weight:600;margin-bottom:8px">🎮 Discord Alerts</div>
@@ -1820,6 +1826,7 @@ async function handleSignup() {
 
     completeAuth(cred.user);
     showToast('Welcome to Market Elites!', 'success');
+    notifyNewSignup(name, email, 'email').catch(() => {});
   } catch (e) {
     console.error('Signup error:', e);
     showToast(e.message || 'Signup failed', 'error');
@@ -1848,7 +1855,8 @@ async function handleGoogleSignIn() {
     const userRef = firebase.database().ref('users/' + user.uid);
     const snapshot = await userRef.once('value');
 
-    if (!snapshot.exists()) {
+    const isNewUser = !snapshot.exists();
+    if (isNewUser) {
       // New user - create profile
       await userRef.set({
         name: user.displayName || 'User',
@@ -1868,6 +1876,7 @@ async function handleGoogleSignIn() {
 
     completeAuth(user);
     showToast('Welcome, ' + S.user.name + '!', 'success');
+    if (isNewUser) notifyNewSignup(user.displayName || 'User', user.email, 'google').catch(() => {});
   } catch (e) {
     console.error('Google sign-in error:', e);
     if (e.code === 'auth/popup-closed-by-user') {
@@ -1892,7 +1901,8 @@ async function handleAppleSignIn() {
     const userRef = firebase.database().ref('users/' + user.uid);
     const snapshot = await userRef.once('value');
 
-    if (!snapshot.exists()) {
+    const isNewApple = !snapshot.exists();
+    if (isNewApple) {
       await userRef.set({
         name: user.displayName || 'User',
         email: user.email || '',
@@ -1910,6 +1920,7 @@ async function handleAppleSignIn() {
 
     completeAuth(user);
     showToast('Welcome, ' + S.user.name + '!', 'success');
+    if (isNewApple) notifyNewSignup(user.displayName || 'User', user.email || '', 'apple').catch(() => {});
   } catch (e) {
     console.error('Apple sign-in error:', e);
     if (e.code === 'auth/popup-closed-by-user') return;
@@ -2326,6 +2337,7 @@ function openAdmin() {
   renderMasterPortfolio();
   renderAdminPosts();
   renderWheelPositions();
+  renderAdminUsers();
   loadPostsFromFirebase();
   loadAdminSettings();
   openModal('adminModal');
@@ -7606,6 +7618,60 @@ function computePortfolioStats() {
   };
 }
 
+
+async function renderAdminUsers() {
+  const el = $('adminUsersList');
+  const countEl = $('userCount');
+  if (!el) return;
+  if (!await initFirebase()) { el.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:12px">Firebase not connected</div>'; return; }
+  try {
+    const snapshot = await firebase.database().ref('users').orderByChild('createdAt').once('value');
+    const users = [];
+    snapshot.forEach(child => { users.unshift({ uid: child.key, ...child.val() }); });
+    if (countEl) countEl.textContent = users.length;
+    if (!users.length) { el.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:12px">No users yet</div>'; return; }
+    el.innerHTML = users.map(u => {
+      const date = u.createdAt ? new Date(u.createdAt).toLocaleDateString() : '?';
+      const time = u.createdAt ? new Date(u.createdAt).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : '';
+      const prov = u.provider ? `<span style="font-size:10px;background:var(--input);padding:1px 6px;border-radius:3px;margin-left:4px">${u.provider}</span>` : '';
+      const premium = u.isPremium ? '<span style="font-size:10px;background:var(--green-bg);color:var(--green);padding:1px 6px;border-radius:3px;margin-left:4px;font-weight:600">PRO</span>' : '';
+      return `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);font-size:13px">
+        <div>
+          <div style="font-weight:600">${u.name || 'User'}${prov}${premium}</div>
+          <div style="font-size:11px;color:var(--text3)">${u.email || 'No email'}</div>
+        </div>
+        <div style="text-align:right;font-size:11px;color:var(--text3)">
+          <div>${date}</div><div>${time}</div>
+        </div>
+      </div>`;
+    }).join('');
+  } catch (e) { console.warn('Load users error:', e); el.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:12px">Failed to load users</div>'; }
+}
+
+async function notifyNewSignup(name, email, provider) {
+  const webhookUrl = localStorage.getItem('discordWebhook');
+  if (!webhookUrl) return;
+  try {
+    await fetch(webhookUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        username: 'Market Elites',
+        embeds: [{
+          title: '🆕 New User Signed Up!',
+          color: 0x3b82f6,
+          fields: [
+            { name: 'Name', value: name || 'Unknown', inline: true },
+            { name: 'Email', value: email || 'N/A', inline: true },
+            { name: 'Method', value: provider || 'email', inline: true }
+          ],
+          timestamp: new Date().toISOString(),
+          footer: { text: 'Market Elites · New Registration' }
+        }]
+      })
+    });
+  } catch (e) { console.warn('Signup Discord notify:', e); }
+}
 
 function renderMasterPortfolio() {
   const c = $('masterPortfolio');
