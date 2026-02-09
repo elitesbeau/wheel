@@ -3082,6 +3082,9 @@ async function listenToFirebasePosts() {
         });
       }
 
+      // Clean orphaned history after Firebase sync (source of truth updated)
+      cleanOrphanedHistory();
+
       // Auto-sync copied positions when signal status changes
       syncCopiedPositions(posts);
 
@@ -3801,11 +3804,18 @@ function renderWheelPositions() {
 }
 
 function deleteWheelPosition(wheelId) {
-  if (!confirm('Delete this wheel position? This cannot be undone.')) return;
+  if (!confirm('Delete this wheel position and all linked posts? This cannot be undone.')) return;
   const w = (S.wheelPositions || []).find(x => x.id === wheelId);
   S.wheelPositions = (S.wheelPositions || []).filter(x => x.id !== wheelId);
-  // Also unlink any admin posts that referenced this wheel
-  (S.adminPosts || []).forEach(p => { if (p.wheelId === wheelId) { p.wheelId = null; } });
+  // Delete all linked admin posts from Firebase AND local state
+  const linkedPosts = (S.adminPosts || []).filter(p => p.wheelId === wheelId);
+  linkedPosts.forEach(p => {
+    if (p.id) {
+      _deletedPostIds.add(p.id);
+      deletePostFromFirebase(p.id).catch(e => console.warn('Firebase cleanup:', e));
+    }
+  });
+  S.adminPosts = (S.adminPosts || []).filter(p => p.wheelId !== wheelId);
   // Clean up trade history entries from this wheel
   if (w) {
     S.history = (S.history || []).filter(h => {
@@ -3820,7 +3830,7 @@ function deleteWheelPosition(wheelId) {
   renderSignals();
   renderHome();
   renderMasterPortfolio();
-  showToast('Wheel position deleted', '');
+  showToast('Wheel position and linked posts deleted', '');
 }
 
 // Show full wheel lifecycle recap modal
@@ -4932,14 +4942,11 @@ function save(){try{localStorage.setItem('meV6',JSON.stringify(S))}catch(e){}}
 function cleanOrphanedHistory(){
   if(!S.history||!S.history.length)return;
   const wheels=S.wheelPositions||[];
-  const posts=S.adminPosts||[];
   const before=S.history.length;
   S.history=S.history.filter(h=>{
     if(h.outcome==='called_away'){
-      // Keep only if a matching completed wheel still exists
-      const hasWheel=wheels.some(w=>w.status==='completed'&&w.symbol===h.symbol);
-      const hasPost=posts.some(p=>p.status==='called'&&p.ticker===h.symbol);
-      return hasWheel||hasPost;
+      // Keep only if a matching completed wheel still exists in wheelPositions
+      return wheels.some(w=>w.status==='completed'&&w.symbol===h.symbol);
     }
     return true;
   });
@@ -8377,9 +8384,10 @@ function computePortfolioStats() {
   const allSignals = posts.filter(p => p.kind === 'signal');
   const openCSPs = allSignals.filter(p => p.type === 'csp' && (!p.status || p.status === 'open'));
   const openCCs = allSignals.filter(p => p.type === 'cc' && (!p.status || p.status === 'open'));
-  const winners = allSignals.filter(p => p.status === 'winner');
+  // Only count winners/called that still have matching wheel positions or are standalone
+  const winners = allSignals.filter(p => p.status === 'winner' && (!p.wheelId || wheels.some(w => w.id === p.wheelId)));
   const assigned = allSignals.filter(p => p.status === 'assigned');
-  const called = allSignals.filter(p => p.status === 'called');
+  const called = allSignals.filter(p => p.status === 'called' && (!p.wheelId || wheels.some(w => w.id === p.wheelId)));
   const rolled = allSignals.filter(p => p.status === 'rolled' || p.rollCount > 0);
 
   let totalPremiumCollected = 0;
@@ -8615,9 +8623,10 @@ function renderAlertsFeed() {
 
   section.style.display = 'block';
   // Show recent posts, prioritizing actionable items (open signals, assignments)
-  // Push completed/called/winner to end — they're shown in signals tab history
+  // Exclude orphaned called/winner posts whose wheel was deleted
+  const wheels = S.wheelPositions || [];
   const actionable = posts.filter(p => !p.status || p.status === 'open' || p.status === 'assigned' || p.kind === 'announcement' || p.kind === 'roll');
-  const completed = posts.filter(p => p.status === 'called' || p.status === 'winner');
+  const completed = posts.filter(p => (p.status === 'called' || p.status === 'winner') && (!p.wheelId || wheels.some(w => w.id === p.wheelId)));
   const recent = [...actionable, ...completed].slice(0, 3);
 
   container.innerHTML = recent.map(p => {
