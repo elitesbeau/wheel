@@ -2076,6 +2076,21 @@ async function loadUserData(uid) {
       S.isPremium = data.isPremium || false;
       save();
     }
+    // Listen for real-time premium status changes (e.g. admin grants PRO)
+    firebase.database().ref('users/' + uid + '/isPremium').on('value', snap => {
+      const wasPremium = S.isPremium;
+      S.isPremium = snap.val() || false;
+      if (S.isPremium !== wasPremium) {
+        save();
+        if (S.isPremium && !wasPremium) {
+          showToast('Premium activated! Welcome to PRO', 'success');
+        }
+        // Re-render to show/hide premium features
+        renderProfile();
+        renderSignals();
+        renderHome();
+      }
+    });
   } catch (e) {
     console.error('Load user data error:', e);
   }
