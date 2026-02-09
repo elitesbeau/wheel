@@ -2566,6 +2566,9 @@ async function savePostToFirebase(post) {
     post.id = ref.key;
     if (!S.adminPosts) S.adminPosts = [];
     if (!S.adminPosts.find(p => p === post || p.id === post.id)) S.adminPosts.unshift(post);
+    // Protect this post from being wiped by the Firebase listener for 30 seconds
+    _recentlyPostedIds.set(ref.key, post);
+    setTimeout(() => _recentlyPostedIds.delete(ref.key), 30000);
     save();
     renderAdminPosts();
     renderSignals();
@@ -2575,6 +2578,11 @@ async function savePostToFirebase(post) {
     console.error('Firebase save error:', e);
     if (!S.adminPosts) S.adminPosts = [];
     if (!S.adminPosts.find(p => p === post || p.id === post.id)) S.adminPosts.unshift(post);
+    // Protect even on failure — keep locally until Firebase confirms
+    if (post.id) {
+      _recentlyPostedIds.set(post.id, post);
+      setTimeout(() => _recentlyPostedIds.delete(post.id), 30000);
+    }
     save();
     renderAdminPosts();
     renderSignals();
@@ -2984,8 +2992,16 @@ async function loadPostsFromFirebase(skipRender) {
     });
     // Filter out locally deleted posts that Firebase hasn't processed yet
     const filtered = posts.filter(p => !_deletedPostIds.has(p.id));
-    if (filtered.length > 0 || !S.adminPosts || S.adminPosts.length === 0) {
-      S.adminPosts = filtered;
+    // Preserve recently-posted signals not yet in Firebase snapshot
+    const filteredIds = new Set(filtered.map(p => p.id));
+    const recentPosts = [];
+    _recentlyPostedIds.forEach((post, id) => {
+      if (!filteredIds.has(id) && !_deletedPostIds.has(id)) recentPosts.push(post);
+      else _recentlyPostedIds.delete(id);
+    });
+    const merged = [...recentPosts, ...filtered];
+    if (merged.length > 0 || !S.adminPosts || S.adminPosts.length === 0) {
+      S.adminPosts = merged;
       save();
     }
     if (!skipRender) {
@@ -3074,7 +3090,17 @@ async function listenToFirebasePosts() {
       // Always use Firebase as source of truth when it returns data
       // Filter out locally deleted posts (prevents re-add before Firebase propagates)
       if (posts.length > 0) {
-        S.adminPosts = posts.filter(p => !_deletedPostIds.has(p.id));
+        let merged = posts.filter(p => !_deletedPostIds.has(p.id));
+        // Preserve recently-posted signals that may not be in the Firebase snapshot yet
+        const mergedIds = new Set(merged.map(p => p.id));
+        _recentlyPostedIds.forEach((post, id) => {
+          if (!mergedIds.has(id) && !_deletedPostIds.has(id)) {
+            merged.unshift(post); // Keep locally-posted signal visible
+          } else {
+            _recentlyPostedIds.delete(id); // Firebase confirmed it, no longer needed
+          }
+        });
+        S.adminPosts = merged;
         save();
         // Clean up _deletedPostIds once Firebase confirms the post is actually gone
         _deletedPostIds.forEach(id => {
@@ -3562,6 +3588,7 @@ async function postRoll() {
 
 let _deleting = false;
 const _deletedPostIds = new Set(); // Prevent Firebase listener from re-adding deleted posts
+const _recentlyPostedIds = new Map(); // Prevent Firebase listener from removing just-posted signals (id -> post object)
 async function deletePost(postId) {
   if (_deleting || !S.adminPosts) return;
   _deleting = true;
