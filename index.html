@@ -5146,6 +5146,7 @@ function showModuleList(addHistory = true) {
   if (addHistory) learnHistory.push({ type: 'modules' });
   $('learnTitle').textContent = 'Elite Trading Academy';
   $('learnBackBtn').style.display = 'none';
+  scrollLearnTop();
 
   const progress = getLearnProgress();
   const totalChapters = EDUCATION.modules.reduce((sum, m) => sum + m.chapters.length, 0);
@@ -5164,17 +5165,18 @@ function showModuleList(addHistory = true) {
   html += EDUCATION.modules.map(m => {
     const modProgress = m.chapters.filter(c => progress[c.id]).length;
     const modPct = Math.round((modProgress / m.chapters.length) * 100);
+    const modComplete = modProgress === m.chapters.length;
     return `
-      <div class="learn-module" onclick="showChapterList('${m.id}')">
+      <div class="learn-module" onclick="showChapterList('${m.id}')" style="${modComplete ? 'border:2px solid var(--green)' : ''}">
         <div style="display:flex;align-items:center">
-          <div class="learn-module-icon" style="background:var(--${m.color}-bg)">${m.icon}</div>
+          <div class="learn-module-icon" style="background:${modComplete ? 'var(--green)' : 'var(--' + m.color + '-bg)'}">${modComplete ? '✓' : m.icon}</div>
           <div class="learn-module-info">
-            <div class="learn-module-title">${m.title}</div>
+            <div class="learn-module-title">${m.title}${modComplete ? ' <span style="color:var(--green);font-size:12px;font-weight:600">COMPLETE</span>' : ''}</div>
             <div class="learn-module-desc">${m.desc}</div>
             <div class="learn-module-meta">
               <span>${m.level}</span>
               <span>${m.duration}</span>
-              <span>${modPct}% done</span>
+              <span style="${modComplete ? 'color:var(--green);font-weight:600' : ''}">${modComplete ? '✓ Done' : modPct + '% done'}</span>
             </div>
           </div>
         </div>
@@ -5192,6 +5194,7 @@ function showChapterList(moduleId, addHistory = true) {
   if (addHistory) learnHistory.push({ type: 'chapters', moduleId });
   $('learnTitle').textContent = mod.title;
   $('learnBackBtn').style.display = 'flex';
+  scrollLearnTop();
 
   const progress = getLearnProgress();
 
@@ -5262,6 +5265,9 @@ function showLesson(moduleId, chapterId) {
   `;
 
   $('learnContent').innerHTML = html;
+  // Scroll to top of lesson content
+  const modal = $('learnModal')?.querySelector('.modal');
+  if (modal) modal.scrollTop = 0;
 }
 
 function completeLesson(chapterId) {
@@ -5272,6 +5278,10 @@ function completeLesson(chapterId) {
 function completeAndNext(moduleId, currentId, nextId) {
   saveLearnProgress(currentId);
   showLesson(moduleId, nextId);
+}
+function scrollLearnTop() {
+  const modal = $('learnModal')?.querySelector('.modal');
+  if (modal) modal.scrollTop = 0;
 }
 
 // Quiz System
@@ -5533,6 +5543,7 @@ function showQuiz(moduleId, chapterId) {
   `;
 
   $('learnContent').innerHTML = html;
+  scrollLearnTop();
 }
 
 function selectQuizAnswer(qIdx, oIdx) {
