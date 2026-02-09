@@ -3087,7 +3087,9 @@ async function listenToFirebasePosts() {
 
       renderSignals();
       renderAdminPosts();
-      renderAlertsFeed(); // Update home alerts too
+      renderAlertsFeed();
+      renderHome();
+      renderMasterPortfolio();
     });
   } catch (e) {
     console.error('Firebase listen error:', e);
@@ -4925,8 +4927,24 @@ function getTimeAgo(ts) {
 
 initAdminAccess();
 const logo=s=>'https://financialmodelingprep.com/image-stock/'+s.toUpperCase()+'.png';
-function load(){try{const d=localStorage.getItem('meV6');if(d)Object.assign(S,JSON.parse(d))}catch(e){}}
+function load(){try{const d=localStorage.getItem('meV6');if(d)Object.assign(S,JSON.parse(d));cleanOrphanedHistory()}catch(e){}}
 function save(){try{localStorage.setItem('meV6',JSON.stringify(S))}catch(e){}}
+function cleanOrphanedHistory(){
+  if(!S.history||!S.history.length)return;
+  const wheels=S.wheelPositions||[];
+  const posts=S.adminPosts||[];
+  const before=S.history.length;
+  S.history=S.history.filter(h=>{
+    if(h.outcome==='called_away'){
+      // Keep only if a matching completed wheel still exists
+      const hasWheel=wheels.some(w=>w.status==='completed'&&w.symbol===h.symbol);
+      const hasPost=posts.some(p=>p.status==='called'&&p.ticker===h.symbol);
+      return hasWheel||hasPost;
+    }
+    return true;
+  });
+  if(S.history.length<before)save();
+}
 function checkLegal(){if(!S.legalOk)openModal('legalModal')}
 function acceptLegal(){S.legalOk=true;save();closeModal('legalModal')}
 const THEMES = ['light','dark','pro','luxury','retro','fun','clean'];
