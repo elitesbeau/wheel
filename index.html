@@ -2562,17 +2562,18 @@ async function savePostToFirebase(post) {
     const db = firebase.database();
     // Strip any local id before pushing so it doesn't conflict with Firebase key on reload
     const { id: _stripId, ...postData } = post;
-    // Lock Firebase listener from overwriting S.adminPosts for 5 seconds after posting
-    _firebaseSyncLock = Date.now() + 5000;
     const ref = await db.ref('posts').push(postData);
     console.log('[savePost] Firebase push OK, key:', ref.key);
+    // Verify the write actually persisted on the server
+    const verify = await db.ref('posts/' + ref.key).once('value');
+    if (!verify.exists()) {
+      console.error('[savePost] WRITE REJECTED — post not found after push. Check Firebase security rules.');
+      showToast('Firebase write rejected — check database rules', 'error');
+    }
     // Update with Firebase key; only add to local state if not already there
     post.id = ref.key;
     if (!S.adminPosts) S.adminPosts = [];
     if (!S.adminPosts.find(p => p === post || p.id === post.id)) S.adminPosts.unshift(post);
-    // Protect this post from being wiped by the Firebase listener for 30 seconds
-    _recentlyPostedIds.set(ref.key, post);
-    setTimeout(() => _recentlyPostedIds.delete(ref.key), 30000);
     save();
     renderAdminPosts();
     renderSignals();
@@ -2580,18 +2581,12 @@ async function savePostToFirebase(post) {
     showToast('Posted to all users!', 'success');
   } catch (e) {
     console.error('[savePost] Firebase save error:', e);
-    _firebaseSyncLock = Date.now() + 10000; // longer lock on failure
     if (!S.adminPosts) S.adminPosts = [];
     if (!S.adminPosts.find(p => p === post || p.id === post.id)) S.adminPosts.unshift(post);
-    // Protect even on failure — keep locally until Firebase confirms
-    if (post.id) {
-      _recentlyPostedIds.set(post.id, post);
-      setTimeout(() => _recentlyPostedIds.delete(post.id), 30000);
-    }
     save();
     renderAdminPosts();
     renderSignals();
-    showToast('Slow connection — signal may still post. Check manage list.', '');
+    showToast('Firebase error: ' + (e.message || 'write failed') + '. Signal saved locally.', 'error');
   }
   // Fire-and-forget notifications (don't block UI)
   if (post.kind === 'signal') {
@@ -2995,21 +2990,14 @@ async function loadPostsFromFirebase(skipRender) {
     snapshot.forEach(child => {
       posts.unshift({ ...child.val(), id: child.key });
     });
-    // Skip overwrite if sync lock is active (just posted a signal)
-    if (_firebaseSyncLock && Date.now() < _firebaseSyncLock) {
-      console.log('[loadPosts] Skipping — sync lock active');
-      return;
-    }
-    // Filter out locally deleted posts that Firebase hasn't processed yet
+    // Merge Firebase with local (preserve recently-added local posts)
     const filtered = posts.filter(p => !_deletedPostIds.has(p.id));
-    // Preserve recently-posted signals not yet in Firebase snapshot
     const filteredIds = new Set(filtered.map(p => p.id));
-    const recentPosts = [];
-    _recentlyPostedIds.forEach((post, id) => {
-      if (!filteredIds.has(id) && !_deletedPostIds.has(id)) recentPosts.push(post);
-      else _recentlyPostedIds.delete(id);
-    });
-    const merged = [...recentPosts, ...filtered];
+    const localSurvivors = (S.adminPosts || []).filter(p =>
+      p.id && !filteredIds.has(p.id) && !_deletedPostIds.has(p.id) &&
+      p.timestamp && (Date.now() - p.timestamp < 300000)
+    );
+    const merged = [...localSurvivors, ...filtered];
     if (merged.length > 0 || !S.adminPosts || S.adminPosts.length === 0) {
       S.adminPosts = merged;
       save();
@@ -3097,25 +3085,21 @@ async function listenToFirebasePosts() {
         }
       });
 
-      // Always use Firebase as source of truth when it returns data
-      // But SKIP overwriting if we just posted (sync lock active)
-      if (_firebaseSyncLock && Date.now() < _firebaseSyncLock) {
-        console.log('[listener] Skipping S.adminPosts overwrite — sync lock active for', Math.round((_firebaseSyncLock - Date.now())/1000), 's');
-        // Still process notifications and celebrations above, just don't overwrite local posts
-      } else if (posts.length > 0) {
-        let merged = posts.filter(p => !_deletedPostIds.has(p.id));
-        // Preserve recently-posted signals that may not be in the Firebase snapshot yet
-        const mergedIds = new Set(merged.map(p => p.id));
-        _recentlyPostedIds.forEach((post, id) => {
-          if (!mergedIds.has(id) && !_deletedPostIds.has(id)) {
-            merged.unshift(post); // Keep locally-posted signal visible
-          } else {
-            _recentlyPostedIds.delete(id); // Firebase confirmed it, no longer needed
-          }
-        });
-        S.adminPosts = merged;
+      // Merge Firebase posts with local state (never lose locally-added posts)
+      if (posts.length > 0) {
+        const firebasePosts = posts.filter(p => !_deletedPostIds.has(p.id));
+        const firebaseIds = new Set(firebasePosts.map(p => p.id));
+        // Keep any local posts not yet confirmed by Firebase (added within last 5 min)
+        const localSurvivors = (S.adminPosts || []).filter(p =>
+          p.id && !firebaseIds.has(p.id) && !_deletedPostIds.has(p.id) &&
+          p.timestamp && (Date.now() - p.timestamp < 300000)
+        );
+        if (localSurvivors.length > 0) {
+          console.log('[listener] Preserving', localSurvivors.length, 'local post(s) not yet in Firebase:', localSurvivors.map(p => p.ticker || p.title || p.id));
+        }
+        S.adminPosts = [...localSurvivors, ...firebasePosts];
         save();
-        // Clean up _deletedPostIds once Firebase confirms the post is actually gone
+        // Clean up _deletedPostIds once Firebase confirms deletion
         _deletedPostIds.forEach(id => {
           if (!posts.find(p => p.id === id)) _deletedPostIds.delete(id);
         });
