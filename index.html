@@ -2559,19 +2559,20 @@ async function savePostToFirebase(post) {
     return;
   }
   try {
-    const db = firebase.database();
     // Strip any local id before pushing so it doesn't conflict with Firebase key on reload
     const { id: _stripId, ...postData } = post;
-    const ref = await db.ref('posts').push(postData);
-    console.log('[savePost] Firebase push OK, key:', ref.key);
-    // Verify the write actually persisted on the server
-    const verify = await db.ref('posts/' + ref.key).once('value');
-    if (!verify.exists()) {
-      console.error('[savePost] WRITE REJECTED — post not found after push. Check Firebase security rules.');
-      showToast('Firebase write rejected — check database rules', 'error');
-    }
-    // Update with Firebase key; only add to local state if not already there
-    post.id = ref.key;
+    // Write via REST API (bypasses SDK issues, proven to work)
+    const dbUrl = firebaseConfig.databaseURL;
+    const resp = await fetch(dbUrl + '/posts.json', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(postData)
+    });
+    if (!resp.ok) throw new Error('Firebase REST write failed: ' + resp.status);
+    const result = await resp.json();
+    if (!result || !result.name) throw new Error('Firebase returned no key');
+    console.log('[savePost] Firebase REST write OK, key:', result.name);
+    post.id = result.name;
     if (!S.adminPosts) S.adminPosts = [];
     if (!S.adminPosts.find(p => p === post || p.id === post.id)) S.adminPosts.unshift(post);
     save();
@@ -3011,12 +3012,25 @@ async function loadPostsFromFirebase(skipRender) {
   }
 }
 
-// Delete post from Firebase
-async function deletePostFromFirebase(postId) {
-  if (!await initFirebase()) return;
+// Update post in Firebase (REST API — bypasses SDK issues)
+async function updatePostInFirebase(postId, updates) {
   try {
-    const db = firebase.database();
-    await db.ref('posts/' + postId).remove();
+    const dbUrl = firebaseConfig.databaseURL;
+    await fetch(dbUrl + '/posts/' + postId + '.json', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updates)
+    });
+  } catch (e) {
+    console.warn('Firebase update error:', e);
+  }
+}
+
+// Delete post from Firebase (REST API — bypasses SDK issues)
+async function deletePostFromFirebase(postId) {
+  try {
+    const dbUrl = firebaseConfig.databaseURL;
+    await fetch(dbUrl + '/posts/' + postId + '.json', { method: 'DELETE' });
   } catch (e) {
     console.error('Firebase delete error:', e);
   }
@@ -3534,7 +3548,7 @@ async function postRoll() {
   origPost.status = 'rolled';
   origPost.closedAt = Date.now();
   if (await initFirebase() && origPost.id) {
-    firebase.database().ref('posts/' + origPost.id).update({ status: 'rolled', closedAt: Date.now() }).catch(e => console.warn(e));
+    updatePostInFirebase(origPost.id, { status: 'rolled', closedAt: Date.now() });
   }
 
   // 2. Post the roll update notification
@@ -4365,7 +4379,7 @@ function closeCCOnWheel(wheelId, ccId) {
     ccPost.closedAt = Date.now();
     (async () => {
       if (await initFirebase() && ccPost.id) {
-        firebase.database().ref('posts/' + ccPost.id).update({ status: 'winner', closedAt: Date.now() }).catch(e => console.warn(e));
+        updatePostInFirebase(ccPost.id, { status: 'winner', closedAt: Date.now() });
       }
     })();
   }
@@ -4471,7 +4485,7 @@ function calledAwayWheel(wheelId) {
             updates.wheelComplete = true;
             updates.wheelSummary = wheelSummary;
           }
-          firebase.database().ref('posts/' + lp.id).update(updates).catch(e => console.warn(e));
+          updatePostInFirebase(lp.id, updates);
         }
       }
     })();
@@ -4646,9 +4660,7 @@ function markPostWinner(postId, postRef) {
 
     // Firebase + notifications in background (don't block UI)
     (async () => {
-      if (await initFirebase() && post.id) {
-        firebase.database().ref('posts/' + post.id).update({ status: 'winner', closedAt: Date.now() }).catch(e => console.warn(e));
-      }
+      if (post.id) updatePostInFirebase(post.id, { status: 'winner', closedAt: Date.now() });
       sendWinnerNotification(post).catch(e => console.warn(e));
     })();
   } catch(e) {
@@ -4728,16 +4740,7 @@ function markPostRolled(postId, postRef) {
         savePostToFirebase(rollNotif).catch(e => console.warn('Roll notif save error:', e));
 
         // Update original post in Firebase (fire-and-forget)
-        (async () => {
-          try {
-            if (await initFirebase() && post.id) {
-              firebase.database().ref('posts/' + post.id).update({
-                status: 'rolled', closedAt: Date.now(),
-                rolledToStrike: newStrike, rolledToExp: newExp
-              }).catch(e => console.warn(e));
-            }
-          } catch(e) { console.warn('Firebase roll update failed:', e); }
-        })();
+        if (post.id) updatePostInFirebase(post.id, { status: 'rolled', closedAt: Date.now(), rolledToStrike: newStrike, rolledToExp: newExp });
 
         renderHome();
         const rollCreditStr = netCredit >= 0 ? `+$${(netCredit * 100).toFixed(0)} credit` : `-$${(Math.abs(netCredit) * 100).toFixed(0)} debit`;
@@ -4833,17 +4836,8 @@ function markPostAssigned(postId, postRef) {
         setTimeout(() => openAdmin(), 300);
 
         // Firebase + notifications (fire-and-forget)
-        (async () => {
-          try {
-            if (await initFirebase() && post.id) {
-              firebase.database().ref('posts/' + post.id).update({
-                status: 'assigned', assignedAt: Date.now(),
-                assignmentPrice: currentPrice, assignedContracts: contracts, wheelId: wheelPos.id
-              }).catch(e => console.warn(e));
-            }
-            sendAssignmentNotification(post, 'assigned').catch(e => console.warn(e));
-          } catch(e) { console.warn('Firebase sync failed:', e); }
-        })();
+        if (post.id) updatePostInFirebase(post.id, { status: 'assigned', assignedAt: Date.now(), assignmentPrice: currentPrice, assignedContracts: contracts, wheelId: wheelPos.id });
+        sendAssignmentNotification(post, 'assigned').catch(e => console.warn(e));
       });
     });
   }).catch(e => {
@@ -4872,7 +4866,8 @@ function markPostAssigned(postId, postRef) {
         const netStr = netPnl >= 0 ? `+$${netPnl.toFixed(0)}` : `-$${Math.abs(netPnl).toFixed(0)}`;
         showToast(`${post.ticker} assigned! ${shares} shares at $${costBasis.toFixed(2)} · Stock: ${stockStr} · Premium: +$${totalPremDollars.toFixed(0)} · Net: ${netStr}`, '');
         setTimeout(() => openAdmin(), 300);
-        (async () => { try { if (await initFirebase() && post.id) { firebase.database().ref('posts/' + post.id).update({ status: 'assigned', assignedAt: Date.now(), assignmentPrice: currentPrice, assignedContracts: contracts, wheelId: wheelPos.id }).catch(e => console.warn('Firebase assignment sync:', e)); } sendAssignmentNotification(post, 'assigned').catch(e => console.warn(e)); } catch(e) { console.warn('Assignment sync error:', e); } })();
+        if (post.id) updatePostInFirebase(post.id, { status: 'assigned', assignedAt: Date.now(), assignmentPrice: currentPrice, assignedContracts: contracts, wheelId: wheelPos.id });
+        sendAssignmentNotification(post, 'assigned').catch(e => console.warn(e));
       });
     });
   });
@@ -4895,7 +4890,7 @@ function markPostCalled(postId, postRef) {
     // Firebase in background
     (async () => {
       if (await initFirebase() && post.id) {
-        firebase.database().ref('posts/' + post.id).update({ status: 'called', calledAt: Date.now() }).catch(e => console.warn(e));
+        updatePostInFirebase(post.id, { status: 'called', calledAt: Date.now() });
       }
     })();
     setTimeout(() => openAdmin(), 300);
@@ -4918,7 +4913,7 @@ function markPostCalled(postId, postRef) {
   // Firebase + notifications in background
   (async () => {
     if (await initFirebase() && post.id) {
-      firebase.database().ref('posts/' + post.id).update({ status: 'called', calledAt: Date.now() }).catch(e => console.warn(e));
+      updatePostInFirebase(post.id, { status: 'called', calledAt: Date.now() });
     }
     sendAssignmentNotification(post, 'called').catch(e => console.warn(e));
   })();
