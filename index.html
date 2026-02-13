@@ -2824,6 +2824,7 @@ async function sendEmailNotifications(post) {
     }
 
     // Send to each subscriber
+    let sent = 0, failed = 0;
     for (const [key, sub] of Object.entries(subscribers)) {
       if (sub.active && sub.email) {
         try {
@@ -2835,11 +2836,15 @@ async function sendEmailNotifications(post) {
             from_name: 'Market Elites',
             reply_to: 'noreply@marketelites.com'
           });
+          console.log('[Email] Sent to', sub.email);
+          sent++;
         } catch (e) {
-          console.error('Email send error:', e);
+          console.error('[Email] FAILED for', sub.email, e);
+          failed++;
         }
       }
     }
+    if (sent || failed) showToast(`Email: ${sent} sent${failed ? ', ' + failed + ' failed' : ''}`, failed ? 'error' : 'success');
   } catch (e) {
     console.error('Email notification error:', e);
   }
@@ -2872,6 +2877,7 @@ async function sendSmsNotifications(post) {
     } else {
       return; // Unknown kind, skip SMS
     }
+    let smsSent = 0, smsFailed = 0;
     for (const [uid, sub] of Object.entries(subs)) {
       if (sub.active && sub.phone && sub.carrier) {
         const smsEmail = sub.phone.replace(/\D/g, '') + '@' + sub.carrier;
@@ -2886,11 +2892,15 @@ async function sendSmsNotifications(post) {
             from_name: '',
             reply_to: ''
           });
+          console.log('[SMS] Sent to', smsEmail);
+          smsSent++;
         } catch (e) {
-          console.warn('SMS send error for', uid, e);
+          console.warn('[SMS] FAILED for', smsEmail, e);
+          smsFailed++;
         }
       }
     }
+    if (smsSent || smsFailed) showToast(`SMS: ${smsSent} sent${smsFailed ? ', ' + smsFailed + ' failed' : ''}`, smsFailed ? 'error' : 'success');
   } catch (e) {
     console.error('SMS notification error:', e);
   }
