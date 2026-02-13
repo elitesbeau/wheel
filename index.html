@@ -1709,6 +1709,13 @@
     </div>
 
     <div style="margin-top:24px;padding-top:16px;border-top:1px solid var(--border)">
+      <div class="card-title" style="display:flex;align-items:center;gap:8px">Alert Subscribers <span style="font-size:11px;padding:2px 8px;background:var(--green-bg);color:var(--green);border-radius:20px;font-weight:600" id="subCount">0</span></div>
+      <p style="font-size:11px;color:var(--text3);margin-bottom:12px">Users receiving email & SMS alerts when you post</p>
+      <div id="adminSubsList" style="max-height:300px;overflow-y:auto"></div>
+      <button onclick="renderAdminSubscribers()" style="margin-top:8px;font-size:11px;padding:6px 12px;background:none;border:1px solid var(--border);color:var(--text2);border-radius:6px;cursor:pointer">Refresh</button>
+    </div>
+
+    <div style="margin-top:24px;padding-top:16px;border-top:1px solid var(--border)">
       <div class="card-title">Notification Settings</div>
       <div style="margin-top:12px">
         <div class="form-label" style="font-weight:600;margin-bottom:8px">🎮 Discord Alerts</div>
@@ -2492,6 +2499,7 @@ function openAdmin() {
   renderAdminPosts();
   renderWheelPositions();
   renderAdminUsers();
+  renderAdminSubscribers();
   loadPostsFromFirebase();
   loadAdminSettings();
   openModal('adminModal');
@@ -8516,6 +8524,69 @@ async function renderAdminUsers() {
       </div>`;
     }).join('');
   } catch (e) { console.warn('Load users error:', e); el.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:12px">Failed to load users</div>'; }
+}
+
+async function renderAdminSubscribers() {
+  const el = $('adminSubsList');
+  const countEl = $('subCount');
+  if (!el) return;
+  if (!await initFirebase()) { el.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:12px">Firebase not connected</div>'; return; }
+  try {
+    const db = firebase.database();
+    const [emailSnap, smsSnap, usersSnap] = await Promise.all([
+      db.ref('emailSubscribers').once('value'),
+      db.ref('smsSubscribers').once('value'),
+      db.ref('users').once('value')
+    ]);
+    const emailSubs = emailSnap.val() || {};
+    const smsSubs = smsSnap.val() || {};
+    const usersMap = usersSnap.val() || {};
+
+    // Build lookup: uid -> user name
+    const uidToName = {};
+    Object.entries(usersMap).forEach(([uid, u]) => { uidToName[uid] = u.name || u.email || uid; });
+
+    // Merge subscribers by uid
+    const merged = {};
+    Object.entries(emailSubs).forEach(([key, sub]) => {
+      const uid = sub.uid || key;
+      if (!merged[uid]) merged[uid] = { name: '', email: '', phone: '', carrier: '', emailActive: false, smsActive: false };
+      merged[uid].email = sub.email || '';
+      merged[uid].emailActive = !!sub.active;
+      merged[uid].name = sub.name || uidToName[uid] || '';
+    });
+    Object.entries(smsSubs).forEach(([uid, sub]) => {
+      if (!merged[uid]) merged[uid] = { name: uidToName[uid] || '', email: '', phone: '', carrier: '', emailActive: false, smsActive: false };
+      merged[uid].phone = sub.phone || '';
+      merged[uid].carrier = sub.carrier || '';
+      merged[uid].smsActive = !!sub.active;
+    });
+
+    const entries = Object.values(merged);
+    if (countEl) countEl.textContent = entries.length;
+    if (!entries.length) { el.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:12px">No subscribers yet</div>'; return; }
+
+    const carrierName = (c) => {
+      const map = { 'vtext.com': 'Verizon', 'txt.att.net': 'AT&T', 'tmomail.net': 'T-Mobile', 'messaging.sprintpcs.com': 'Sprint', 'msg.fi.google.com': 'Google Fi' };
+      return map[c] || c || '?';
+    };
+
+    el.innerHTML = entries.map(s => {
+      const emailBadge = s.emailActive
+        ? `<span style="font-size:10px;padding:2px 6px;border-radius:3px;background:var(--green-bg);color:var(--green);font-weight:600">EMAIL</span>`
+        : '';
+      const smsBadge = s.smsActive
+        ? `<span style="font-size:10px;padding:2px 6px;border-radius:3px;background:var(--blue-bg,rgba(59,130,246,0.1));color:var(--blue,#3b82f6);font-weight:600">SMS</span>`
+        : '';
+      const phoneDisplay = s.phone ? s.phone.replace(/(\d{3})(\d{3})(\d{4})/, '($1) $2-$3') : '';
+      return `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);font-size:13px;gap:8px">
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:600">${s.name || 'User'} <span style="display:inline-flex;gap:4px;vertical-align:middle">${emailBadge}${smsBadge}</span></div>
+          <div style="font-size:11px;color:var(--text3)">${s.email || 'No email'}${phoneDisplay ? ' · ' + phoneDisplay + ' (' + carrierName(s.carrier) + ')' : ''}</div>
+        </div>
+      </div>`;
+    }).join('');
+  } catch (e) { console.warn('Load subscribers error:', e); el.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:12px">Failed to load subscribers</div>'; }
 }
 
 async function toggleUserPremium(uid, grant) {
